@@ -5,13 +5,15 @@ export interface AtmosAirconLogoProps {
   variant?: 'full' | 'icon' | 'horizontal';
   className?: string;
   isDarkTheme?: boolean;
+  iconSize?: number;
 }
 
 export const AtmosAirconLogo: React.FC<AtmosAirconLogoProps> = ({
   size = 'md',
   variant = 'full',
   className = '',
-  isDarkTheme = false
+  isDarkTheme = false,
+  iconSize
 }) => {
   // Dimensions map
   const dimensions = {
@@ -173,8 +175,8 @@ export const AtmosAirconLogo: React.FC<AtmosAirconLogoProps> = ({
   // Icon only
   if (variant === 'icon') {
     return (
-      <div className={`inline-flex items-center justify-center ${className}`}>
-        <LogoEmblem emblemSize={dimensions.icon} />
+      <div className={`inline-flex items-center justify-center shrink-0 ${className}`}>
+        <LogoEmblem emblemSize={iconSize || dimensions.icon} />
       </div>
     );
   }

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   FileText,
   Plus,
@@ -25,7 +25,7 @@ import {
   Eye
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { Quote, QuoteStatus, Lead, InventoryItem } from '../types';
+import { Quote, QuoteStatus, Lead, InventoryItem, Project } from '../types';
 import { storageService } from '../services/storageService';
 import { CommunicationService } from '../services/whatsappEmailService';
 import { downloadElementAsPDF, triggerDirectPrint } from '../utils/pdfExportHelper';
@@ -35,11 +35,13 @@ import { DocumentFooter } from './common/DocumentFooter';
 import { PrintableDocumentTemplate } from './common/PrintableDocumentTemplate';
 import { QuoteMarginSummaryPanel } from './QuoteMarginSummaryPanel';
 import { QuotePrintPreviewModal } from './QuotePrintPreviewModal';
+import { ClientQuotationDocumentModal } from './ClientQuotationDocumentModal';
 
 interface QuotesViewProps {
   quotes: Quote[];
   leads: Lead[];
   inventory: InventoryItem[];
+  projects?: Project[];
   onOpenNewQuote: () => void;
   onAwardQuote: (quote: Quote) => void;
 }
@@ -48,6 +50,7 @@ export const QuotesView: React.FC<QuotesViewProps> = ({
   quotes,
   leads,
   inventory,
+  projects = [],
   onOpenNewQuote,
   onAwardQuote
 }) => {
@@ -55,51 +58,53 @@ export const QuotesView: React.FC<QuotesViewProps> = ({
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [selectedQuoteForPreview, setSelectedQuoteForPreview] = useState<Quote | null>(null);
   const [quoteForPrintModal, setQuoteForPrintModal] = useState<Quote | null>(null);
+
+  // Client Quotation PDF Generation with Current Project Details
+  const [isClientQuotationModalOpen, setIsClientQuotationModalOpen] = useState(false);
+  const [clientQuotationQuote, setClientQuotationQuote] = useState<Quote | null>(null);
+  const [clientQuotationProject, setClientQuotationProject] = useState<Project | null>(null);
+
   const [isExportingQuotePDF, setIsExportingQuotePDF] = useState(false);
   const [isExportingAllQuotesPDF, setIsExportingAllQuotesPDF] = useState(false);
   const [exportingQuoteId, setExportingQuoteId] = useState<string | null>(null);
   const quotePrintRef = useRef<HTMLDivElement>(null);
   const quotesLedgerPrintRef = useRef<HTMLDivElement>(null);
 
+  // Derive active project pool
+  const allAvailableProjects = useMemo(() => {
+    if (projects && projects.length > 0) return projects;
+    return storageService.getProjects() || [];
+  }, [projects]);
+
+  // Find linked or active project for a quote
+  const getLinkedProjectForQuote = (targetQuote: Quote): Project | null => {
+    return (
+      allAvailableProjects.find(
+        (p) =>
+          p.quoteId === targetQuote.id ||
+          targetQuote.convertedToProjectId === p.id ||
+          (p.leadId && p.leadId === targetQuote.leadId) ||
+          p.projectName.toLowerCase().includes((targetQuote.projectTitle || '').toLowerCase().substring(0, 15))
+      ) ||
+      allAvailableProjects[0] ||
+      null
+    );
+  };
+
+  const handleOpenClientQuotationModal = (quoteToUse?: Quote, projectToUse?: Project) => {
+    const q = quoteToUse || selectedQuoteForPreview || quotes[0] || null;
+    const p = projectToUse || (q ? getLinkedProjectForQuote(q) : allAvailableProjects[0] || null);
+    setClientQuotationQuote(q);
+    setClientQuotationProject(p);
+    setIsClientQuotationModalOpen(true);
+  };
+
   const handleDownloadPDF = async (quoteToExport?: Quote) => {
-    const targetQuote = quoteToExport || selectedQuoteForPreview;
+    const targetQuote = quoteToExport || selectedQuoteForPreview || quotes[0];
     if (!targetQuote) return;
 
-    // If exporting directly from card, set it for preview first so DOM mounts
-    if (quoteToExport && selectedQuoteForPreview?.id !== quoteToExport.id) {
-      setExportingQuoteId(targetQuote.id);
-      setSelectedQuoteForPreview(quoteToExport);
-      // Allow brief tick for DOM to render
-      setTimeout(async () => {
-        if (!quotePrintRef.current) {
-          setExportingQuoteId(null);
-          return;
-        }
-        setIsExportingQuotePDF(true);
-        try {
-          await downloadElementAsPDF(quotePrintRef.current, {
-            filename: `AlphaERP_Quotation_${targetQuote.quoteNumber}`,
-            documentTitle: `AlphaERP Techno-Commercial Quotation - ${targetQuote.quoteNumber}`
-          });
-        } finally {
-          setIsExportingQuotePDF(false);
-          setExportingQuoteId(null);
-        }
-      }, 120);
-      return;
-    }
-
-    if (!quotePrintRef.current) return;
-    setIsExportingQuotePDF(true);
-    try {
-      await downloadElementAsPDF(quotePrintRef.current, {
-        filename: `AlphaERP_Quotation_${targetQuote.quoteNumber}`,
-        documentTitle: `AlphaERP Techno-Commercial Quotation - ${targetQuote.quoteNumber}`
-      });
-    } finally {
-      setIsExportingQuotePDF(false);
-      setExportingQuoteId(null);
-    }
+    // Launch the Client Quotation Document generator for formatted output with project details
+    handleOpenClientQuotationModal(targetQuote);
   };
 
   const handleExportQuotesLedgerPDF = async () => {
@@ -170,22 +175,34 @@ export const QuotesView: React.FC<QuotesViewProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Dedicated Export to PDF Action Button for Quotes View */}
+          {/* Primary PDF Generation Button for QuotesView using current project details */}
+          <button
+            id="btn-generate-client-quote-pdf"
+            onClick={() => handleOpenClientQuotationModal()}
+            disabled={filteredQuotes.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 hover:from-blue-600 hover:to-indigo-600 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50"
+            title="Generate formatted quotation document for clients using current project details"
+          >
+            <FileDown className="w-4 h-4 text-blue-200" />
+            <span>Generate Client Quotation PDF</span>
+          </button>
+
+          {/* Dedicated Export to PDF Action Button for Quotes Ledger */}
           <button
             onClick={handleExportQuotesLedgerPDF}
             disabled={isExportingAllQuotesPDF || filteredQuotes.length === 0}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-xs transition-all disabled:opacity-50 cursor-pointer"
-            title="Export all filtered quotations as a comprehensive PDF report"
+            title="Export all filtered quotations as a comprehensive PDF register"
           >
             {isExportingAllQuotesPDF ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Exporting PDF...</span>
+                <span>Exporting Ledger...</span>
               </>
             ) : (
               <>
                 <Download className="w-3.5 h-3.5" />
-                <span>Export to PDF</span>
+                <span>Export Ledger PDF</span>
               </>
             )}
           </button>
@@ -323,29 +340,24 @@ export const QuotesView: React.FC<QuotesViewProps> = ({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setQuoteForPrintModal(quote);
+                      handleOpenClientQuotationModal(quote);
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl border border-indigo-200 transition-colors shadow-2xs cursor-pointer"
-                    title="Open Print Preview & Layout Formatter"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl border border-blue-200 transition-colors shadow-2xs cursor-pointer"
+                    title="Generate formatted quotation document for clients with current project details"
                   >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Print Preview</span>
+                    <FileDown className="w-3.5 h-3.5" />
+                    <span>Client Quote PDF</span>
                   </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDownloadPDF(quote);
+                      setQuoteForPrintModal(quote);
                     }}
-                    disabled={isExportingQuotePDF && exportingQuoteId === quote.id}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl border border-blue-200 transition-colors shadow-2xs cursor-pointer"
-                    title="Export Quotation as PDF Document"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold rounded-xl border border-slate-200 transition-colors shadow-2xs cursor-pointer"
+                    title="Open Print Layout Formatter"
                   >
-                    {isExportingQuotePDF && exportingQuoteId === quote.id ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Download className="w-3.5 h-3.5" />
-                    )}
-                    <span>PDF</span>
+                    <Eye className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Preview</span>
                   </button>
                   <button
                     onClick={(e) => handleShareWhatsApp(quote, e)}
@@ -411,6 +423,30 @@ export const QuotesView: React.FC<QuotesViewProps> = ({
         />
       )}
 
+      {/* Formatted Client Quotation Document & PDF Generator Modal */}
+      {isClientQuotationModalOpen && clientQuotationQuote && (
+        <ClientQuotationDocumentModal
+          isOpen={isClientQuotationModalOpen}
+          quote={clientQuotationQuote}
+          project={clientQuotationProject || getLinkedProjectForQuote(clientQuotationQuote)}
+          allProjects={allAvailableProjects}
+          allQuotes={quotes}
+          leads={leads}
+          onClose={() => setIsClientQuotationModalOpen(false)}
+          onSelectQuote={(q) => {
+            setClientQuotationQuote(q);
+            setClientQuotationProject(getLinkedProjectForQuote(q));
+          }}
+          onSelectProject={(p) => setClientQuotationProject(p)}
+          onAwardQuote={(q) => {
+            onAwardQuote(q);
+            setIsClientQuotationModalOpen(false);
+          }}
+          onShareWhatsApp={() => handleShareWhatsApp(clientQuotationQuote)}
+          onShareEmail={() => handleShareEmail(clientQuotationQuote)}
+        />
+      )}
+
       {/* Quote Detail / Standard Printable Document Modal */}
       {selectedQuoteForPreview && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto print-container">
@@ -430,6 +466,51 @@ export const QuotesView: React.FC<QuotesViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Off-screen Quotes Register for handleExportQuotesLedgerPDF */}
+      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', pointerEvents: 'none' }}>
+        <div ref={quotesLedgerPrintRef} className="bg-white text-slate-900 p-8 w-[1000px] space-y-6 font-sans">
+          <div className="flex items-center justify-between border-b pb-4 border-slate-200">
+            <div>
+              <div className="text-lg font-black text-slate-900">ATMOS AIRCON PRIVATE LIMITED</div>
+              <div className="text-xs text-slate-500 font-mono">HVAC Techno-Commercial Quotations & Project Costing Register</div>
+            </div>
+            <div className="text-right text-xs text-slate-500">
+              <div>Date: {new Date().toLocaleDateString('en-IN')}</div>
+              <div>Filtered Records: {filteredQuotes.length}</div>
+            </div>
+          </div>
+
+          <table className="w-full text-xs text-left border-collapse border border-slate-200">
+            <thead className="bg-slate-100 font-bold text-slate-700 uppercase text-[10px]">
+              <tr>
+                <th className="p-2 border border-slate-200">Quote #</th>
+                <th className="p-2 border border-slate-200">Client Organization</th>
+                <th className="p-2 border border-slate-200">Project / Scope</th>
+                <th className="p-2 border border-slate-200">Date</th>
+                <th className="p-2 border border-slate-200 text-right">Selling Price (₹)</th>
+                <th className="p-2 border border-slate-200 text-right">BOQ Cost (₹)</th>
+                <th className="p-2 border border-slate-200 text-right">Gross Margin</th>
+                <th className="p-2 border border-slate-200 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-slate-800">
+              {filteredQuotes.map((q) => (
+                <tr key={q.id}>
+                  <td className="p-2 border border-slate-200 font-mono font-bold text-blue-900">{q.quoteNumber}</td>
+                  <td className="p-2 border border-slate-200 font-semibold">{q.companyName || q.clientName}</td>
+                  <td className="p-2 border border-slate-200 text-slate-600">{q.projectTitle}</td>
+                  <td className="p-2 border border-slate-200">{q.date}</td>
+                  <td className="p-2 border border-slate-200 text-right font-mono font-bold">₹{q.totalAmount.toLocaleString('en-IN')}</td>
+                  <td className="p-2 border border-slate-200 text-right font-mono text-slate-600">₹{q.totalCost.toLocaleString('en-IN')}</td>
+                  <td className="p-2 border border-slate-200 text-right font-mono font-bold text-emerald-700">{q.grossMarginPct.toFixed(1)}%</td>
+                  <td className="p-2 border border-slate-200 text-center font-semibold">{q.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

@@ -36,7 +36,8 @@ import {
   PinOff,
   Zap,
   Search,
-  TrendingUp
+  TrendingUp,
+  Presentation
 } from 'lucide-react';
 import { JSAlphaSoftLogo } from './JSAlphaSoftLogo';
 import { QuickExportMenu } from './QuickExportMenu';
@@ -111,6 +112,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label: 'Executive Dashboard',
           icon: LayoutDashboard,
           badge: null
+        },
+        {
+          id: 'pitch_deck',
+          label: 'Investor Pitch Deck',
+          icon: Presentation,
+          badge: 'Deck',
+          badgeColor: 'bg-gradient-to-r from-amber-500 to-orange-500'
         },
         {
           id: 'sales',
@@ -295,30 +303,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Pin state: when pinned, sidebar stays open permanently.
-  // When unpinned (default), sidebar auto-collapses and expands on mouseover.
-  const [isPinned, setIsPinned] = useState<boolean>(() => {
+  // When unpinned, sidebar collapses to icon rail and expands on mouseover.
+  const [internalPinned, setInternalPinned] = useState<boolean>(() => {
     if (controlledIsCollapsed !== undefined) {
       return !controlledIsCollapsed;
     }
     try {
-      const saved = localStorage.getItem('jsalphasoft_sidebar_pinned');
+      const saved = sessionStorage.getItem('alphaerp_sidebar_pinned_state');
       if (saved !== null) {
         return saved === 'true';
       }
-      return false; // Default: auto-collapsible & expand on hover
+      return true; // Default: fully visible and open
     } catch {
-      return false;
+      return true;
     }
   });
+
+  const isPinned = controlledIsCollapsed !== undefined ? !controlledIsCollapsed : internalPinned;
 
   const togglePin = () => {
     if (controlledToggleCollapse) {
       controlledToggleCollapse();
     } else {
-      setIsPinned((prev) => {
+      setInternalPinned((prev) => {
         const next = !prev;
         try {
-          localStorage.setItem('jsalphasoft_sidebar_pinned', String(next));
+          sessionStorage.setItem('alphaerp_sidebar_pinned_state', String(next));
         } catch {}
         return next;
       });
@@ -341,10 +351,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
-    // Smooth 160ms debounce to prevent jarring snaps on brief edge cursor exits
+    // Smooth 180ms debounce to prevent jarring snaps on brief edge cursor exits
     hoverTimeoutRef.current = setTimeout(() => {
       setIsHovered(false);
-    }, 160);
+    }, 180);
   };
 
   useEffect(() => {
@@ -390,9 +400,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const handleSelectTab = (tabId: string) => {
     setActiveTab(tabId);
     setHoveredItem(null);
-    if (!isPinned) {
-      setIsHovered(false);
-    }
     if (onCloseMobile) {
       onCloseMobile();
     }
@@ -419,15 +426,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
         />
       )}
 
+      {/* Non-pinned hover overlay backdrop to softly focus on expanded navigation */}
+      {!isPinned && isHovered && !isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-slate-950/25 backdrop-blur-[0.5px] z-20 pointer-events-none transition-opacity duration-200"
+        />
+      )}
+
       <aside
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className={`shrink-0 bg-[#070d21] border-r border-[#152347] flex flex-col justify-between h-full text-slate-200 select-none shadow-xl transition-all duration-300 ease-in-out ${
+        className={`bg-[#070d21] border-r border-[#152347] flex flex-col justify-between h-full text-slate-200 select-none transition-[width] duration-300 ease-in-out shrink-0 ${
           isMobileOpen
             ? 'fixed inset-y-0 left-0 z-50 w-64 shadow-2xl'
-            : isCollapsed
-            ? 'w-[70px] z-30'
-            : 'w-64 z-30 shadow-2xl shadow-blue-950/70'
+            : isExpanded
+            ? 'w-64 z-30 shadow-xl'
+            : 'w-16 z-30 shadow-lg'
         }`}
       >
         {/* Top Header & Logo Area */}
@@ -486,16 +500,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 onClick={togglePin}
                 className="p-1.5 text-slate-400 hover:text-white rounded-lg bg-[#14234c] hover:bg-blue-600 transition-colors"
-                title="Auto-collapse mode: Expands on hover • Click to pin open"
+                title="Sidebar is in Auto-collapse mode (Expands on hover) • Click to pin open"
               >
-                <PinOff className="w-3.5 h-3.5 text-blue-300" />
+                <Pin className="w-3.5 h-3.5 text-blue-300" />
               </button>
             </div>
           )}
         </div>
 
       {/* Navigation Scrollable Body */}
-      <div className="flex-1 p-2 space-y-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
+      <div className="flex-1 min-h-0 p-2 space-y-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
         {/* Accordion Quick Expand / Collapse buttons when expanded */}
         {!isCollapsed && (
           <div className="flex items-center justify-between px-2 py-1.5 mb-1 bg-[#030334] rounded-xl border border-[#1b2b5a]">

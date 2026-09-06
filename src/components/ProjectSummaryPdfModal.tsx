@@ -290,7 +290,9 @@ Authorized Project PMO`);
               <div className="border-b-2 border-slate-900 pb-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <JSAlphaSoftLogo className="w-12 h-12" />
+                    <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-xs">
+                      <JSAlphaSoftLogo variant="icon" size="sm" isDarkTheme={true} />
+                    </div>
                     <div>
                       <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-tight">
                         ALPHA HVAC SOLUTIONS & ENGINEERING SERVICES LTD

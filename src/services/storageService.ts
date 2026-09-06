@@ -38,6 +38,7 @@ import {
   CompanyHoliday,
   PayrollMonth,
   ResignationRecord,
+  ExitApprovalStage,
   DepartmentMaster,
   DesignationGrade,
   ShiftMaster,
@@ -3668,26 +3669,144 @@ class StorageService {
     return this.resignationRecords;
   }
 
-  public submitResignation(data: Omit<ResignationRecord, 'id' | 'status'>): ResignationRecord {
+  public getResignations(): ResignationRecord[] {
+    return this.resignationRecords;
+  }
+
+  public submitResignation(data: Omit<ResignationRecord, 'id' | 'status'> & { status?: ResignationRecord['status'] }): ResignationRecord {
+    const today = new Date().toISOString().split('T')[0];
     const newRes: ResignationRecord = {
       ...data,
       id: `res-${Date.now()}`,
-      status: 'Notice Period'
+      status: data.status || 'Submitted',
+      approvals: data.approvals || {
+        manager: {
+          status: 'Pending',
+          remarks: 'Awaiting reporting manager review & project handover clearance.'
+        },
+        admin: {
+          status: 'Pending',
+          remarks: 'Awaiting company ID card, access revocation & facilities clearance.'
+        },
+        hr: {
+          status: 'Pending',
+          remarks: 'Awaiting exit interview, notice audit & final relieving authorization.'
+        }
+      },
+      clearances: data.clearances || {
+        itAssets: false,
+        financeAdvances: false,
+        projectHandover: false,
+        adminIdCard: false,
+        hrExitInterview: false
+      },
+      fnfSettlement: data.fnfSettlement || {
+        unpaidSalaryDays: 30,
+        unpaidSalaryAmount: 35000,
+        leaveEncashmentDays: 5,
+        leaveEncashmentAmount: 5833,
+        gratuityAmount: 0,
+        bonusOrIncentives: 0,
+        reimbursementsPending: 0,
+        otherEarnings: 0,
+        totalEarnings: 40833,
+        noticeRecoveryDays: 0,
+        noticeRecoveryAmount: 0,
+        imprestAdvanceDeduction: 0,
+        assetDamageOrLossDeduction: 0,
+        tdsTaxDeduction: 0,
+        pfDeduction: 0,
+        otherDeductions: 0,
+        totalDeductions: 0,
+        netPayableAmount: 40833,
+        financeStatus: 'Draft'
+      }
     };
     this.resignationRecords = [newRes, ...this.resignationRecords];
     save(STORAGE_KEYS.RESIGNATIONS, this.resignationRecords);
-    this.logAudit('CREATE', 'USER', newRes.empCode, `Resignation registered for ${newRes.empName} (${newRes.empCode})`);
+    this.logAudit('CREATE', 'USER', newRes.empCode, `Resignation registered for ${newRes.empName} (${newRes.empCode}) - Notice Period: ${newRes.noticePeriodDays} days`);
     this.notify();
     return newRes;
   }
 
-  public registerResignation(data: Omit<ResignationRecord, 'id' | 'status'>): ResignationRecord {
+  public registerResignation(data: Omit<ResignationRecord, 'id' | 'status'> & { status?: ResignationRecord['status'] }): ResignationRecord {
     return this.submitResignation(data);
+  }
+
+  public updateResignationApproval(
+    id: string,
+    stage: 'manager' | 'admin' | 'hr',
+    decision: 'Approved' | 'Rejected',
+    details: Partial<ExitApprovalStage>
+  ): void {
+    const today = new Date().toISOString().split('T')[0];
+    this.resignationRecords = this.resignationRecords.map((r) => {
+      if (r.id === id) {
+        const currentApprovals = r.approvals || {
+          manager: { status: 'Pending' },
+          admin: { status: 'Pending' },
+          hr: { status: 'Pending' }
+        };
+
+        const updatedStage: ExitApprovalStage = {
+          ...currentApprovals[stage],
+          status: decision,
+          actionDate: today,
+          ...details
+        };
+
+        const newApprovals = {
+          ...currentApprovals,
+          [stage]: updatedStage
+        };
+
+        // Determine new overall status
+        let newStatus = r.status;
+        if (decision === 'Rejected') {
+          newStatus = 'Rejected';
+        } else if (stage === 'manager' && decision === 'Approved') {
+          newStatus = 'Manager Approved';
+          if (details.recommendedLastWorkingDate) {
+            r.approvedLastWorkingDate = details.recommendedLastWorkingDate;
+          }
+          if (details.handoverCompleted) {
+            r.clearances.projectHandover = true;
+          }
+        } else if (stage === 'admin' && decision === 'Approved') {
+          newStatus = 'Admin Approved';
+          if (details.idCardReturned) {
+            r.clearances.adminIdCard = true;
+          }
+          if (details.assetsClearanceConfirmed) {
+            r.clearances.itAssets = true;
+          }
+        } else if (stage === 'hr' && decision === 'Approved') {
+          newStatus = 'Ready for F&F';
+          if (details.exitInterviewConducted) {
+            r.clearances.hrExitInterview = true;
+          }
+          if (details.finalApprovedLastDate) {
+            r.approvedLastWorkingDate = details.finalApprovedLastDate;
+          }
+        }
+
+        return {
+          ...r,
+          approvals: newApprovals,
+          status: newStatus
+        };
+      }
+      return r;
+    });
+
+    save(STORAGE_KEYS.RESIGNATIONS, this.resignationRecords);
+    this.logAudit('UPDATE', 'USER', id, `Resignation approval updated: Stage [${stage.toUpperCase()}] -> ${decision}`);
+    this.notify();
   }
 
   public updateClearance(
     id: string,
-    clearances: ResignationRecord['clearances'],
+    clearances: Partial<ResignationRecord['clearances']>,
     fnfSettlement?: ResignationRecord['fnfSettlement'],
     status?: ResignationRecord['status']
   ): void {
@@ -3706,7 +3825,118 @@ class StorageService {
     this.notify();
   }
 
-  public settleFullAndFinal(id: string, paymentRef: string = `NEFT-DISB-${Date.now()}`): void {
+  public updateFnfSettlement(
+    id: string,
+    fnfData: Partial<NonNullable<ResignationRecord['fnfSettlement']>>
+  ): void {
+    this.resignationRecords = this.resignationRecords.map((r) => {
+      if (r.id === id) {
+        const existing = r.fnfSettlement || {
+          unpaidSalaryDays: 0,
+          unpaidSalaryAmount: 0,
+          leaveEncashmentDays: 0,
+          leaveEncashmentAmount: 0,
+          gratuityAmount: 0,
+          noticeRecoveryAmount: 0,
+          otherDeductions: 0,
+          netPayableAmount: 0
+        };
+        const updated = { ...existing, ...fnfData };
+        // Recalculate net payable if not explicitly overridden
+        const totalEarnings = (updated.unpaidSalaryAmount || 0) +
+          (updated.leaveEncashmentAmount || 0) +
+          (updated.gratuityAmount || 0) +
+          (updated.bonusOrIncentives || 0) +
+          (updated.reimbursementsPending || 0) +
+          (updated.otherEarnings || 0);
+        const totalDeductions = (updated.noticeRecoveryAmount || 0) +
+          (updated.imprestAdvanceDeduction || 0) +
+          (updated.assetDamageOrLossDeduction || 0) +
+          (updated.tdsTaxDeduction || 0) +
+          (updated.pfDeduction || 0) +
+          (updated.otherDeductions || 0);
+
+        updated.totalEarnings = totalEarnings;
+        updated.totalDeductions = totalDeductions;
+        updated.netPayableAmount = Math.max(0, totalEarnings - totalDeductions);
+
+        return {
+          ...r,
+          fnfSettlement: updated
+        };
+      }
+      return r;
+    });
+    save(STORAGE_KEYS.RESIGNATIONS, this.resignationRecords);
+    this.notify();
+  }
+
+  public shareFnfWithFinance(id: string, customVoucherNumber?: string): void {
+    const today = new Date().toISOString().split('T')[0];
+    const res = this.resignationRecords.find((r) => r.id === id);
+    if (!res) return;
+
+    const voucherNumber = customVoucherNumber || `FNF-PAY-${Date.now().toString().slice(-6)}`;
+    const netAmount = res.fnfSettlement?.netPayableAmount || 0;
+
+    this.resignationRecords = this.resignationRecords.map((r) => {
+      if (r.id === id) {
+        return {
+          ...r,
+          status: 'Shared with Finance',
+          fnfSettlement: r.fnfSettlement ? {
+            ...r.fnfSettlement,
+            sharedWithFinanceDate: today,
+            financeStatus: 'Sent to Finance',
+            financeVoucherNumber: voucherNumber
+          } : undefined
+        };
+      }
+      return r;
+    });
+    save(STORAGE_KEYS.RESIGNATIONS, this.resignationRecords);
+
+    // Also register an official payable entry in Payments for the Finance team
+    const paymentVoucher: PaymentRecord = {
+      id: `pay-fnf-${res.id}`,
+      invoiceNumber: voucherNumber,
+      referenceType: 'EmployeeExit',
+      referenceId: res.id,
+      referenceTitle: `F&F Settlement: ${res.empName} (${res.empCode})`,
+      clientOrVendorName: `${res.empName} (${res.designation}, ${res.department})`,
+      isPayable: true,
+      paymentType: 'F&F Exit Settlement',
+      amount: netAmount,
+      taxAmount: res.fnfSettlement?.tdsTaxDeduction || 0,
+      totalAmount: netAmount,
+      dueDate: res.approvedLastWorkingDate || today,
+      status: 'Pending',
+      notes: `Full & Final (F&F) employee exit settlement. All clearances (Manager, Admin, HR) verified. Net payable: ₹${netAmount.toLocaleString()}`
+    };
+
+    // Remove any existing duplicate voucher for this exit before inserting
+    this.payments = [paymentVoucher, ...this.payments.filter((p) => p.id !== paymentVoucher.id)];
+    save(STORAGE_KEYS.PAYMENTS, this.payments);
+
+    this.logAudit('CREATE', 'PAYMENT', voucherNumber, `F&F settlement voucher shared to Finance for ${res.empName} (₹${netAmount.toLocaleString()})`);
+    this.notify();
+  }
+
+  public settleFullAndFinal(
+    id: string,
+    paymentDetails?: {
+      paymentMethod?: 'Bank Transfer / NEFT' | 'RTGS' | 'UPI' | 'Cheque';
+      paymentRef?: string;
+      paymentDate?: string;
+      financeRemarks?: string;
+      disbursedBy?: string;
+    }
+  ): void {
+    const today = new Date().toISOString().split('T')[0];
+    const txnRef = paymentDetails?.paymentRef || `NEFT-DISB-${Date.now()}`;
+    const pMethod = paymentDetails?.paymentMethod || 'Bank Transfer / NEFT';
+    const pDate = paymentDetails?.paymentDate || today;
+
     this.resignationRecords = this.resignationRecords.map((r) => {
       if (r.id === id) {
         return {
@@ -3714,14 +3944,41 @@ class StorageService {
           status: 'F&F Completed',
           fnfSettlement: r.fnfSettlement ? {
             ...r.fnfSettlement,
-            paymentRef,
-            paymentDate: new Date().toISOString().split('T')[0]
+            financeStatus: 'Payment Released',
+            paymentMethod: pMethod,
+            paymentRef: txnRef,
+            paymentDate: pDate,
+            financeRemarks: paymentDetails?.financeRemarks || 'F&F settlement disbursed via corporate banking',
+            financeDisbursedBy: paymentDetails?.disbursedBy || 'Finance Accounts Team'
           } : undefined
         };
       }
       return r;
     });
     save(STORAGE_KEYS.RESIGNATIONS, this.resignationRecords);
+
+    // Sync corresponding payment voucher in payments
+    const payVoucher = this.payments.find((p) => p.id === `pay-fnf-${id}` || p.referenceId === id);
+    if (payVoucher) {
+      payVoucher.status = 'Paid';
+      payVoucher.paidDate = pDate;
+      payVoucher.paymentMethod = pMethod;
+      payVoucher.transactionReference = txnRef;
+      save(STORAGE_KEYS.PAYMENTS, this.payments);
+    }
+
+    // Update employee status to Inactive / Separated
+    const targetRes = this.resignationRecords.find((r) => r.id === id);
+    if (targetRes) {
+      const emp = this.employees.find((e) => e.id === targetRes.empId || e.empCode === targetRes.empCode);
+      if (emp) {
+        emp.status = 'Inactive';
+        emp.employmentStatus = 'Separated';
+        save(STORAGE_KEYS.EMPLOYEES, this.employees);
+      }
+    }
+
+    this.logAudit('UPDATE', 'USER', id, `Full & Final payment settled with reference ${txnRef}`);
     this.notify();
   }
 
@@ -3806,8 +4063,52 @@ class StorageService {
     return newAsset;
   }
 
-  public returnAsset(id: string, returnedDate: string = new Date().toISOString().split('T')[0]): void {
-    this.employeeAssets = this.employeeAssets.map(a => a.id === id ? { ...a, status: 'Returned', returnedDate } : a);
+  public returnAsset(
+    id: string,
+    returnData?: {
+      returnDate?: string;
+      returnRemarks?: string;
+      returnCondition?: 'Brand New' | 'Good' | 'Fair' | 'Damaged' | 'Normal Wear & Tear';
+      receivedBy?: string;
+    } | string
+  ): void {
+    const returnDate = (typeof returnData === 'object' ? returnData.returnDate : returnData) || new Date().toISOString().split('T')[0];
+    const returnRemarks = typeof returnData === 'object' ? (returnData.returnRemarks || '') : '';
+    const returnCondition = typeof returnData === 'object' ? (returnData.returnCondition || 'Good') : 'Good';
+    const receivedBy = (typeof returnData === 'object' && returnData.receivedBy) ? returnData.receivedBy : (this.user?.name || 'HR Admin');
+
+    const prevAsset = this.employeeAssets.find(a => a.id === id);
+
+    this.employeeAssets = this.employeeAssets.map(a =>
+      a.id === id
+        ? {
+            ...a,
+            status: 'Returned',
+            returnDate,
+            returnedDate: returnDate,
+            returnRemarks,
+            returnCondition,
+            receivedBy
+          }
+        : a
+    );
+    save(STORAGE_KEYS.EMPLOYEE_ASSETS, this.employeeAssets);
+
+    if (prevAsset) {
+      this.logAudit(
+        'UPDATE',
+        'USER',
+        id,
+        `Returned asset ${prevAsset.assetTag} (${prevAsset.assetType}). Condition: ${returnCondition}. Remarks: ${returnRemarks || 'N/A'}`,
+        { assetTag: prevAsset.assetTag, returnCondition, returnRemarks, receivedBy }
+      );
+    }
+
+    this.notify();
+  }
+
+  public updateEmployeeAsset(id: string, updates: Partial<EmployeeAsset>): void {
+    this.employeeAssets = this.employeeAssets.map(a => a.id === id ? { ...a, ...updates } : a);
     save(STORAGE_KEYS.EMPLOYEE_ASSETS, this.employeeAssets);
     this.notify();
   }

@@ -9,6 +9,7 @@ import {
   ChevronDown,
   UserCheck,
   CheckCircle2,
+  AlertCircle,
   Clock,
   Sparkles,
   Menu,
@@ -28,7 +29,10 @@ import {
   ShoppingCart,
   ArrowRight,
   BookOpen,
-  Code
+  Code,
+  Presentation,
+  PanelLeft,
+  PanelLeftClose
 } from 'lucide-react';
 import { UserRole, AppNotification, GoogleSheetsSyncConfig, UserProfile } from '../types';
 import { storageService } from '../services/storageService';
@@ -52,6 +56,8 @@ interface HeaderProps {
   setActiveTab: (tab: string) => void;
   isMobileMenuOpen?: boolean;
   onToggleMobileMenu?: () => void;
+  isSidebarPinned?: boolean;
+  onToggleSidebar?: () => void;
   onOpenAuthModal?: () => void;
   onLogout?: () => void;
 }
@@ -67,9 +73,12 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSheetsModal,
   onOpenAuditLogs,
   onOpenApiDocs,
+  activeTab,
   setActiveTab,
   isMobileMenuOpen = false,
   onToggleMobileMenu,
+  isSidebarPinned = false,
+  onToggleSidebar,
   onOpenAuthModal,
   onLogout
 }) => {
@@ -80,6 +89,8 @@ export const Header: React.FC<HeaderProps> = ({
   const [showCompactSearch, setShowCompactSearch] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [quickSyncState, setQuickSyncState] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [quickSyncError, setQuickSyncError] = useState<string | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // Close search preview dropdown on outside click
@@ -317,16 +328,36 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const handleQuickSync = async () => {
+    if (quickSyncState === 'syncing' || isSyncing) return;
     setIsSyncing(true);
+    setQuickSyncState('syncing');
+    setQuickSyncError(null);
     try {
-      if (!sheetsConfig.spreadsheetId) {
-        onOpenSheetsModal();
-      } else {
-        await googleSheetsService.syncToGoogleSheet();
-      }
-    } catch (e) {
-      console.error(e);
-      onOpenSheetsModal();
+      await googleSheetsService.syncToGoogleSheet();
+      setQuickSyncState('success');
+      storageService.addNotification(
+        'Quick Sync Completed',
+        'Direct data flush to Google Sheets finished successfully for all modules.',
+        'success',
+        'sheets'
+      );
+      setTimeout(() => {
+        setQuickSyncState('idle');
+      }, 3500);
+    } catch (e: any) {
+      console.error('Quick sync error:', e);
+      const msg = e?.message || 'Failed to sync with Google Sheets';
+      setQuickSyncError(msg);
+      setQuickSyncState('error');
+      storageService.addNotification(
+        'Quick Sync Failed',
+        msg,
+        'alert',
+        'sheets'
+      );
+      setTimeout(() => {
+        setQuickSyncState('idle');
+      }, 4000);
     } finally {
       setIsSyncing(false);
     }
@@ -344,6 +375,24 @@ export const Header: React.FC<HeaderProps> = ({
               title={isMobileMenuOpen ? 'Close Menu' : 'Open Navigation Menu'}
             >
               {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          )}
+
+          {onToggleSidebar && (
+            <button
+              onClick={onToggleSidebar}
+              className="hidden md:flex items-center justify-center p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors shrink-0 border border-slate-200 dark:border-slate-700 shadow-2xs"
+              title={
+                isSidebarPinned
+                  ? 'Collapse Sidebar (Enable auto-expand on mouse hover)'
+                  : 'Pin Sidebar Open (Keep expanded at 256px)'
+              }
+            >
+              {isSidebarPinned ? (
+                <PanelLeftClose className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              ) : (
+                <PanelLeft className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+              )}
             </button>
           )}
 
@@ -548,12 +597,73 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="font-semibold text-slate-800 dark:text-slate-200">Connected</span>
           </div>
 
-          {/* Google Sheets Sync Indicator & Action */}
+          {/* Pitch Deck Quick Launcher */}
+          <button
+            onClick={() => setActiveTab('pitch_deck')}
+            id="btn-header-pitch-deck"
+            title="Open Investor Pitch Deck & System Walkthrough"
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-2xs shrink-0 ${
+              activeTab === 'pitch_deck'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white border-amber-600 shadow-xs'
+                : 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+            }`}
+          >
+            <Presentation className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden sm:inline">Pitch Deck</span>
+          </button>
+
+          {/* Quick Sync Direct Trigger Button */}
+          <button
+            onClick={handleQuickSync}
+            disabled={quickSyncState === 'syncing' || isSyncing}
+            id="btn-header-quick-sync"
+            title={
+              quickSyncState === 'success'
+                ? 'Data flushed to Google Sheets successfully!'
+                : quickSyncState === 'error'
+                ? `Sync issue: ${quickSyncError || 'Click to retry'}`
+                : 'Directly flush all 10 ERP modules to Google Sheets without opening the modal'
+            }
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-2xs shrink-0 ${
+              quickSyncState === 'syncing'
+                ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700 animate-pulse'
+                : quickSyncState === 'success'
+                ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-600 shadow-xs'
+                : quickSyncState === 'error'
+                ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-700'
+                : 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+            }`}
+          >
+            {quickSyncState === 'syncing' ? (
+              <>
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600 dark:text-blue-400 shrink-0" />
+                <span className="hidden sm:inline">Syncing...</span>
+              </>
+            ) : quickSyncState === 'success' ? (
+              <>
+                <CheckCircle2 className="w-3.5 h-3.5 text-white shrink-0" />
+                <span className="hidden sm:inline">Synced!</span>
+              </>
+            ) : quickSyncState === 'error' ? (
+              <>
+                <AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                <span className="hidden sm:inline">Sync Failed</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span className="hidden sm:inline">Quick Sync</span>
+              </>
+            )}
+          </button>
+
+          {/* Google Sheets Modal Opener & Status */}
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5 sm:p-1 border border-slate-200 dark:border-slate-700 shrink-0">
             <button
               onClick={onOpenSheetsModal}
-              title="Open Google Sheets Master Database & Live Preview"
-              className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg hover:bg-white dark:hover:bg-slate-700 text-emerald-700 dark:text-emerald-400 transition-colors whitespace-nowrap"
+              id="btn-header-sheets-modal"
+              title="Open Google Sheets Master Database & Live Preview Modal"
+              className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors whitespace-nowrap"
             >
               <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span className="hidden 2xl:inline">Google Sheets</span>
@@ -562,21 +672,12 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            <button
-              onClick={handleQuickSync}
-              disabled={isSyncing}
-              title="Quick Sync All Tabs to Google Sheets"
-              className="p-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg hover:bg-white dark:hover:bg-slate-700 transition-colors shrink-0"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-blue-600 dark:text-blue-400' : ''}`} />
-            </button>
-
             {sheetsConfig.spreadsheetUrl && (
               <a
                 href={sheetsConfig.spreadsheetUrl}
                 target="_blank"
                 rel="noreferrer"
-                title="Open in Google Drive / Google Sheets"
+                title="Open Live Spreadsheet in Google Drive / Google Sheets"
                 className="p-1 text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 rounded-lg hover:bg-white dark:hover:bg-slate-700 transition-colors hidden sm:inline-block shrink-0"
               >
                 <ExternalLink className="w-3.5 h-3.5" />

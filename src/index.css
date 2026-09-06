@@ -320,5 +320,41 @@ html.dark body {
     page-break-before: always !important;
     break-before: page !important;
   }
+
+  /* Pitch Deck Specific Print & PDF Styling */
+  #pitch-deck-printable-master {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    display: block !important;
+    visibility: visible !important;
+    z-index: 1 !important;
+  }
+
+  .deck-print-slide {
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    width: 297mm !important;
+    height: 209mm !important;
+    max-height: 209mm !important;
+    box-sizing: border-box !important;
+    padding: 8mm 12mm !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    overflow: hidden !important;
+    border: 1px solid #e2e8f0 !important;
+    margin: 0 !important;
+  }
+
+  .deck-print-slide:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
 }
 

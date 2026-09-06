@@ -30,6 +30,7 @@ import { AuditLogView } from './components/AuditLogView';
 import { AdminCustomizationView } from './components/AdminCustomizationView';
 import { GlobalSearchView } from './components/GlobalSearchView';
 import { AuthModalOrPage } from './components/AuthModalOrPage';
+import { PitchDeckView } from './components/PitchDeckView';
 
 import { NewLeadModal } from './components/NewLeadModal';
 import { NewQuoteModal } from './components/NewQuoteModal';
@@ -53,6 +54,29 @@ export function App() {
   const [isSheetsModalOpen, setIsSheetsModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isApiGuideOpen, setIsApiGuideOpen] = useState(false);
+
+  // Sidebar Pinned state (defaults to visible expanded mode)
+  const [isSidebarPinned, setIsSidebarPinned] = useState<boolean>(() => {
+    try {
+      const saved = sessionStorage.getItem('alphaerp_sidebar_pinned_state');
+      if (saved !== null) {
+        return saved === 'true';
+      }
+      return true; // Default: fully visible and open
+    } catch {
+      return true;
+    }
+  });
+
+  const handleToggleSidebarPinned = () => {
+    setIsSidebarPinned((prev) => {
+      const next = !prev;
+      try {
+        sessionStorage.setItem('alphaerp_sidebar_pinned_state', String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   // Subscribe to storage service
   useEffect(() => {
@@ -155,7 +179,7 @@ export function App() {
   const pendingInvoicesCount = data.payments.filter((p) => p.status !== 'Paid').length;
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#FAF9F5] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-blue-500 selection:text-white transition-colors duration-200">
+    <div className="h-screen w-full max-w-full overflow-hidden bg-[#FAF9F5] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-blue-500 selection:text-white transition-colors duration-200">
       {/* Top Application Header */}
       <Header
         currentUser={data.currentUser}
@@ -172,6 +196,8 @@ export function App() {
         setActiveTab={setActiveTab}
         isMobileMenuOpen={isMobileMenuOpen}
         onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        isSidebarPinned={isSidebarPinned}
+        onToggleSidebar={handleToggleSidebarPinned}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
         onLogout={() => storageService.logout()}
       />
@@ -184,7 +210,7 @@ export function App() {
       />
 
       {/* Main Workspace: Sidebar + Dynamic View Container */}
-      <div className="flex-1 flex w-full max-w-full overflow-hidden min-w-0">
+      <div className="flex-1 flex w-full max-w-full overflow-hidden min-h-0">
         {/* Navigation Sidebar */}
         <Sidebar
           activeTab={activeTab}
@@ -198,10 +224,12 @@ export function App() {
           isMobileOpen={isMobileMenuOpen}
           onCloseMobile={() => setIsMobileMenuOpen(false)}
           currentRole={data.currentUser?.role}
+          isCollapsed={!isSidebarPinned}
+          onToggleCollapse={handleToggleSidebarPinned}
         />
 
         {/* Viewport */}
-        <main className="flex-1 w-full min-w-0 overflow-y-auto overflow-x-hidden p-3.5 sm:p-4 lg:p-6 bg-[#FAF9F5] dark:bg-slate-950 transition-colors duration-200">
+        <main className="flex-1 h-full min-w-0 overflow-y-auto overflow-x-hidden p-3.5 sm:p-4 lg:p-6 bg-[#FAF9F5] dark:bg-slate-950 transition-colors duration-200">
           <div className="max-w-7xl mx-auto w-full min-w-0">
             {/* View: Global ERP Search & Lookup */}
             {activeTab === 'search' && (
@@ -240,6 +268,21 @@ export function App() {
                   setIsNewQuoteOpen(true);
                 }}
                 onOpenSheetsModal={() => setIsSheetsModalOpen(true)}
+              />
+            )}
+
+            {/* View: Official Investor Pitch Deck & System Overview */}
+            {activeTab === 'pitch_deck' && (
+              <PitchDeckView
+                onNavigateTab={(tab) => setActiveTab(tab)}
+                projects={data.projects || []}
+                quotes={data.quotes || []}
+                leads={data.leads || []}
+                inventory={data.inventory || []}
+                pos={data.pos || []}
+                prs={data.prs || []}
+                payments={data.payments || []}
+                employees={data.employees || []}
               />
             )}
 
@@ -324,6 +367,7 @@ export function App() {
                 quotes={data.quotes}
                 leads={data.leads}
                 inventory={data.inventory}
+                projects={data.projects}
                 onOpenNewQuote={() => {
                   setQuotePrefillLead(null);
                   setIsNewQuoteOpen(true);

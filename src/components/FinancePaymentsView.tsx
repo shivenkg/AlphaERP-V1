@@ -74,7 +74,9 @@ export const FinancePaymentsView: React.FC<FinancePaymentsViewProps> = ({
       (p.invoiceNumber || '').toLowerCase().includes(term) ||
       (p.clientOrVendorName || '').toLowerCase().includes(term) ||
       (p.projectName || '').toLowerCase().includes(term) ||
-      (p.milestoneTitle || '').toLowerCase().includes(term);
+      (p.referenceTitle || '').toLowerCase().includes(term) ||
+      (p.milestoneTitle || '').toLowerCase().includes(term) ||
+      (p.paymentType || '').toLowerCase().includes(term);
 
     return tabMatch && searchMatch;
   });
@@ -442,11 +444,26 @@ export const FinancePaymentsView: React.FC<FinancePaymentsViewProps> = ({
                           {p.invoiceNumber}
                         </button>
                       </td>
-                      <td className="py-3.5 px-4 text-slate-900 font-semibold">{p.projectName}</td>
+                      <td className="py-3.5 px-4 text-slate-900 font-semibold">
+                        {p.referenceType === 'EmployeeExit' ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                              Exit F&F
+                            </span>
+                            <span className="text-slate-900 font-semibold">{p.referenceTitle || 'Employee Exit Settlement'}</span>
+                          </div>
+                        ) : (
+                          p.projectName || p.referenceTitle || 'Alpha HVAC Projects'
+                        )}
+                      </td>
                       <td className="py-3.5 px-4 text-slate-600 font-medium">{p.clientOrVendorName}</td>
                       <td className="py-3.5 px-4 text-slate-700">
-                        <div className="font-semibold text-slate-900">{p.milestoneTitle}</div>
-                        <div className="text-[10px] text-slate-400 font-medium">{p.milestonePercentage}% Milestone</div>
+                        <div className="font-semibold text-slate-900">
+                          {p.referenceType === 'EmployeeExit' ? (p.paymentType || 'Full & Final Payout') : (p.milestoneTitle || p.paymentType)}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium">
+                          {p.referenceType === 'EmployeeExit' ? 'Statutory & Final Dues' : `${p.milestonePercentage || 100}% Milestone`}
+                        </div>
                       </td>
                       <td className="py-3.5 px-4 text-center text-slate-600 font-mono">{p.dueDate}</td>
                       <td className="py-3.5 px-4 text-right font-bold text-emerald-600 font-mono">

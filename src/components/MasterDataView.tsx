@@ -23,7 +23,9 @@ import {
   Phone,
   Mail,
   MapPin,
-  FileText
+  FileText,
+  Scale,
+  Calculator
 } from 'lucide-react';
 import {
   ClientMaster,
@@ -34,6 +36,7 @@ import {
   InventoryItem
 } from '../types';
 import { storageService } from '../services/storageService';
+import { UomConversionCalculatorModal } from './UomConversionCalculatorModal';
 
 interface MasterDataViewProps {
   clients: ClientMaster[];
@@ -80,6 +83,27 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
 
   const [itemModalOpen, setItemModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+
+  // UoM Conversion Calculator Modal State
+  const [uomCalculatorOpen, setUomCalculatorOpen] = useState(false);
+  const [uomPreselectedItem, setUomPreselectedItem] = useState<InventoryItem | null>(null);
+
+  const handleOpenUomCalculator = (item?: InventoryItem) => {
+    setUomPreselectedItem(item || null);
+    setUomCalculatorOpen(true);
+  };
+
+  const handleApplyConversionToItem = (itemSku: string, targetUnit: string, convertedRate: number) => {
+    const item = inventory.find((i) => i.sku === itemSku);
+    if (item) {
+      storageService.updateInventoryItem(itemSku, {
+        unit: targetUnit,
+        averageUnitCost: Math.round(convertedRate * 100) / 100
+      });
+      if (onRefresh) onRefresh();
+      setUomCalculatorOpen(false);
+    }
+  };
 
   const [ccModalOpen, setCcModalOpen] = useState(false);
   const [editingCc, setEditingCc] = useState<CostCenterMaster | null>(null);
@@ -603,13 +627,23 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
             </button>
           )}
           {activeTab === 'items' && (
-            <button
-              onClick={() => handleOpenItemModal()}
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Item / SKU</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleOpenUomCalculator()}
+                className="flex items-center gap-2 px-3.5 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-xl shadow-2xs transition-all"
+                title="Unit of Measure (UoM) Conversion Calculator & Rate Estimator"
+              >
+                <Scale className="w-4 h-4 text-indigo-600" />
+                <span>UoM Calculator</span>
+              </button>
+              <button
+                onClick={() => handleOpenItemModal()}
+                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Item / SKU</span>
+              </button>
+            </div>
           )}
           {activeTab === 'costCenters' && (
             <button
@@ -1002,6 +1036,13 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                     </td>
                     <td className="px-4 py-3.5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleOpenUomCalculator(item)}
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                          title="UoM Conversion & Rate Calculator for this Item"
+                        >
+                          <Scale className="w-4 h-4 text-indigo-600" />
+                        </button>
                         <button
                           onClick={() => handleOpenItemModal(item)}
                           className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
@@ -1671,7 +1712,18 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Unit of Measurement (UOM)</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-slate-700">Unit of Measurement (UOM)</label>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenUomCalculator(editingItem || undefined)}
+                      className="text-[11px] text-indigo-600 hover:text-indigo-700 font-bold flex items-center gap-1 transition-colors"
+                      title="Open UoM Converter"
+                    >
+                      <Scale className="w-3 h-3 text-indigo-600" />
+                      <span>UoM Calculator</span>
+                    </button>
+                  </div>
                   <select
                     value={itemForm.unit}
                     onChange={(e) => setItemForm({ ...itemForm, unit: e.target.value })}
@@ -1682,6 +1734,10 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                     <option value="sq.m">sq.m (Square Meters)</option>
                     <option value="kg">kg (Kilograms)</option>
                     <option value="set">set (Complete Sets)</option>
+                    <option value="TR">TR (Tons of Refrigeration)</option>
+                    <option value="CFM">CFM (Cubic Feet / Min)</option>
+                    <option value="Rolls">Rolls (Roll)</option>
+                    <option value="Boxes">Boxes (Box / Carton)</option>
                   </select>
                 </div>
 
@@ -2105,6 +2161,18 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Unit of Measure (UoM) Conversion Calculator Modal */}
+      <UomConversionCalculatorModal
+        isOpen={uomCalculatorOpen}
+        onClose={() => {
+          setUomCalculatorOpen(false);
+          setUomPreselectedItem(null);
+        }}
+        inventory={inventory}
+        preselectedItem={uomPreselectedItem}
+        onApplyConversionToItem={handleApplyConversionToItem}
+      />
     </div>
   );
 };

@@ -1142,11 +1142,47 @@ export const INITIAL_RESIGNATIONS: ResignationRecord[] = [
     noticePeriodDays: 30,
     noticeShortfallDays: 0,
     status: 'F&F Completed',
+    approvals: {
+      manager: {
+        status: 'Approved',
+        approverName: 'Rahul Verma (Engineering Lead)',
+        actionDate: '2026-08-03',
+        remarks: 'Handover of all BIM & Revit project files verified and assigned to team.',
+        handoverCompleted: true,
+        recommendedLastWorkingDate: '2026-08-31'
+      },
+      admin: {
+        status: 'Approved',
+        approverName: 'Suresh Patil (Admin & Facilities)',
+        actionDate: '2026-08-28',
+        remarks: 'Biometric access revoked, company ID card returned, drawer keys received.',
+        idCardReturned: true,
+        premisesAccessRevoked: true,
+        assetsClearanceConfirmed: true,
+        facilityDuesCleared: true
+      },
+      hr: {
+        status: 'Approved',
+        approverName: 'Ananya Deshmukh (Head HR)',
+        actionDate: '2026-08-29',
+        remarks: 'Exit interview conducted. Full notice served. Relieving letter authorized.',
+        exitInterviewConducted: true,
+        finalApprovedLastDate: '2026-08-31',
+        relievingLetterIssued: true,
+        relievingLetterNumber: 'ALP/HR/REL/2026-08/042'
+      }
+    },
     clearances: {
       itAssets: true,
+      itAssetsRemarks: 'Dell Latitude 5420 & charger returned to IT Store (Good condition)',
       financeAdvances: true,
+      financeAdvancesRemarks: 'All site travel imprest accounts reconciled (NIL dues)',
       projectHandover: true,
-      adminIdCard: true
+      projectHandoverRemarks: 'Sign-off received from Project Lead Rahul Verma',
+      adminIdCard: true,
+      adminRemarks: 'ID Card & access fob surrendered',
+      hrExitInterview: true,
+      hrRemarks: 'Exit feedback documented'
     },
     fnfSettlement: {
       unpaidSalaryDays: 31,
@@ -1154,11 +1190,106 @@ export const INITIAL_RESIGNATIONS: ResignationRecord[] = [
       leaveEncashmentDays: 6,
       leaveEncashmentAmount: 9692,
       gratuityAmount: 0, // < 5 years service
+      bonusOrIncentives: 0,
+      reimbursementsPending: 0,
+      otherEarnings: 0,
+      totalEarnings: 51692,
+      noticeRecoveryDays: 0,
       noticeRecoveryAmount: 0,
+      imprestAdvanceDeduction: 0,
+      assetDamageOrLossDeduction: 0,
+      tdsTaxDeduction: 0,
+      pfDeduction: 0,
       otherDeductions: 0,
+      totalDeductions: 0,
       netPayableAmount: 51692,
+      sharedWithFinanceDate: '2026-08-29',
+      financeStatus: 'Payment Released',
+      paymentMethod: 'Bank Transfer / NEFT',
       paymentDate: '2026-08-30',
-      paymentRef: 'NEFT-HDFC-FNF-8812'
+      paymentRef: 'NEFT-HDFC-FNF-8812',
+      financeRemarks: 'Processed via HDFC Corporate Netbanking. Advice sent to ex-employee email.',
+      financeVoucherNumber: 'FNF-PAY-2026-081',
+      financeDisbursedBy: 'Vikram Mehta (Accounts Manager)'
+    }
+  },
+  {
+    id: 'res-002',
+    empId: 'emp-005-demo',
+    empCode: 'ALP-005',
+    empName: 'Kunal Sharma',
+    designation: 'Senior HVAC Commissioning Engineer',
+    department: 'Testing & Commissioning',
+    dateOfJoining: '2021-02-15',
+    resignationDate: '2026-08-10',
+    requestedRelievingDate: '2026-09-10',
+    approvedLastWorkingDate: '2026-09-10',
+    reasonCategory: 'Relocation',
+    employeeRemarks: 'Relocating to Bengaluru due to family requirements. Thankful for the great learning opportunity at Alpha HVAC.',
+    managerRemarks: 'Critical HVAC handover in progress for Prestige CyberTower chiller plant.',
+    noticePeriodDays: 30,
+    noticeShortfallDays: 0,
+    status: 'Admin Approved',
+    approvals: {
+      manager: {
+        status: 'Approved',
+        approverName: 'Prakash Rao (Projects Director)',
+        actionDate: '2026-08-12',
+        remarks: 'Handover of all field test calibration reports and client punch-lists assigned to Rakesh Nair.',
+        handoverCompleted: true,
+        recommendedLastWorkingDate: '2026-09-10'
+      },
+      admin: {
+        status: 'Approved',
+        approverName: 'Suresh Patil (Admin & Facilities)',
+        actionDate: '2026-08-25',
+        remarks: 'Site safety gear and security ID badge verified. Access revocation scheduled for Sep 10.',
+        idCardReturned: true,
+        premisesAccessRevoked: false,
+        assetsClearanceConfirmed: true,
+        facilityDuesCleared: true
+      },
+      hr: {
+        status: 'Pending',
+        remarks: 'Exit interview scheduled for Sep 08. F&F settlement drafted and awaiting final HR signoff to release to Finance.'
+      }
+    },
+    clearances: {
+      itAssets: true,
+      itAssetsRemarks: 'Lenovo ThinkPad P14s returned in good working order',
+      financeAdvances: true,
+      financeAdvancesRemarks: 'Site imprest of ₹15,000 settled and verified with vouchers',
+      projectHandover: true,
+      projectHandoverRemarks: 'Prestige project logbooks handed over',
+      adminIdCard: true,
+      adminRemarks: 'ID Card surrendered to reception',
+      hrExitInterview: false,
+      hrRemarks: 'Exit feedback pending'
+    },
+    fnfSettlement: {
+      unpaidSalaryDays: 10,
+      unpaidSalaryAmount: 23333,
+      leaveEncashmentDays: 12,
+      leaveEncashmentAmount: 28000,
+      gratuityAmount: 110769, // 5.5 years service ((15 * 35000 * 5.5) / 26)
+      bonusOrIncentives: 15000,
+      reimbursementsPending: 4200,
+      otherEarnings: 0,
+      totalEarnings: 181302,
+      noticeRecoveryDays: 0,
+      noticeRecoveryAmount: 0,
+      imprestAdvanceDeduction: 0,
+      assetDamageOrLossDeduction: 0,
+      tdsTaxDeduction: 12500,
+      pfDeduction: 1800,
+      otherDeductions: 0,
+      totalDeductions: 14300,
+      netPayableAmount: 167002,
+      sharedWithFinanceDate: '2026-08-28',
+      financeStatus: 'Sent to Finance',
+      paymentMethod: 'Bank Transfer / NEFT',
+      financeRemarks: 'Awaiting final HR authorization and clearance before bank release on Sep 10.',
+      financeVoucherNumber: 'FNF-PAY-2026-094'
     }
   }
 ];
@@ -1536,6 +1667,21 @@ export const INITIAL_EMPLOYEE_ASSETS: any[] = [
     allocatedDate: '2025-09-10',
     condition: 'Brand New',
     status: 'Allocated'
+  },
+  {
+    id: 'ast-005',
+    empId: 'emp-001',
+    assetType: 'Mobile Handset',
+    assetTag: 'AST-MOB-012',
+    serialNumber: 'SMP-A54-5G-9021',
+    allocatedDate: '2025-01-10',
+    returnDate: '2025-06-15',
+    returnedDate: '2025-06-15',
+    condition: 'Brand New',
+    returnCondition: 'Good',
+    status: 'Returned',
+    returnRemarks: 'Returned on transition to corporate laptop. Accessories and charger verified intact.',
+    receivedBy: 'Pooja Rao (HR Operations)'
   }
 ];
 

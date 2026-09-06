@@ -72,6 +72,8 @@ import { TrainingTalentView } from './hr/TrainingTalentView';
 import { TravelExpensesView } from './hr/TravelExpensesView';
 import { GrievanceManagementView } from './hr/GrievanceManagementView';
 import { WorkforcePlanningView } from './hr/WorkforcePlanningView';
+import { ExitResignationView } from './hr/ExitResignationView';
+import { RegisterResignationModal } from './hr/RegisterResignationModal';
 import { PayslipModal } from './hr/PayslipModal';
 import { EmployeeAvatarUploadModal } from './common';
 import { BiometricDeviceManagerModal } from './hr/BiometricDeviceManagerModal';
@@ -1819,82 +1821,12 @@ export const HRView: React.FC<HRViewProps> = ({
 
       {/* 8. RESIGNATION & F&F SETTLEMENT */}
       {activeTab === 'resignations' && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
-            <h3 className="font-bold text-slate-900 text-sm">Employee Resignation, Exit Clearance & Full & Final (F&F)</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Automated leave encashment, gratuity, notice period shortfall, and multi-department clearances</p>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">
-                  <tr>
-                    <th className="px-4 py-3">Employee Name</th>
-                    <th className="px-4 py-3">Resignation Date</th>
-                    <th className="px-4 py-3">Last Working Date</th>
-                    <th className="px-4 py-3">Clearance Status</th>
-                    <th className="px-4 py-3 text-right">F&F Net Settlement</th>
-                    <th className="px-4 py-3">Disbursal Status</th>
-                    <th className="px-4 py-3 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {resignations.map((res) => {
-                    const rName = res.employeeName || (res as any).empName || 'Employee';
-                    const lastDate = res.lastWorkingDate || (res as any).approvedLastWorkingDate || (res as any).requestedRelievingDate || '2026-08-31';
-                    const itAssets = res.clearanceChecklist?.itAssetsHandedOver ?? (res as any).clearances?.itAssets ?? false;
-                    const handover = res.clearanceChecklist?.projectHandoverComplete ?? (res as any).clearances?.projectHandover ?? false;
-                    const financeClr = res.clearanceChecklist?.financeAdvanceCleared ?? (res as any).clearances?.financeAdvances ?? false;
-                    const fnfNet = res.fullAndFinalSettlement?.netPayableAmount ?? (res as any).fnfSettlement?.netPayable ?? (res as any).netPayable ?? 0;
-
-                    return (
-                      <tr key={res.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="px-4 py-3.5">
-                          <div className="font-bold text-slate-900">{rName}</div>
-                          <div className="text-[11px] text-slate-500">{res.designation}</div>
-                        </td>
-                        <td className="px-4 py-3.5 font-mono">{res.resignationDate}</td>
-                        <td className="px-4 py-3.5 font-mono font-semibold text-slate-800">{lastDate}</td>
-                        <td className="px-4 py-3.5">
-                          <div className="space-y-0.5 text-[10px]">
-                            <div>IT Assets: <span className={itAssets ? 'text-emerald-600 font-bold' : 'text-amber-600'}>{itAssets ? '✓ Returned' : 'Pending'}</span></div>
-                            <div>Site Handover: <span className={handover ? 'text-emerald-600 font-bold' : 'text-amber-600'}>{handover ? '✓ Signed' : 'Pending'}</span></div>
-                            <div>Finance Imprest: <span className={financeClr ? 'text-emerald-600 font-bold' : 'text-amber-600'}>{financeClr ? '✓ Settled' : 'Pending'}</span></div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3.5 text-right font-mono font-bold text-slate-900 text-sm">
-                          ₹{fnfNet.toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            res.status === 'Settled' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                            'bg-amber-50 text-amber-700 border border-amber-200'
-                          }`}>
-                            {res.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3.5 text-right">
-                          {res.status !== 'Settled' && (
-                            <button
-                              onClick={() => {
-                                storageService.settleFullAndFinal(res.id);
-                                onRefresh();
-                              }}
-                              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-bold transition-all"
-                            >
-                              Disburse F&F
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        <ExitResignationView
+          resignations={resignations}
+          employees={employees}
+          onRefresh={onRefresh}
+          onRequestNewExit={() => setResignationModalOpen(true)}
+        />
       )}
 
       {/* ========================================== */}
@@ -2459,6 +2391,14 @@ export const HRView: React.FC<HRViewProps> = ({
         isOpen={isBiometricDeviceModalOpen}
         onClose={() => setIsBiometricDeviceModalOpen(false)}
         onDataChanged={onRefresh}
+      />
+
+      {/* Employee Resignation / Exit Registration Modal */}
+      <RegisterResignationModal
+        isOpen={resignationModalOpen}
+        onClose={() => setResignationModalOpen(false)}
+        employees={employees}
+        onSuccess={onRefresh}
       />
     </div>
   );

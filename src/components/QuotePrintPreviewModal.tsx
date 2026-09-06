@@ -60,13 +60,13 @@ export const QuotePrintPreviewModal: React.FC<QuotePrintPreviewModalProps> = ({
   const [customRemarks, setCustomRemarks] = useState<string>('Standard 1-Year Comprehensive Warranty on all HVAC equipment and 90-day testing & balancing signoff included.');
 
   // Financial calculations
-  const subtotal = quote.subtotal || quote.totalCost || quote.items.reduce((sum, i) => sum + i.totalCost, 0);
+  const subtotal = quote.subtotal || quote.items.reduce((sum, i) => sum + (i.totalPrice || (i.unitPrice * i.qty)), 0);
   const discountAmount = quote.discountAmount || 0;
   const taxableAmount = Math.max(0, subtotal - discountAmount);
   const gstRate = 18; // 18% standard GST for HVAC contracts
   const cgstAmount = Number(((taxableAmount * (gstRate / 2)) / 100).toFixed(2));
   const sgstAmount = Number(((taxableAmount * (gstRate / 2)) / 100).toFixed(2));
-  const totalTax = cgstAmount + sgstAmount;
+  const totalTax = quote.taxAmount || (cgstAmount + sgstAmount);
   const grandTotal = quote.totalAmount || (taxableAmount + totalTax);
 
   const handleDownloadPDF = async () => {
@@ -398,8 +398,8 @@ export const QuotePrintPreviewModal: React.FC<QuotePrintPreviewModalProps> = ({
               <div className={`p-6 rounded-2xl ${getThemeHeaderClasses()} flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm relative z-10`}>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-white p-1 flex items-center justify-center">
-                      <JSAlphaSoftLogo className="w-6 h-6 text-indigo-900" />
+                    <div className="w-8 h-8 rounded-lg bg-white p-1 flex items-center justify-center overflow-hidden shrink-0">
+                      <JSAlphaSoftLogo variant="icon" size="xs" />
                     </div>
                     <div>
                       <div className="font-extrabold text-lg tracking-tight text-white">
@@ -510,16 +510,16 @@ export const QuotePrintPreviewModal: React.FC<QuotePrintPreviewModalProps> = ({
                           {item.category}
                         </td>
                         <td className="p-2.5 border-r border-slate-200 text-center font-mono font-semibold">
-                          {item.quantity}
+                          {item.qty}
                         </td>
                         <td className="p-2.5 border-r border-slate-200 text-center text-slate-500">
                           {item.unit || 'Nos'}
                         </td>
                         <td className="p-2.5 border-r border-slate-200 text-right font-mono">
-                          {item.unitCost?.toLocaleString('en-IN') || '0'}
+                          {(item.unitPrice || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                         <td className="p-2.5 text-right font-mono font-bold text-slate-900">
-                          {item.totalCost?.toLocaleString('en-IN') || '0'}
+                          {(item.totalPrice || ((item.unitPrice || 0) * (item.qty || 1))).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                       </tr>
                     ))}

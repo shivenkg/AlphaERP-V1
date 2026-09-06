@@ -364,7 +364,8 @@ export type PaymentType =
   | 'Testing & Handover 10%'
   | 'Retention Payment'
   | 'Vendor Payout'
-  | 'AMC Service Fee';
+  | 'AMC Service Fee'
+  | 'F&F Exit Settlement';
 
 export type PaymentStatus = 'Pending' | 'Paid' | 'Partially Paid' | 'Overdue';
 
@@ -382,7 +383,7 @@ export interface InvoiceAttachment {
 export interface PaymentRecord {
   id: string;
   invoiceNumber: string;
-  referenceType: 'Quote' | 'Project' | 'WorkOrder' | 'PurchaseOrder';
+  referenceType: 'Quote' | 'Project' | 'WorkOrder' | 'PurchaseOrder' | 'EmployeeExit';
   referenceId: string;
   referenceTitle: string;
   clientOrVendorName: string;
@@ -394,7 +395,7 @@ export interface PaymentRecord {
   dueDate: string;
   paidDate?: string;
   status: PaymentStatus;
-  paymentMethod?: 'Bank Transfer / NEFT' | 'UPI' | 'Credit Card' | 'Cheque' | 'Stripe / Online';
+  paymentMethod?: 'Bank Transfer / NEFT' | 'UPI' | 'Credit Card' | 'Cheque' | 'Stripe / Online' | 'RTGS';
   transactionReference?: string;
   notes?: string;
   attachments?: InvoiceAttachment[];
@@ -1101,6 +1102,27 @@ export interface PayrollMonth {
   payslips: EmployeeSalarySlip[];
 }
 
+export interface ExitApprovalStage {
+  status: 'Pending' | 'Approved' | 'Rejected';
+  approverName?: string;
+  approverId?: string;
+  actionDate?: string;
+  remarks?: string;
+  recommendedLastWorkingDate?: string;
+  handoverCompleted?: boolean;
+  handoverDocUrl?: string;
+  assetsClearanceConfirmed?: boolean;
+  idCardReturned?: boolean;
+  premisesAccessRevoked?: boolean;
+  facilityDuesCleared?: boolean;
+  exitInterviewConducted?: boolean;
+  exitInterviewNotes?: string;
+  noticeWaiverDays?: number;
+  finalApprovedLastDate?: string;
+  relievingLetterIssued?: boolean;
+  relievingLetterNumber?: string;
+}
+
 export interface ResignationRecord {
   id: string;
   empId: string;
@@ -1112,30 +1134,78 @@ export interface ResignationRecord {
   resignationDate: string;
   requestedRelievingDate: string;
   approvedLastWorkingDate: string;
-  reasonCategory: 'Career Growth' | 'Relocation' | 'Compensation' | 'Personal / Health' | 'Higher Studies';
+  reasonCategory: 'Career Growth' | 'Relocation' | 'Compensation' | 'Personal / Health' | 'Higher Studies' | 'Retirement' | 'Other';
   employeeRemarks: string;
   managerRemarks?: string;
   noticePeriodDays: number;
   noticeShortfallDays: number;
-  status: 'Submitted' | 'Notice Period' | 'Clearances In Progress' | 'Relieved' | 'F&F Completed';
+  status: 'Submitted' | 'Manager Approved' | 'Admin Approved' | 'HR Approved' | 'Notice Period' | 'Clearances In Progress' | 'Ready for F&F' | 'Shared with Finance' | 'F&F Completed' | 'Settled' | 'Relieved' | 'Rejected' | 'Withdrawn';
+  
+  // Organization Best Practice 3-Tier Approvals
+  approvals?: {
+    manager: ExitApprovalStage;
+    admin: ExitApprovalStage;
+    hr: ExitApprovalStage;
+  };
+
   clearances: {
     itAssets: boolean;
+    itAssetsRemarks?: string;
     financeAdvances: boolean;
+    financeAdvancesRemarks?: string;
     projectHandover: boolean;
+    projectHandoverRemarks?: string;
     adminIdCard: boolean;
+    adminRemarks?: string;
+    hrExitInterview?: boolean;
+    hrRemarks?: string;
   };
+
   fnfSettlement?: {
+    // Earnings (+)
     unpaidSalaryDays: number;
     unpaidSalaryAmount: number;
     leaveEncashmentDays: number;
     leaveEncashmentAmount: number;
     gratuityAmount: number;
+    bonusOrIncentives?: number;
+    reimbursementsPending?: number;
+    otherEarnings?: number;
+    totalEarnings?: number;
+
+    // Deductions (-)
+    noticeRecoveryDays?: number;
     noticeRecoveryAmount: number;
+    imprestAdvanceDeduction?: number;
+    assetDamageOrLossDeduction?: number;
+    tdsTaxDeduction?: number;
+    pfDeduction?: number;
     otherDeductions: number;
+    totalDeductions?: number;
+
+    // Net Payable Amount
     netPayableAmount: number;
-    paymentDate?: string;
+
+    // Finance Handover & Payment Processing Details
+    sharedWithFinanceDate?: string;
+    financeStatus?: 'Draft' | 'Sent to Finance' | 'Verified by Finance' | 'Payment Processed' | 'Payment Released';
+    paymentMethod?: 'Bank Transfer / NEFT' | 'RTGS' | 'UPI' | 'Cheque';
     paymentRef?: string;
+    paymentDate?: string;
+    financeRemarks?: string;
+    financeVoucherNumber?: string;
+    financeDisbursedBy?: string;
   };
+
+  // Backwards compatibility for alternate property access
+  employeeName?: string;
+  lastWorkingDate?: string;
+  clearanceChecklist?: {
+    itAssetsHandedOver: boolean;
+    projectHandoverComplete: boolean;
+    financeAdvanceCleared: boolean;
+  };
+  fullAndFinalSettlement?: any;
 }
 
 // -------------------------------------------------------------
@@ -1199,7 +1269,11 @@ export interface EmployeeAsset {
   allocatedDate: string;
   condition: 'Brand New' | 'Good' | 'Fair';
   returnDate?: string;
+  returnedDate?: string;
   status: 'Allocated' | 'Returned' | 'Under Repair';
+  returnRemarks?: string;
+  returnCondition?: 'Brand New' | 'Good' | 'Fair' | 'Damaged' | 'Normal Wear & Tear';
+  receivedBy?: string;
 }
 
 export interface EmployeeDocument {
