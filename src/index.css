@@ -230,6 +230,109 @@ html.dark body {
   overflow-x: hidden;
 }
 
+/* ==========================================================================
+   DISPLAY DENSITY MODES (Compact vs Spacious)
+   Applies dynamically across all data-heavy views: CRM, Quotes, BOQ, PR/PO,
+   Inventory, Finance, Master Data, Audit Logs, and User Management.
+   ========================================================================== */
+
+/* 1. COMPACT MODE (Dense Tables & High Information Density) */
+html[data-density="compact"] table:not(.no-density-override) th,
+html[data-density="compact"] table:not(.no-density-override) td,
+.density-compact table:not(.no-density-override) th,
+.density-compact table:not(.no-density-override) td {
+  padding-top: 0.35rem !important;
+  padding-bottom: 0.35rem !important;
+  padding-left: 0.625rem !important;
+  padding-right: 0.625rem !important;
+  font-size: 0.75rem !important;
+  line-height: 1.15rem !important;
+}
+
+html[data-density="compact"] table:not(.no-density-override) thead th,
+.density-compact table:not(.no-density-override) thead th {
+  padding-top: 0.4rem !important;
+  padding-bottom: 0.4rem !important;
+  font-size: 0.6875rem !important;
+  letter-spacing: 0.04em;
+}
+
+html[data-density="compact"] table:not(.no-density-override) tbody tr,
+.density-compact table:not(.no-density-override) tbody tr {
+  min-height: 2.25rem !important;
+}
+
+html[data-density="compact"] table:not(.no-density-override) td select,
+html[data-density="compact"] table:not(.no-density-override) td input:not([type="checkbox"]):not([type="radio"]),
+html[data-density="compact"] table:not(.no-density-override) td button,
+.density-compact table:not(.no-density-override) td select,
+.density-compact table:not(.no-density-override) td input:not([type="checkbox"]):not([type="radio"]),
+.density-compact table:not(.no-density-override) td button {
+  padding-top: 0.15rem !important;
+  padding-bottom: 0.15rem !important;
+  padding-left: 0.45rem !important;
+  padding-right: 0.45rem !important;
+  font-size: 0.6875rem !important;
+}
+
+html[data-density="compact"] table:not(.no-density-override) td span[class*="rounded-"],
+.density-compact table:not(.no-density-override) td span[class*="rounded-"] {
+  padding-top: 0.05rem !important;
+  padding-bottom: 0.05rem !important;
+  padding-left: 0.35rem !important;
+  padding-right: 0.35rem !important;
+  font-size: 0.6875rem !important;
+  line-height: 0.95rem !important;
+}
+
+/* 2. SPACIOUS MODE (Increased Padding & Comfortable Viewing) */
+html[data-density="spacious"] table:not(.no-density-override) th,
+html[data-density="spacious"] table:not(.no-density-override) td,
+.density-spacious table:not(.no-density-override) th,
+.density-spacious table:not(.no-density-override) td {
+  padding-top: 0.9rem !important;
+  padding-bottom: 0.9rem !important;
+  padding-left: 1.125rem !important;
+  padding-right: 1.125rem !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.35rem !important;
+}
+
+html[data-density="spacious"] table:not(.no-density-override) thead th,
+.density-spacious table:not(.no-density-override) thead th {
+  padding-top: 0.8rem !important;
+  padding-bottom: 0.8rem !important;
+  font-size: 0.75rem !important;
+}
+
+html[data-density="spacious"] table:not(.no-density-override) tbody tr,
+.density-spacious table:not(.no-density-override) tbody tr {
+  min-height: 3.25rem !important;
+}
+
+html[data-density="spacious"] table:not(.no-density-override) td select,
+html[data-density="spacious"] table:not(.no-density-override) td input:not([type="checkbox"]):not([type="radio"]),
+html[data-density="spacious"] table:not(.no-density-override) td button,
+.density-spacious table:not(.no-density-override) td select,
+.density-spacious table:not(.no-density-override) td input:not([type="checkbox"]):not([type="radio"]),
+.density-spacious table:not(.no-density-override) td button {
+  padding-top: 0.35rem !important;
+  padding-bottom: 0.35rem !important;
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  font-size: 0.75rem !important;
+}
+
+html[data-density="spacious"] table:not(.no-density-override) td span[class*="rounded-"],
+.density-spacious table:not(.no-density-override) td span[class*="rounded-"] {
+  padding-top: 0.15rem !important;
+  padding-bottom: 0.15rem !important;
+  padding-left: 0.6rem !important;
+  padding-right: 0.6rem !important;
+  font-size: 0.75rem !important;
+  line-height: 1.15rem !important;
+}
+
 /* Dedicated Print & PDF Generation Styles */
 @media print {
   @page {

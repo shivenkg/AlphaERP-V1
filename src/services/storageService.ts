@@ -372,6 +372,16 @@ class StorageService {
 
     // Run automated safety stock audit on startup
     this.checkSafetyStockAlerts(false);
+
+    // Apply global UI display density to document root
+    try {
+      if (typeof document !== 'undefined') {
+        const density = this.systemSettings.displayDensity || 'spacious';
+        document.documentElement.setAttribute('data-density', density);
+        document.body.classList.toggle('density-compact', density === 'compact');
+        document.body.classList.toggle('density-spacious', density === 'spacious');
+      }
+    } catch {}
   }
 
   public subscribe(listener: () => void): () => void {
@@ -2069,6 +2079,22 @@ class StorageService {
     );
     this.notify();
     return this.systemSettings;
+  }
+
+  public getDisplayDensity(): 'compact' | 'spacious' {
+    return this.systemSettings.displayDensity || 'spacious';
+  }
+
+  public setDisplayDensity(density: 'compact' | 'spacious'): 'compact' | 'spacious' {
+    this.updateSystemSettings({ displayDensity: density });
+    try {
+      if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-density', density);
+        document.body.classList.toggle('density-compact', density === 'compact');
+        document.body.classList.toggle('density-spacious', density === 'spacious');
+      }
+    } catch {}
+    return density;
   }
 
   public resetSystemSettings(): SystemSettings {

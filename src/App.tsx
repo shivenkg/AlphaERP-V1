@@ -80,9 +80,20 @@ export function App() {
 
   // Subscribe to storage service
   useEffect(() => {
+    const syncDensity = () => {
+      try {
+        const density = storageService.getDisplayDensity();
+        document.documentElement.setAttribute('data-density', density);
+        document.body.classList.toggle('density-compact', density === 'compact');
+        document.body.classList.toggle('density-spacious', density === 'spacious');
+      } catch {}
+    };
+    syncDensity();
+
     const unsubscribe = storageService.subscribe(() => {
       setData(storageService.getAllData());
       setNotifications(storageService.getNotifications());
+      syncDensity();
     });
     return () => unsubscribe();
   }, []);

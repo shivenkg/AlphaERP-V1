@@ -32,7 +32,8 @@ import {
   Code,
   Presentation,
   PanelLeft,
-  PanelLeftClose
+  PanelLeftClose,
+  Table
 } from 'lucide-react';
 import { UserRole, AppNotification, GoogleSheetsSyncConfig, UserProfile } from '../types';
 import { storageService } from '../services/storageService';
@@ -916,8 +917,8 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 </div>
 
-                {/* Theme toggle item inside profile menu */}
-                <div className="py-1.5">
+                {/* Theme toggle & Display density items inside profile menu */}
+                <div className="py-1.5 space-y-0.5">
                   <button
                     onClick={toggleTheme}
                     className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 flex items-center justify-between"
@@ -928,6 +929,24 @@ export const Header: React.FC<HeaderProps> = ({
                     </div>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 capitalize border border-slate-200 dark:border-slate-700">
                       {theme} mode
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const currentDensity = storageService.getDisplayDensity();
+                      const nextDensity = currentDensity === 'compact' ? 'spacious' : 'compact';
+                      storageService.setDisplayDensity(nextDensity);
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 flex items-center justify-between"
+                    title="Toggle between Compact (dense tables) and Spacious (increased padding) modes"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Table className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                      <span>Display Density</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 capitalize border border-indigo-200 dark:border-indigo-800/60">
+                      {storageService.getDisplayDensity()} mode
                     </span>
                   </button>
                 </div>

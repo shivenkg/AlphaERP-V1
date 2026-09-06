@@ -1899,6 +1899,7 @@ export const INITIAL_SYSTEM_SETTINGS: SystemSettings = {
   supportEmail: 'contact@alphaerp.com',
   currencySymbol: '₹',
   themeColor: 'blue',
+  displayDensity: 'spacious',
 
   defaultGstRate: 18,
   quoteValidityDays: 30,

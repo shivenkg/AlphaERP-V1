@@ -467,6 +467,7 @@ export interface SystemSettings {
   supportEmail: string;
   currencySymbol: string;
   themeColor: 'blue' | 'emerald' | 'indigo' | 'violet' | 'slate';
+  displayDensity?: 'compact' | 'spacious';
   
   // Quotation & Commercial Parameters
   defaultGstRate: number; // e.g. 18
