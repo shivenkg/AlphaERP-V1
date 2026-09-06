@@ -1,0 +1,6 @@
+{
+  "name": "AlphaERP - Atmos Aircon Enterprise HVAC Suite",
+  "description": "AlphaERP by Atmos Aircon - Full-lifecycle HVAC CRM, Quote-to-Project conversion, BOQ inventory cross-check, PR & PO approval pipeline, Work Orders, Final Handover Billing, and Google Sheets synchronization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

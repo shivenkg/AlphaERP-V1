@@ -1,0 +1,37 @@
+<svg width="200" height="170" viewBox="0 0 200 170" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="jsBlueGrad" x1="20" y1="20" x2="110" y2="130" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0080FF" />
+      <stop offset="50%" stop-color="#0062E0" />
+      <stop offset="100%" stop-color="#0C349C" />
+    </linearGradient>
+    <linearGradient id="jsOrangeGrad" x1="75" y1="25" x2="165" y2="125" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FF931E" />
+      <stop offset="45%" stop-color="#FF6600" />
+      <stop offset="100%" stop-color="#D93800" />
+    </linearGradient>
+    <linearGradient id="jsSwooshGrad" x1="10" y1="130" x2="185" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0A2D8A" />
+      <stop offset="25%" stop-color="#0066E0" />
+      <stop offset="55%" stop-color="#B32B00" />
+      <stop offset="85%" stop-color="#FF5500" />
+      <stop offset="100%" stop-color="#FF8800" />
+    </linearGradient>
+  </defs>
+  <rect x="166" y="28" width="6" height="6" fill="#FF7700" rx="0.5" />
+  <rect x="175" y="32" width="6.5" height="6.5" fill="#FF5E00" rx="0.5" />
+  <rect x="162" y="38" width="7" height="7" fill="#FF8000" rx="0.5" />
+  <rect x="172" y="42" width="8" height="8" fill="#FF5000" rx="0.5" />
+  <rect x="183" y="42" width="6.5" height="6.5" fill="#FF6A00" rx="0.5" />
+  <rect x="156" y="48" width="8" height="8" fill="#FF7A00" rx="0.5" />
+  <rect x="168" y="52" width="8" height="8" fill="#FF4800" rx="0.5" />
+  <rect x="179" y="55" width="7" height="7" fill="#FF5E00" rx="0.5" />
+  <rect x="171" y="65" width="7" height="7" fill="#FF5500" rx="0.5" />
+  <rect x="180" y="67" width="5" height="5" fill="#FF7700" rx="0.5" />
+  <path d="M 84 25 H 112 L 96 78 C 91 95, 78 107, 60 107 H 46 L 52 87 H 61 C 69 87, 74 81, 77 73 Z" fill="url(#jsBlueGrad)" />
+  <path d="M 114 26 H 156 L 150 44 H 124 C 117 44, 114 47, 115 50 C 116 53, 120 55, 127 55 H 138 C 156 55, 162 67, 155 83 C 148 100, 131 109, 110 109 H 76 L 84 91 H 108 C 118 91, 124 86, 126 80 C 128 74, 124 71, 116 71 H 105 C 87 71, 83 58, 89 44 C 95 31, 104 26, 114 26 Z" fill="url(#jsOrangeGrad)" />
+  <path d="M 40 85 C 25 96, 16 112, 23 125 C 33 143, 72 147, 120 132 C 152 122, 178 98, 185 75 C 178 88, 155 106, 124 116 C 78 129, 44 125, 36 112 C 31 102, 35 93, 40 85 Z" fill="url(#jsSwooshGrad)" />
+  <rect x="150" y="93" width="4.5" height="4.5" fill="#FF8800" rx="0.5" />
+  <rect x="160" y="85" width="4" height="4" fill="#FFAA33" rx="0.5" />
+  <rect x="170" y="77" width="3.5" height="3.5" fill="#FFCC66" rx="0.5" />
+</svg>
