@@ -22,10 +22,12 @@ import { DailyKpiSnapshot, WhatsAppTriggerConfig } from '../types';
 
 interface WhatsAppKpiWidgetCardProps {
   onOpenFullModal: () => void;
+  onNavigate?: (tab: string) => void;
 }
 
 export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
-  onOpenFullModal
+  onOpenFullModal,
+  onNavigate
 }) => {
   const [copied, setCopied] = useState(false);
   const [isTriggering, setIsTriggering] = useState(false);
@@ -169,116 +171,188 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
       {/* 6 Requested Metrics Grid */}
       <div className="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3.5 bg-slate-50/50">
         {/* Metric 1: New Leads */}
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-blue-300 transition-colors">
-          <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
-            <span className="flex items-center gap-1 text-blue-700">
-              <Users className="w-3.5 h-3.5" />
-              1. New Leads
-            </span>
-            <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 text-[10px] font-bold">
-              {snapshot.newLeadsCount} Leads
-            </span>
+        <div
+          onClick={() => (onNavigate ? onNavigate('crm') : onOpenFullModal())}
+          title="Click to view CRM Deals & Inbound Leads"
+          role="button"
+          tabIndex={0}
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-blue-400 hover:shadow-sm hover:-translate-y-0.5 transition-all cursor-pointer group select-none"
+        >
+          <div>
+            <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
+              <span className="flex items-center gap-1 text-blue-700">
+                <Users className="w-3.5 h-3.5" />
+                1. New Leads
+              </span>
+              <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 text-[10px] font-bold">
+                {snapshot.newLeadsCount} Leads
+              </span>
+            </div>
+            <div className="text-base font-extrabold text-slate-900 truncate">
+              {KpiDigestService.formatCurrency(snapshot.newLeadsValue)}
+            </div>
+            <div className="text-[10px] text-slate-500 truncate mt-1">
+              Top: {snapshot.newLeadsList[0]?.companyName || 'Singhania Cloud'}
+            </div>
           </div>
-          <div className="text-base font-extrabold text-slate-900 truncate">
-            {KpiDigestService.formatCurrency(snapshot.newLeadsValue)}
-          </div>
-          <div className="text-[10px] text-slate-500 truncate mt-1">
-            Top: {snapshot.newLeadsList[0]?.companyName || 'Singhania Cloud'}
+          <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-blue-600 group-hover:underline">
+            <span>View in CRM</span>
+            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </div>
 
         {/* Metric 2: Total Collection */}
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-emerald-300 transition-colors">
-          <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
-            <span className="flex items-center gap-1 text-emerald-700">
-              <CreditCard className="w-3.5 h-3.5" />
-              2. Total Collections
-            </span>
-            <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 text-[10px] font-bold">
-              {snapshot.collectionEfficiencyPct}% Eff.
-            </span>
+        <div
+          onClick={() => (onNavigate ? onNavigate('payments') : onOpenFullModal())}
+          title="Click to view Payments & Collections"
+          role="button"
+          tabIndex={0}
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-emerald-400 hover:shadow-sm hover:-translate-y-0.5 transition-all cursor-pointer group select-none"
+        >
+          <div>
+            <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
+              <span className="flex items-center gap-1 text-emerald-700">
+                <CreditCard className="w-3.5 h-3.5" />
+                2. Total Collections
+              </span>
+              <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 text-[10px] font-bold">
+                {snapshot.collectionEfficiencyPct}% Eff.
+              </span>
+            </div>
+            <div className="text-base font-extrabold text-emerald-700 truncate">
+              {KpiDigestService.formatCurrency(snapshot.totalCollectionsReceived)}
+            </div>
+            <div className="text-[10px] text-slate-500 truncate mt-1">
+              Billed: {KpiDigestService.formatCurrency(snapshot.totalInvoicesGenerated)}
+            </div>
           </div>
-          <div className="text-base font-extrabold text-emerald-700 truncate">
-            {KpiDigestService.formatCurrency(snapshot.totalCollectionsReceived)}
-          </div>
-          <div className="text-[10px] text-slate-500 truncate mt-1">
-            Billed: {KpiDigestService.formatCurrency(snapshot.totalInvoicesGenerated)}
+          <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-emerald-600 group-hover:underline">
+            <span>View Payments</span>
+            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </div>
 
         {/* Metric 3: Pending Aging Buckets */}
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-amber-300 transition-colors">
-          <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
-            <span className="flex items-center gap-1 text-amber-700">
-              <Clock className="w-3.5 h-3.5" />
-              3. Aging Buckets
-            </span>
-            <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 text-[10px] font-bold">
-              0-90+ Days
-            </span>
+        <div
+          onClick={() => (onNavigate ? onNavigate('payments') : onOpenFullModal())}
+          title="Click to view Receivables & Aging Buckets"
+          role="button"
+          tabIndex={0}
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-amber-400 hover:shadow-sm hover:-translate-y-0.5 transition-all cursor-pointer group select-none"
+        >
+          <div>
+            <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
+              <span className="flex items-center gap-1 text-amber-700">
+                <Clock className="w-3.5 h-3.5" />
+                3. Aging Buckets
+              </span>
+              <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 text-[10px] font-bold">
+                0-90+ Days
+              </span>
+            </div>
+            <div className="text-base font-extrabold text-slate-900 truncate">
+              {KpiDigestService.formatCurrency(snapshot.agingBuckets.totalPendingAmount)}
+            </div>
+            <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-1 font-mono">
+              <span className="text-emerald-600 font-bold">0-30d: {KpiDigestService.formatCurrency(snapshot.agingBuckets.bucket0to30.amount)}</span>
+            </div>
           </div>
-          <div className="text-base font-extrabold text-slate-900 truncate">
-            {KpiDigestService.formatCurrency(snapshot.agingBuckets.totalPendingAmount)}
-          </div>
-          <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-1 font-mono">
-            <span className="text-emerald-600 font-bold">0-30d: {KpiDigestService.formatCurrency(snapshot.agingBuckets.bucket0to30.amount)}</span>
+          <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-amber-600 group-hover:underline">
+            <span>View Receivables</span>
+            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </div>
 
         {/* Metric 4: Total Payment Done */}
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-purple-300 transition-colors">
-          <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
-            <span className="flex items-center gap-1 text-purple-700">
-              <DollarSign className="w-3.5 h-3.5" />
-              4. Payments Done
-            </span>
-            <span className="px-1.5 py-0.5 rounded bg-purple-50 text-purple-800 text-[10px] font-bold">
-              {snapshot.paymentsDisbursedCount} Outflows
-            </span>
+        <div
+          onClick={() => (onNavigate ? onNavigate('payments') : onOpenFullModal())}
+          title="Click to view Disbursements & Vendor PO Payouts"
+          role="button"
+          tabIndex={0}
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-purple-400 hover:shadow-sm hover:-translate-y-0.5 transition-all cursor-pointer group select-none"
+        >
+          <div>
+            <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
+              <span className="flex items-center gap-1 text-purple-700">
+                <DollarSign className="w-3.5 h-3.5" />
+                4. Payments Done
+              </span>
+              <span className="px-1.5 py-0.5 rounded bg-purple-50 text-purple-800 text-[10px] font-bold">
+                {snapshot.paymentsDisbursedCount} Outflows
+              </span>
+            </div>
+            <div className="text-base font-extrabold text-slate-900 truncate">
+              {KpiDigestService.formatCurrency(snapshot.totalPaymentsDisbursed)}
+            </div>
+            <div className="text-[10px] text-slate-500 truncate mt-1">
+              Vendor & PO Payouts
+            </div>
           </div>
-          <div className="text-base font-extrabold text-slate-900 truncate">
-            {KpiDigestService.formatCurrency(snapshot.totalPaymentsDisbursed)}
-          </div>
-          <div className="text-[10px] text-slate-500 truncate mt-1">
-            Vendor & PO Payouts
+          <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-purple-600 group-hover:underline">
+            <span>View Disbursements</span>
+            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </div>
 
         {/* Metric 5: Net Revenue Generated */}
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-indigo-300 transition-colors">
-          <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
-            <span className="flex items-center gap-1 text-indigo-700">
-              <TrendingUp className="w-3.5 h-3.5" />
-              5. Net Revenue
-            </span>
-            <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-800 text-[10px] font-bold">
-              Won Bookings
-            </span>
+        <div
+          onClick={() => (onNavigate ? onNavigate('quotes') : onOpenFullModal())}
+          title="Click to view Awarded Quotes & Won Bookings"
+          role="button"
+          tabIndex={0}
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-indigo-400 hover:shadow-sm hover:-translate-y-0.5 transition-all cursor-pointer group select-none"
+        >
+          <div>
+            <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
+              <span className="flex items-center gap-1 text-indigo-700">
+                <TrendingUp className="w-3.5 h-3.5" />
+                5. Net Revenue
+              </span>
+              <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-800 text-[10px] font-bold">
+                Won Bookings
+              </span>
+            </div>
+            <div className="text-base font-extrabold text-indigo-900 truncate">
+              {KpiDigestService.formatCurrency(snapshot.netRevenueGenerated)}
+            </div>
+            <div className="text-[10px] text-slate-500 truncate mt-1">
+              Pipeline: {KpiDigestService.formatCurrency(snapshot.activePipelineValue)}
+            </div>
           </div>
-          <div className="text-base font-extrabold text-indigo-900 truncate">
-            {KpiDigestService.formatCurrency(snapshot.netRevenueGenerated)}
-          </div>
-          <div className="text-[10px] text-slate-500 truncate mt-1">
-            Pipeline: {KpiDigestService.formatCurrency(snapshot.activePipelineValue)}
+          <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-indigo-600 group-hover:underline">
+            <span>View Won Quotes</span>
+            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </div>
 
         {/* Metric 6: Delayed Projects with Reason */}
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-red-300 transition-colors">
-          <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
-            <span className="flex items-center gap-1 text-red-700">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              6. Delayed Projects
-            </span>
-            <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-800 text-[10px] font-bold">
-              {snapshot.delayedProjectsCount} Behind
-            </span>
+        <div
+          onClick={() => (onNavigate ? onNavigate('projects') : onOpenFullModal())}
+          title="Click to view Delayed HVAC Projects"
+          role="button"
+          tabIndex={0}
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-red-400 hover:shadow-sm hover:-translate-y-0.5 transition-all cursor-pointer group select-none"
+        >
+          <div>
+            <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
+              <span className="flex items-center gap-1 text-red-700">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                6. Delayed Projects
+              </span>
+              <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-800 text-[10px] font-bold">
+                {snapshot.delayedProjectsCount} Behind
+              </span>
+            </div>
+            <div className="text-base font-extrabold text-red-700 truncate">
+              {snapshot.delayedProjectsCount} Delayed
+            </div>
+            <div className="text-[10px] text-slate-500 truncate mt-1">
+              {snapshot.delayedProjects[0] ? `PRJ-002: ${snapshot.delayedProjects[0].delayDays}d Overdue` : 'All on track'}
+            </div>
           </div>
-          <div className="text-base font-extrabold text-red-700 truncate">
-            {snapshot.delayedProjectsCount} Delayed
-          </div>
-          <div className="text-[10px] text-slate-500 truncate mt-1">
-            {snapshot.delayedProjects[0] ? `PRJ-002: ${snapshot.delayedProjects[0].delayDays}d Overdue` : 'All on track'}
+          <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-red-600 group-hover:underline">
+            <span>View Projects</span>
+            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </div>
       </div>

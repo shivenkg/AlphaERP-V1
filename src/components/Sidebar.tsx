@@ -67,6 +67,7 @@ interface NavItem {
   icon: React.ElementType;
   badge?: string | null;
   badgeColor?: string;
+  description?: string;
 }
 
 interface NavGroup {
@@ -105,26 +106,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label: 'Global ERP Search',
           icon: Search,
           badge: '⌘K',
-          badgeColor: 'bg-blue-600'
+          badgeColor: 'bg-blue-600',
+          description: 'Unified record search & lookup'
         },
         {
           id: 'dashboard',
           label: 'Executive Dashboard',
           icon: LayoutDashboard,
-          badge: null
+          badge: null,
+          description: 'High-level KPIs & executive overview'
         },
         {
           id: 'pitch_deck',
           label: 'Investor Pitch Deck',
           icon: Presentation,
           badge: 'Deck',
-          badgeColor: 'bg-gradient-to-r from-amber-500 to-orange-500'
+          badgeColor: 'bg-gradient-to-r from-amber-500 to-orange-500',
+          description: 'Interactive investor presentation'
         },
         {
           id: 'sales',
           label: 'Sales Performance',
           icon: Target,
-          badge: null
+          badge: null,
+          description: 'Quotas, conversion & team pipeline'
         }
       ]
     },
@@ -139,27 +144,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label: 'CRM & HVAC Leads',
           icon: Users,
           badge: leadCount > 0 ? `${leadCount}` : null,
-          badgeColor: 'bg-blue-500'
+          badgeColor: 'bg-blue-500',
+          description: 'HVAC inquiries, client leads & visits'
         },
         {
           id: 'quotes',
           label: 'Quotes & Estimations',
           icon: FileText,
-          badge: null
+          badge: null,
+          description: 'Estimation sheets & customer quotes'
         },
         {
           id: 'projects',
           label: 'Projects & BOQ Engine',
           icon: Briefcase,
           badge: openShortagesCount > 0 ? `${openShortagesCount} Short` : null,
-          badgeColor: 'bg-amber-500'
+          badgeColor: 'bg-amber-500',
+          description: 'BOQ execution, jobs & shortages'
         },
         {
           id: 'cost_analysis',
           label: 'Project Cost & PO Variance',
           icon: TrendingUp,
           badge: 'Actuals',
-          badgeColor: 'bg-emerald-600'
+          badgeColor: 'bg-emerald-600',
+          description: 'PO variance & budget tracking'
         }
       ]
     },
@@ -174,20 +183,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label: 'Inventory & PR/PO',
           icon: ShoppingCart,
           badge: pendingPRCount + pendingPOCount > 0 ? `${pendingPRCount + pendingPOCount} Act` : null,
-          badgeColor: 'bg-red-500'
+          badgeColor: 'bg-red-500',
+          description: 'Purchase requisitions & vendor POs'
         },
         {
           id: 'inventory',
           label: 'Warehouse Stock & SKUs',
           icon: Boxes,
           badge: lowStockCount > 0 ? `${lowStockCount} Low` : null,
-          badgeColor: 'bg-red-500'
+          badgeColor: 'bg-red-500',
+          description: 'Warehouse ledger & stock balance'
         },
         {
           id: 'workorders',
           label: 'Work Orders & Field Dispatch',
           icon: Wrench,
-          badge: null
+          badge: null,
+          description: 'Field engineer dispatch & service'
         }
       ]
     },
@@ -201,14 +213,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           id: 'finance',
           label: 'General Ledger & Vouchers',
           icon: Landmark,
-          badge: null
+          badge: null,
+          description: 'General ledger & journal vouchers'
         },
         {
           id: 'payments',
           label: 'Invoices & Receivables',
           icon: CreditCard,
           badge: pendingInvoicesCount > 0 ? `${pendingInvoicesCount}` : null,
-          badgeColor: 'bg-purple-500'
+          badgeColor: 'bg-purple-500',
+          description: 'Tax invoices, GST & receivables'
         }
       ]
     },
@@ -223,14 +237,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label: 'AlphaHR Suite (HRMS & Payroll)',
           icon: Sparkles,
           badge: '12 Subs',
-          badgeColor: 'bg-indigo-600'
+          badgeColor: 'bg-indigo-600',
+          description: 'HRMS, biometric logs & payroll'
         },
         {
           id: 'ess',
           label: 'ESS / MSS Self-Service Portal',
           icon: UserCheck,
           badge: 'Portal',
-          badgeColor: 'bg-emerald-600'
+          badgeColor: 'bg-emerald-600',
+          description: 'Employee self-service & leaves'
         }
       ]
     },
@@ -245,7 +261,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label: 'Master Data Management',
           icon: Database,
           badge: 'Master',
-          badgeColor: 'bg-blue-600'
+          badgeColor: 'bg-blue-600',
+          description: 'Clients, vendors, SKUs & tax slabs'
         }
       ]
     },
@@ -260,26 +277,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label: 'Google Sheet Master Sync',
           icon: FileSpreadsheet,
           badge: 'Live',
-          badgeColor: 'bg-emerald-500'
+          badgeColor: 'bg-emerald-500',
+          description: 'Live Google Sheets bidirectional sync'
         },
         {
           id: 'users',
           label: 'Users & RBAC Roles',
           icon: ShieldCheck,
           badge: 'Admin',
-          badgeColor: 'bg-slate-700'
+          badgeColor: 'bg-slate-700',
+          description: 'Role-based access control (RBAC)'
         },
         {
           id: 'customization',
           label: 'Admin Customization',
           icon: Sliders,
-          badge: null
+          badge: null,
+          description: 'ERP configuration & numbering'
         },
         {
           id: 'audit',
           label: 'Audit Trail Logs',
           icon: History,
-          badge: null
+          badge: null,
+          description: 'Security logs & system audit trail'
         }
       ]
     }
@@ -303,7 +324,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Pin state: when pinned, sidebar stays open permanently.
-  // When unpinned, sidebar collapses to icon rail and expands on mouseover.
+  // When unpinned, sidebar collapses to sub menu bar and opens interactive flyouts on hover.
   const [internalPinned, setInternalPinned] = useState<boolean>(() => {
     if (controlledIsCollapsed !== undefined) {
       return !controlledIsCollapsed;
@@ -313,9 +334,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       if (saved !== null) {
         return saved === 'true';
       }
-      return true; // Default: fully visible and open
+      return false; // Default: collapsed to sub menu bar
     } catch {
-      return true;
+      return false;
     }
   });
 
@@ -338,6 +359,68 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // Determine whether sidebar is visually expanded
   const isExpanded = isMobileOpen || (controlledIsCollapsed !== undefined ? !controlledIsCollapsed : isPinned);
   const isCollapsed = !isExpanded;
+
+  // Active Flyout Sub Menu Bar state for Collapsed Mode
+  const [activeFlyoutGroup, setActiveFlyoutGroup] = useState<{
+    group: NavGroup;
+    top: number;
+    hoveredItemId?: string;
+  } | null>(null);
+  const flyoutTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const clearFlyoutTimer = () => {
+    if (flyoutTimerRef.current) {
+      clearTimeout(flyoutTimerRef.current);
+      flyoutTimerRef.current = null;
+    }
+  };
+
+  const handleRailItemMouseEnter = (group: NavGroup, item: NavItem, event: React.MouseEvent<HTMLElement>) => {
+    clearFlyoutTimer();
+    const rect = event.currentTarget.getBoundingClientRect();
+    const estimatedHeight = 70 + group.items.length * 46;
+    const windowHeight = window.innerHeight;
+    const idealTop = rect.top - 10;
+    const clampedTop = Math.max(12, Math.min(windowHeight - estimatedHeight - 16, idealTop));
+
+    setActiveFlyoutGroup({
+      group,
+      top: clampedTop,
+      hoveredItemId: item.id
+    });
+  };
+
+  const handleRailItemMouseLeave = () => {
+    clearFlyoutTimer();
+    flyoutTimerRef.current = setTimeout(() => {
+      setActiveFlyoutGroup(null);
+    }, 180);
+  };
+
+  const handleFlyoutMouseEnter = () => {
+    clearFlyoutTimer();
+  };
+
+  const handleFlyoutMouseLeave = () => {
+    clearFlyoutTimer();
+    flyoutTimerRef.current = setTimeout(() => {
+      setActiveFlyoutGroup(null);
+    }, 180);
+  };
+
+  // Close flyout on Escape key or outside click
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveFlyoutGroup(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      clearFlyoutTimer();
+    };
+  }, []);
 
   // Hover Tooltip state for Collapsed Mode
   const [hoveredItem, setHoveredItem] = useState<{
@@ -375,6 +458,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const handleSelectTab = (tabId: string) => {
     setActiveTab(tabId);
     setHoveredItem(null);
+    setActiveFlyoutGroup(null);
+    clearFlyoutTimer();
     if (onCloseMobile) {
       onCloseMobile();
     }
@@ -447,33 +532,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center w-full gap-2">
+            <div className="flex flex-col items-center justify-center w-full gap-2 py-1">
               <JSAlphaSoftLogo size="xs" variant="icon" isDarkTheme={true} />
               <button
                 onClick={togglePin}
-                onMouseEnter={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  setHoveredItem({
-                    id: 'toggle-pin-top',
-                    label: 'Expand Full Sidebar',
-                    groupTitle: 'Sidebar Navigation',
-                    isActive: false,
-                    top: rect.top + rect.height / 2
-                  });
-                }}
-                onMouseLeave={() => setHoveredItem(null)}
                 className="p-1.5 text-slate-400 hover:text-white rounded-lg bg-[#14234c] hover:bg-blue-600 transition-colors cursor-pointer"
-                title="Expand Sidebar"
+                title="Expand to Full Pinned Sidebar"
+                aria-label="Expand to Full Pinned Sidebar"
               >
                 <PanelLeftOpen className="w-3.5 h-3.5 text-blue-300" />
               </button>
+              <div className="text-[7.5px] font-bold text-blue-300/80 uppercase tracking-widest text-center">
+                Sub Menu
+              </div>
             </div>
           )}
         </div>
 
       {/* Navigation Scrollable Body */}
       <div
-        onScroll={() => setHoveredItem(null)}
+        onScroll={() => {
+          setHoveredItem(null);
+          setActiveFlyoutGroup(null);
+        }}
         className="flex-1 min-h-0 p-2 space-y-2 overflow-y-auto overflow-x-hidden custom-scrollbar"
       >
         {/* Accordion Quick Expand / Collapse buttons when expanded */}
@@ -513,12 +594,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           const prominentBg = groupBgColors[group.id] || 'bg-[#0f1d40] text-white border-blue-900/40';
 
           if (isCollapsed) {
-            // COLLAPSED RAIL MODE
+            // COLLAPSED SUB MENU RAIL MODE
             return (
               <div key={group.id} className="space-y-1.5 pb-1 border-b border-[#14234c]/60 last:border-b-0">
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
+                  const isHoveredInSubmenu = activeFlyoutGroup?.hoveredItemId === item.id;
+
                   return (
                     <div key={item.id} className="relative flex justify-center">
                       <motion.button
@@ -533,25 +616,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           stiffness: 400,
                           damping: 28
                         }}
-                        onMouseEnter={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          setHoveredItem({
-                            id: item.id,
-                            label: item.label,
-                            groupTitle: group.title,
-                            badge: item.badge,
-                            badgeColor: item.badgeColor,
-                            isActive,
-                            top: rect.top + rect.height / 2
-                          });
-                        }}
-                        onMouseLeave={() => setHoveredItem(null)}
-                        className={`relative w-11 h-11 rounded-xl flex items-center justify-center transition-colors duration-300 overflow-hidden cursor-pointer ${
+                        onMouseEnter={(e) => handleRailItemMouseEnter(group, item, e)}
+                        onMouseLeave={handleRailItemMouseLeave}
+                        className={`relative w-11 h-11 rounded-xl flex items-center justify-center transition-colors duration-200 overflow-hidden cursor-pointer ${
                           isActive
                             ? 'text-white shadow-lg shadow-blue-600/40 ring-2 ring-blue-400'
+                            : isHoveredInSubmenu
+                            ? 'text-white bg-[#15234f] ring-1 ring-blue-500/50'
                             : 'text-slate-300 hover:bg-[#15234f] hover:text-white'
                         }`}
-                        title={item.label}
+                        title={`${item.label} (${group.title})`}
                         aria-label={item.label}
                       >
                         {/* Animated Active Background */}
@@ -693,26 +767,105 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
       </div>
 
-      {/* Floating Tooltip in Collapsed Rail Mode */}
-      {isCollapsed && hoveredItem && (
+      {/* Interactive Sub Menu Bar Flyout in Collapsed Mode */}
+      {isCollapsed && activeFlyoutGroup && (
         <div
-          className="fixed left-[76px] z-50 px-3 py-2 bg-slate-900 text-white text-xs rounded-xl shadow-2xl border border-slate-700 pointer-events-none transition-all flex flex-col gap-1 min-w-[150px] max-w-[220px]"
-          style={{ top: `${Math.max(10, hoveredItem.top - 6)}px` }}
+          role="menu"
+          aria-label={`${activeFlyoutGroup.group.title} Sub Menu`}
+          onMouseEnter={handleFlyoutMouseEnter}
+          onMouseLeave={handleFlyoutMouseLeave}
+          className="fixed left-[70px] z-50 w-72 bg-[#070d24]/95 backdrop-blur-md text-white rounded-2xl shadow-2xl border border-[#1d2e63] p-2 select-none ring-1 ring-blue-500/30"
+          style={{ top: `${activeFlyoutGroup.top}px` }}
         >
-          <div className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">
-            {hoveredItem.groupTitle}
+          {/* Sub Menu Bar Header */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-[#182756] mb-1.5 bg-[#0a1438]/80 rounded-xl">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-1.5 rounded-lg bg-blue-900/60 text-blue-300 border border-blue-700/50 shrink-0">
+                <activeFlyoutGroup.group.icon className="w-4 h-4 text-cyan-400" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[11px] font-extrabold text-white truncate uppercase tracking-wider">
+                  {activeFlyoutGroup.group.title}
+                </div>
+                <div className="text-[9px] text-blue-300 font-medium flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                  <span>Sub Menu Bar • {activeFlyoutGroup.group.items.length} Modules</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="font-semibold text-slate-100 flex items-center justify-between gap-2">
-            <span>{hoveredItem.label}</span>
-            {hoveredItem.badge && (
-              <span
-                className={`text-[9px] px-1.5 py-0.2 rounded font-bold text-white ${
-                  hoveredItem.badgeColor || 'bg-blue-600'
-                }`}
-              >
-                {hoveredItem.badge}
-              </span>
-            )}
+
+          {/* Sub Menu Items List */}
+          <div className="space-y-1">
+            {activeFlyoutGroup.group.items.map((subItem) => {
+              const SubIcon = subItem.icon;
+              const isCurrentActive = activeTab === subItem.id;
+              const isFocused = activeFlyoutGroup.hoveredItemId === subItem.id;
+
+              return (
+                <button
+                  key={subItem.id}
+                  type="button"
+                  onClick={() => handleSelectTab(subItem.id)}
+                  className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-all cursor-pointer group ${
+                    isCurrentActive
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md font-bold ring-1 ring-cyan-400/40'
+                      : isFocused
+                      ? 'bg-[#152454] text-white'
+                      : 'text-slate-200 hover:bg-[#13224f] hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div
+                      className={`p-1.5 rounded-lg transition-colors shrink-0 ${
+                        isCurrentActive
+                          ? 'bg-white/20 text-white'
+                          : 'bg-[#101b3e] text-blue-300 group-hover:bg-[#1c2e63] group-hover:text-cyan-300'
+                      }`}
+                    >
+                      <SubIcon className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-semibold truncate">
+                          {subItem.label}
+                        </span>
+                        {isCurrentActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-300 ring-2 ring-cyan-400/40 animate-pulse" />
+                        )}
+                      </div>
+                      {subItem.description && (
+                        <div
+                          className={`text-[10px] truncate leading-tight ${
+                            isCurrentActive
+                              ? 'text-blue-100'
+                              : 'text-slate-400 group-hover:text-slate-300'
+                          }`}
+                        >
+                          {subItem.description}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {subItem.badge && (
+                    <span
+                      className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ml-2 shrink-0 ${
+                        subItem.badgeColor || 'bg-blue-600'
+                      }`}
+                    >
+                      {subItem.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Sub Menu Footer */}
+          <div className="px-2.5 pt-2 pb-1 border-t border-[#15234c] mt-1.5 flex items-center justify-between text-[9px] text-slate-400">
+            <span>Click any module to jump</span>
+            <span className="font-mono text-blue-400">Esc to close</span>
           </div>
         </div>
       )}

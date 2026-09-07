@@ -71,6 +71,7 @@ import { DashboardLayoutManagerModal } from './dashboard/DashboardLayoutManagerM
 import { WhatsAppKpiWidgetCard } from './WhatsAppKpiWidgetCard';
 import { WhatsAppDailyKpiModal } from './WhatsAppDailyKpiModal';
 import { PersonalizedRoleWidgets } from './dashboard/PersonalizedRoleWidgets';
+import { RecentActivityPanel } from './dashboard/RecentActivityPanel';
 import { QuickActionFloatingButton } from './QuickActionFloatingButton';
 
 interface DashboardViewProps {
@@ -395,10 +396,46 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     { stage: 'Awarded', count: wonLeadsCount, color: 'bg-emerald-500' }
   ];
 
+  // Helper to get target detail interface for KPI cards
+  const getKpiTarget = (widgetId: string) => {
+    switch (widgetId) {
+      case 'kpi_awarded_sales':
+        return {
+          tab: 'quotes',
+          label: 'Won Quotes & Awards',
+          shortLabel: 'Quotes',
+          tooltip: 'Click to open Awarded Quotations & Project Awards'
+        };
+      case 'kpi_active_pipeline':
+        return {
+          tab: 'crm',
+          label: 'Active CRM Pipeline',
+          shortLabel: 'CRM Deals',
+          tooltip: 'Click to open CRM Deals & Lead Stages'
+        };
+      case 'kpi_inventory_worth':
+        return {
+          tab: 'inventory',
+          label: 'Warehouse Inventory & Stock',
+          shortLabel: 'Inventory',
+          tooltip: 'Click to open Warehouse Inventory & Stock Levels'
+        };
+      case 'kpi_receivables':
+      default:
+        return {
+          tab: 'payments',
+          label: 'Milestone Receivables',
+          shortLabel: 'Payments',
+          tooltip: 'Click to open Milestone Invoices, Receivables & Collections'
+        };
+    }
+  };
+
   // Helper to render individual KPI Card by Widget ID
   const renderKpiCard = (widget: WidgetConfig) => {
     const isDragged = draggedKpiId === widget.id;
     const isDragOver = dragOverKpiId === widget.id;
+    const target = getKpiTarget(widget.id);
 
     let content: React.ReactNode = null;
 
@@ -406,22 +443,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       case 'kpi_awarded_sales':
         content = (
           <div className="flex flex-col justify-between h-full">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Awarded Sales (Won)</span>
-              <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0">
-                <TrendingUp className="w-4 h-4" />
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Awarded Sales (Won)</span>
+                <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 tracking-tight font-mono">
+                  ₹{(totalAwardedSales / 100000).toFixed(2)} L
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs text-emerald-600 font-medium">
+                  <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+                  <span>
+                    {awardedQuotes.length} Won Deals • {winRatePct}% Win Rate
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="mt-3">
-              <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 tracking-tight font-mono">
-                ₹{(totalAwardedSales / 100000).toFixed(2)} L
-              </div>
-              <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs text-emerald-600 font-medium">
-                <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
-                <span>
-                  {awardedQuotes.length} Won Deals • {winRatePct}% Win Rate
-                </span>
-              </div>
+            <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">Awarded Quotations</span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 group-hover:underline">
+                <span>View Details</span>
+                <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </span>
             </div>
           </div>
         );
@@ -430,19 +476,28 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       case 'kpi_active_pipeline':
         content = (
           <div className="flex flex-col justify-between h-full">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Active CRM Pipeline</span>
-              <div className="p-2 sm:p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 shrink-0">
-                <Users className="w-4 h-4" />
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Active CRM Pipeline</span>
+                <div className="p-2 sm:p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 shrink-0">
+                  <Users className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 tracking-tight font-mono">
+                  ₹{(activePipelineValue / 100000).toFixed(2)} L
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs text-blue-600 font-medium">
+                  <span>{activePipelineLeads.length} In-Flight Deals (5 Stages)</span>
+                </div>
               </div>
             </div>
-            <div className="mt-3">
-              <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 tracking-tight font-mono">
-                ₹{(activePipelineValue / 100000).toFixed(2)} L
-              </div>
-              <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs text-blue-600 font-medium">
-                <span>{activePipelineLeads.length} In-Flight Deals (5 Stages)</span>
-              </div>
+            <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">Prospect Pipeline</span>
+              <span className="font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1 group-hover:underline">
+                <span>View Details</span>
+                <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </span>
             </div>
           </div>
         );
@@ -451,26 +506,35 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       case 'kpi_inventory_worth':
         content = (
           <div className="flex flex-col justify-between h-full">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Inventory Stock Worth</span>
-              <div className="p-2 sm:p-2.5 rounded-xl bg-cyan-50 text-cyan-600 border border-cyan-100 shrink-0">
-                <Boxes className="w-4 h-4" />
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Inventory Stock Worth</span>
+                <div className="p-2 sm:p-2.5 rounded-xl bg-cyan-50 text-cyan-600 border border-cyan-100 shrink-0">
+                  <Boxes className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 tracking-tight font-mono">
+                  ₹{(totalInventoryValue / 100000).toFixed(2)} L
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mt-2 text-xs">
+                  <span className="text-slate-500">{inventory.length} Warehouse SKUs</span>
+                  <span
+                    className={`font-semibold shrink-0 ${
+                      lowStockItems.length > 0 ? 'text-rose-600' : 'text-emerald-600'
+                    }`}
+                  >
+                    {lowStockItems.length} Low / Deficit
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="mt-3">
-              <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 tracking-tight font-mono">
-                ₹{(totalInventoryValue / 100000).toFixed(2)} L
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mt-2 text-xs">
-                <span className="text-slate-500">{inventory.length} Warehouse SKUs</span>
-                <span
-                  className={`font-semibold shrink-0 ${
-                    lowStockItems.length > 0 ? 'text-rose-600' : 'text-emerald-600'
-                  }`}
-                >
-                  {lowStockItems.length} Low / Deficit
-                </span>
-              </div>
+            <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">Warehouse Stock</span>
+              <span className="font-semibold text-cyan-600 dark:text-cyan-400 flex items-center gap-1 group-hover:underline">
+                <span>View Details</span>
+                <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </span>
             </div>
           </div>
         );
@@ -480,20 +544,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       default:
         content = (
           <div className="flex flex-col justify-between h-full">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Milestone Receivables</span>
-              <div className="p-2 sm:p-2.5 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 shrink-0">
-                <CreditCard className="w-4 h-4" />
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Milestone Receivables</span>
+                <div className="p-2 sm:p-2.5 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 shrink-0">
+                  <CreditCard className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 tracking-tight font-mono">
+                  ₹{(pendingReceivables / 100000).toFixed(2)} L
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mt-2 text-xs">
+                  <span className="text-emerald-600 font-medium">₹{(totalCollected / 100000).toFixed(1)}L Collected</span>
+                  <span className="text-amber-600 font-medium shrink-0">Pending Billing</span>
+                </div>
               </div>
             </div>
-            <div className="mt-3">
-              <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 tracking-tight font-mono">
-                ₹{(pendingReceivables / 100000).toFixed(2)} L
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mt-2 text-xs">
-                <span className="text-emerald-600 font-medium">₹{(totalCollected / 100000).toFixed(1)}L Collected</span>
-                <span className="text-amber-600 font-medium shrink-0">Pending Billing</span>
-              </div>
+            <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">Aging & Invoices</span>
+              <span className="font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1 group-hover:underline">
+                <span>View Details</span>
+                <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </span>
             </div>
           </div>
         );
@@ -511,29 +584,44 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           setDraggedKpiId(null);
           setDragOverKpiId(null);
         }}
-        className={`relative bg-white dark:bg-slate-900 border rounded-2xl p-4 sm:p-5 shadow-xs transition-all min-w-0 group ${
+        onClick={() => {
+          if (!isCustomizeMode) {
+            onNavigate(target.tab);
+          }
+        }}
+        title={isCustomizeMode ? 'Drag KPI to reorder' : target.tooltip}
+        role={isCustomizeMode ? undefined : 'button'}
+        tabIndex={isCustomizeMode ? undefined : 0}
+        onKeyDown={(e) => {
+          if (!isCustomizeMode && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            onNavigate(target.tab);
+          }
+        }}
+        className={`relative bg-white dark:bg-slate-900 border rounded-2xl p-4 sm:p-5 shadow-xs transition-all min-w-0 group select-none ${
           isDragged
             ? 'opacity-40 border-dashed border-blue-500 scale-95'
             : isDragOver
             ? 'border-blue-500 ring-2 ring-blue-400/30 scale-[1.02] bg-blue-50/20'
             : isCustomizeMode
             ? 'border-blue-300 dark:border-blue-700 bg-blue-50/10 cursor-grab active:cursor-grabbing hover:shadow-md'
-            : 'border-slate-200 dark:border-slate-800 hover:shadow-md'
+            : 'border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md hover:-translate-y-0.5 cursor-pointer'
         }`}
       >
-        {/* Customization Grip Overlay */}
-        {(isCustomizeMode || true) && (
-          <div
-            className={`absolute top-2 right-2 flex items-center gap-1 transition-opacity ${
-              isCustomizeMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-            }`}
-          >
+        {/* Customization Grip Overlay or Quick Navigation Pill on Hover */}
+        {isCustomizeMode ? (
+          <div className="absolute top-2 right-2 flex items-center gap-1">
             <div
               className="p-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-grab active:cursor-grabbing shadow-2xs"
               title="Drag KPI to reorder"
             >
               <GripVertical className="w-3.5 h-3.5" />
             </div>
+          </div>
+        ) : (
+          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center gap-1 text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md shadow-2xs border border-slate-200/80 dark:border-slate-700">
+            <span>{target.shortLabel}</span>
+            <ArrowUpRight className="w-3 h-3 text-blue-600 dark:text-blue-400" />
           </div>
         )}
         {content}
@@ -797,7 +885,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 return (
                   <div
                     key={rep.id}
-                    className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700 space-y-2"
+                    onClick={() => onNavigate('sales')}
+                    role="button"
+                    tabIndex={0}
+                    title={`Click to view sales quotas and deals for ${rep.name}`}
+                    className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700 space-y-2 cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50/20 transition-all group select-none"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -1198,14 +1290,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* Critical Deficit Stock Warning Banner if any */}
       {lowStockItems.length > 0 && (
-        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-rose-900 shadow-sm">
+        <div
+          onClick={() => onNavigate('inventory')}
+          role="button"
+          tabIndex={0}
+          title="Click to view Inventory Deficit & Stockouts in Warehouse"
+          className="bg-rose-50 border border-rose-200 hover:border-rose-300 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-rose-900 shadow-sm cursor-pointer transition-all hover:shadow-md group"
+        >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-rose-100 text-rose-600">
+            <div className="p-2 rounded-xl bg-rose-100 text-rose-600 group-hover:scale-105 transition-transform">
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs font-bold text-rose-700 uppercase tracking-wide">
-                Inventory Deficit Alert ({lowStockItems.length} SKUs Below Threshold)
+              <div className="text-xs font-bold text-rose-700 uppercase tracking-wide flex items-center gap-1.5">
+                <span>Inventory Deficit Alert ({lowStockItems.length} SKUs Below Threshold)</span>
+                <span className="text-[10px] font-semibold text-rose-600 underline">Open Inventory ➔</span>
               </div>
               <div className="text-xs text-rose-600 mt-0.5">
                 {lowStockItems.map((i) => `${i.sku} (${i.availableStock} ${i.unit})`).slice(0, 3).join(', ')}
@@ -1214,8 +1313,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
           <button
-            onClick={() => onNavigate('projects')}
-            className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl transition-colors whitespace-nowrap shadow-sm cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNavigate('projects');
+            }}
+            className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl transition-colors whitespace-nowrap shadow-sm cursor-pointer shrink-0"
           >
             Review Project BOQs & Generate PR
           </button>
@@ -1225,7 +1327,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* ========================================================= */}
       {/* AUTOMATED PREVIOUS DAY BUSINESS KPI WHATSAPP TRIGGER WIDGET */}
       {/* ========================================================= */}
-      <WhatsAppKpiWidgetCard onOpenFullModal={() => setIsWhatsAppModalOpen(true)} />
+      <WhatsAppKpiWidgetCard
+        onOpenFullModal={() => setIsWhatsAppModalOpen(true)}
+        onNavigate={onNavigate}
+      />
 
       {/* ========================================================= */}
       {/* PERSONALIZED ROLE-BASED COMMAND DECK & WIDGETS */}
@@ -1254,127 +1359,173 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       />
 
       {/* ========================================================= */}
-      {/* DRAGGABLE COMMERCIAL KPI GRID */}
+      {/* MAIN DASHBOARD CONTENT & RIGHT-SIDE RECENT ACTIVITY PANEL */}
       {/* ========================================================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
-        {visibleKpis.map((kpiWidget) => renderKpiCard(kpiWidget))}
-      </div>
-
-      {/* ========================================================= */}
-      {/* EXECUTIVE FINANCE & HR TELEMETRY SECTION */}
-      {/* ========================================================= */}
-      <div className="bg-slate-900/5 rounded-2xl p-5 border border-slate-200 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              <Landmark className="w-4 h-4 text-emerald-600" />
-              <span>Executive Management: Finance & Talent Metrics</span>
-            </h3>
-            <p className="text-xs text-slate-500">Real-time statutory tax liabilities, operating profitability & staff deployment</p>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+        {/* Main Content Column */}
+        <div className="xl:col-span-8 2xl:col-span-9 space-y-6 min-w-0">
+          {/* DRAGGABLE COMMERCIAL KPI GRID */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+            {visibleKpis.map((kpiWidget) => renderKpiCard(kpiWidget))}
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onNavigate('finance')}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
-            >
-              Open Finance
-            </button>
-            <button
-              onClick={() => onNavigate('hr')}
-              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
-            >
-              Open HR System
-            </button>
+          {/* EXECUTIVE FINANCE & HR TELEMETRY SECTION */}
+          <div className="bg-slate-900/5 dark:bg-slate-800/40 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
+                  <Landmark className="w-4 h-4 text-emerald-600" />
+                  <span>Executive Management: Finance & Talent Metrics</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Real-time statutory tax liabilities, operating profitability & staff deployment</p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => onNavigate('finance')}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
+                >
+                  Open Finance
+                </button>
+                <button
+                  onClick={() => onNavigate('hr')}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
+                >
+                  Open HR System
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* EBITDA / Net Operating Margin */}
+              <div
+                onClick={() => onNavigate('finance')}
+                role="button"
+                tabIndex={0}
+                title="Click to open Financial General Ledger & P&L"
+                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-600 cursor-pointer transition-all shadow-2xs hover:shadow-md hover:-translate-y-0.5 group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Operating EBITDA</span>
+                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md">
+                      {ebitdaMargin}% Margin
+                    </span>
+                  </div>
+                  <div className="text-xl font-bold font-mono text-emerald-700 dark:text-emerald-400 mt-2">
+                    ₹{(ebitda / 100000).toFixed(2)} Lakhs
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                    Rev: ₹{(totalRevenue / 100000).toFixed(1)}L • COGS: ₹{(totalExpenses / 100000).toFixed(1)}L
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-2 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 group-hover:underline">
+                  <span>View P&L Ledger</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </div>
+              </div>
+
+              {/* TDS / GST Statutory Dues */}
+              <div
+                onClick={() => onNavigate('finance')}
+                role="button"
+                tabIndex={0}
+                title="Click to open Statutory TDS Deductions & Tax Dues"
+                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-600 cursor-pointer transition-all shadow-2xs hover:shadow-md hover:-translate-y-0.5 group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Statutory TDS Pending</span>
+                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md">
+                      Due 7th Next Mo
+                    </span>
+                  </div>
+                  <div className="text-xl font-bold font-mono text-amber-700 dark:text-amber-400 mt-2">
+                    ₹{pendingTdsDeposit.toLocaleString()}
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                    Sec 194C / 194J Contractor Deductions
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-2 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-amber-600 dark:text-amber-400 group-hover:underline">
+                  <span>View Tax Liabilities</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </div>
+              </div>
+
+              {/* Active Headcount & Attendance */}
+              <div
+                onClick={() => onNavigate('hr')}
+                role="button"
+                tabIndex={0}
+                title="Click to open Staff Directory & Engineering Attendance"
+                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-600 cursor-pointer transition-all shadow-2xs hover:shadow-md hover:-translate-y-0.5 group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Staff Deployment</span>
+                    <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md">
+                      100% Present
+                    </span>
+                  </div>
+                  <div className="text-xl font-bold font-mono text-slate-900 dark:text-slate-100 mt-2">
+                    {activeStaffCount} Engineers & Staff
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                    Site Execution & HVAC Design Team
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-2 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 group-hover:underline">
+                  <span>View HR Staff</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </div>
+              </div>
+
+              {/* Monthly Payroll & Open Roles */}
+              <div
+                onClick={() => onNavigate('hr')}
+                role="button"
+                tabIndex={0}
+                title="Click to open Payroll Disbursal & Job Openings"
+                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-purple-400 dark:hover:border-purple-600 cursor-pointer transition-all shadow-2xs hover:shadow-md hover:-translate-y-0.5 group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Monthly Payroll / Hiring</span>
+                    <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-md">
+                      {openPositionsCount} Openings
+                    </span>
+                  </div>
+                  <div className="text-xl font-bold font-mono text-slate-900 dark:text-slate-100 mt-2">
+                    ₹{(latestPayrollAmount / 100000).toFixed(2)} Lakhs/mo
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                    EPF (12%) & Statutory Net Disbursal
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-2 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-purple-600 dark:text-purple-400 group-hover:underline">
+                  <span>View Payroll & Jobs</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* DRAGGABLE MAIN DASHBOARD SECTIONS */}
+          <div className="space-y-6">
+            {sortedMainSections.map((sectionWidget, index) =>
+              renderMainSection(sectionWidget, index)
+            )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* EBITDA / Net Operating Margin */}
-          <div
-            onClick={() => onNavigate('finance')}
-            className="bg-white p-4 rounded-xl border border-slate-200 hover:border-emerald-300 cursor-pointer transition-all shadow-2xs"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 font-medium">Operating EBITDA</span>
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                {ebitdaMargin}% Margin
-              </span>
-            </div>
-            <div className="text-xl font-bold font-mono text-emerald-700 mt-2">
-              ₹{(ebitda / 100000).toFixed(2)} Lakhs
-            </div>
-            <div className="text-[11px] text-slate-500 mt-1">
-              Rev: ₹{(totalRevenue / 100000).toFixed(1)}L • COGS: ₹{(totalExpenses / 100000).toFixed(1)}L
-            </div>
-          </div>
-
-          {/* TDS / GST Statutory Dues */}
-          <div
-            onClick={() => onNavigate('finance')}
-            className="bg-white p-4 rounded-xl border border-slate-200 hover:border-amber-300 cursor-pointer transition-all shadow-2xs"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 font-medium">Statutory TDS Pending</span>
-              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
-                Due 7th Next Mo
-              </span>
-            </div>
-            <div className="text-xl font-bold font-mono text-amber-700 mt-2">
-              ₹{pendingTdsDeposit.toLocaleString()}
-            </div>
-            <div className="text-[11px] text-slate-500 mt-1">
-              Sec 194C / 194J Contractor Deductions
-            </div>
-          </div>
-
-          {/* Active Headcount & Attendance */}
-          <div
-            onClick={() => onNavigate('hr')}
-            className="bg-white p-4 rounded-xl border border-slate-200 hover:border-indigo-300 cursor-pointer transition-all shadow-2xs"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 font-medium">Staff Deployment</span>
-              <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
-                100% Present
-              </span>
-            </div>
-            <div className="text-xl font-bold font-mono text-slate-900 mt-2">
-              {activeStaffCount} Engineers & Staff
-            </div>
-            <div className="text-[11px] text-slate-500 mt-1">
-              Site Execution & HVAC Design Team
-            </div>
-          </div>
-
-          {/* Monthly Payroll & Open Roles */}
-          <div
-            onClick={() => onNavigate('hr')}
-            className="bg-white p-4 rounded-xl border border-slate-200 hover:border-purple-300 cursor-pointer transition-all shadow-2xs"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 font-medium">Monthly Payroll / Hiring</span>
-              <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md">
-                {openPositionsCount} Openings
-              </span>
-            </div>
-            <div className="text-xl font-bold font-mono text-slate-900 mt-2">
-              ₹{(latestPayrollAmount / 100000).toFixed(2)} Lakhs/mo
-            </div>
-            <div className="text-[11px] text-slate-500 mt-1">
-              EPF (12%) & Statutory Net Disbursal
-            </div>
-          </div>
+        {/* Right-Side Panel Column: Recent Activity Panel */}
+        <div className="xl:col-span-4 2xl:col-span-3 space-y-6 xl:sticky xl:top-6">
+          <RecentActivityPanel
+            auditLogs={auditLogs}
+            onNavigate={onNavigate}
+          />
         </div>
-      </div>
-
-      {/* ========================================================= */}
-      {/* DRAGGABLE MAIN DASHBOARD SECTIONS & ACTIVITY FEEDS */}
-      {/* ========================================================= */}
-      <div className="space-y-6">
-        {sortedMainSections.map((sectionWidget, index) =>
-          renderMainSection(sectionWidget, index)
-        )}
       </div>
 
       {/* Layout Manager Modal */}

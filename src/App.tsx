@@ -60,16 +60,16 @@ export function App() {
   const [isNewPROpen, setIsNewPROpen] = useState(false);
   const [isNewExpenseOpen, setIsNewExpenseOpen] = useState(false);
 
-  // Sidebar Pinned state (defaults to visible expanded mode)
+  // Sidebar Pinned state (defaults to collapsed sub-menu bar mode)
   const [isSidebarPinned, setIsSidebarPinned] = useState<boolean>(() => {
     try {
       const saved = sessionStorage.getItem('alphaerp_sidebar_pinned_state');
       if (saved !== null) {
         return saved === 'true';
       }
-      return true; // Default: fully visible and open
+      return false; // Default: collapsed to sub menu bar
     } catch {
-      return true;
+      return false;
     }
   });
 

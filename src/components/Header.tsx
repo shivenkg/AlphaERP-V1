@@ -385,8 +385,8 @@ export const Header: React.FC<HeaderProps> = ({
               className="hidden md:flex items-center justify-center p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors shrink-0 border border-slate-200 dark:border-slate-700 shadow-2xs"
               title={
                 isSidebarPinned
-                  ? 'Collapse Sidebar (Enable auto-expand on mouse hover)'
-                  : 'Pin Sidebar Open (Keep expanded at 256px)'
+                  ? 'Collapse to Sub Menu Bar'
+                  : 'Expand Sidebar (Full Navigation Tree)'
               }
             >
               {isSidebarPinned ? (
