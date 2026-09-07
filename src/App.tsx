@@ -38,6 +38,9 @@ import { LeadDetailModal } from './components/LeadDetailModal';
 import { GoogleSheetIntegrationModal } from './components/GoogleSheetIntegrationModal';
 import { LocalBackupNotification } from './components/LocalBackupNotification';
 import { ApiIntegrationAndDeploymentModal } from './components/ApiIntegrationAndDeploymentModal';
+import { CreatePRModal } from './components/CreatePRModal';
+import { NewExpenseModal } from './components/NewExpenseModal';
+import { QuickActionFloatingButton } from './components/QuickActionFloatingButton';
 
 export function App() {
   const [data, setData] = useState(storageService.getAllData());
@@ -54,6 +57,8 @@ export function App() {
   const [isSheetsModalOpen, setIsSheetsModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isApiGuideOpen, setIsApiGuideOpen] = useState(false);
+  const [isNewPROpen, setIsNewPROpen] = useState(false);
+  const [isNewExpenseOpen, setIsNewExpenseOpen] = useState(false);
 
   // Sidebar Pinned state (defaults to visible expanded mode)
   const [isSidebarPinned, setIsSidebarPinned] = useState<boolean>(() => {
@@ -279,6 +284,8 @@ export function App() {
                   setIsNewQuoteOpen(true);
                 }}
                 onOpenSheetsModal={() => setIsSheetsModalOpen(true)}
+                onOpenNewPR={() => setIsNewPROpen(true)}
+                onOpenNewExpense={() => setIsNewExpenseOpen(true)}
               />
             )}
 
@@ -571,6 +578,39 @@ export function App() {
         isOpen={isApiGuideOpen}
         onClose={() => setIsApiGuideOpen(false)}
       />
+
+      {/* Global Quick Action Modals: Create PR & Log Expense */}
+      <CreatePRModal
+        isOpen={isNewPROpen}
+        onClose={() => setIsNewPROpen(false)}
+        projects={data.projects}
+        inventory={data.inventory}
+        currentRole={data.currentUser?.role}
+        onPRCreated={() => {
+          setIsNewPROpen(false);
+          handleRefreshData();
+        }}
+      />
+
+      <NewExpenseModal
+        isOpen={isNewExpenseOpen}
+        onClose={() => setIsNewExpenseOpen(false)}
+        projects={data.projects}
+        employees={data.employees}
+        onExpenseCreated={() => {
+          setIsNewExpenseOpen(false);
+          handleRefreshData();
+        }}
+      />
+
+      {/* Global Quick Action Floating Action Button (Active across all views) */}
+      {activeTab !== 'dashboard' && (
+        <QuickActionFloatingButton
+          onOpenNewLead={() => setIsNewLeadOpen(true)}
+          onOpenNewPR={() => setIsNewPROpen(true)}
+          onOpenNewExpense={() => setIsNewExpenseOpen(true)}
+        />
+      )}
 
       {/* Local Backup Notification & Snapshot Recovery Floating Toast / Modal */}
       <LocalBackupNotification />

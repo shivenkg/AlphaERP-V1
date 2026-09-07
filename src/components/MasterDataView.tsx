@@ -25,7 +25,8 @@ import {
   MapPin,
   FileText,
   Scale,
-  Calculator
+  Calculator,
+  Download
 } from 'lucide-react';
 import {
   ClientMaster,
@@ -37,6 +38,7 @@ import {
 } from '../types';
 import { storageService } from '../services/storageService';
 import { UomConversionCalculatorModal } from './UomConversionCalculatorModal';
+import { exportToCSV } from '../utils/pdfExportHelper';
 
 interface MasterDataViewProps {
   clients: ClientMaster[];
@@ -586,6 +588,136 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
     (pt.code || '').toLowerCase().includes(term)
   );
 
+  const [csvToast, setCsvToast] = useState<string | null>(null);
+
+  const handleDownloadCSV = () => {
+    const today = new Date().toISOString().split('T')[0];
+    let rows: (string | number)[][] = [];
+    let filename = '';
+
+    switch (activeTab) {
+      case 'clients':
+        filename = `MasterData_Clients_${today}.csv`;
+        rows = [
+          ['Client Code', 'Company Name', 'Contact Person', 'Designation', 'Email', 'Phone', 'City', 'State', 'GSTIN', 'PAN', 'Credit Limit (INR)', 'Credit Days', 'Payment Terms', 'Industry', 'Status'],
+          ...filteredClients.map((c) => [
+            c.clientCode || '',
+            c.companyName || '',
+            c.contactPerson || '',
+            c.designation || '',
+            c.email || '',
+            c.phone || '',
+            c.city || '',
+            c.state || '',
+            c.gstin || '',
+            c.pan || '',
+            c.creditLimit || 0,
+            c.creditPeriodDays || 0,
+            c.paymentTerms || '',
+            c.industry || '',
+            c.status || ''
+          ])
+        ];
+        break;
+
+      case 'vendors':
+        filename = `MasterData_Vendors_${today}.csv`;
+        rows = [
+          ['Vendor Code', 'Vendor Name', 'Category', 'Contact Person', 'Phone', 'Email', 'City', 'State', 'GSTIN', 'PAN', 'Payment Terms', 'Rating', 'Bank Account', 'IFSC'],
+          ...filteredVendors.map((v) => [
+            v.vendorCode || v.code || '',
+            v.name || '',
+            v.category || '',
+            v.contactPerson || '',
+            v.phone || '',
+            v.email || '',
+            v.city || '',
+            v.state || '',
+            v.gstin || v.gstOrTaxId || '',
+            v.pan || '',
+            v.paymentTerms || '',
+            v.rating || '',
+            v.bankDetails?.accountNumber || '',
+            v.bankDetails?.ifscCode || ''
+          ])
+        ];
+        break;
+
+      case 'items':
+        filename = `MasterData_Items_SKUs_${today}.csv`;
+        rows = [
+          ['SKU', 'Item Name', 'Category', 'Unit', 'Avg Unit Cost (INR)', 'Physical Stock', 'Allocated Stock', 'Available Stock', 'Reorder Level', 'Lead Time Days', 'Preferred Vendor'],
+          ...filteredItems.map((i) => [
+            i.sku || '',
+            i.name || '',
+            i.category || '',
+            i.unit || '',
+            i.averageUnitCost || 0,
+            i.currentStock || 0,
+            i.allocatedStock || 0,
+            i.availableStock || 0,
+            i.reorderLevel || 0,
+            i.leadTimeDays || 0,
+            i.preferredVendor || ''
+          ])
+        ];
+        break;
+
+      case 'costCenters':
+        filename = `MasterData_CostCenters_${today}.csv`;
+        rows = [
+          ['Code', 'Name', 'Department', 'Location', 'Manager Name', 'Budget Limit (INR)', 'Status'],
+          ...filteredCostCenters.map((cc) => [
+            cc.code || '',
+            cc.name || '',
+            cc.department || '',
+            cc.location || '',
+            cc.managerName || '',
+            cc.budgetLimit || 0,
+            cc.active ? 'Active' : 'Inactive'
+          ])
+        ];
+        break;
+
+      case 'taxSlabs':
+        filename = `MasterData_TaxSlabs_${today}.csv`;
+        rows = [
+          ['Name', 'CGST %', 'SGST %', 'IGST %', 'Total GST %', 'HSN/SAC Code', 'Applies To', 'Status'],
+          ...filteredTaxSlabs.map((t) => [
+            t.name || '',
+            t.cgstRate || 0,
+            t.sgstRate || 0,
+            t.igstRate || 0,
+            t.totalGstRate || 0,
+            t.hsnSacCode || '',
+            t.appliesTo || '',
+            t.active ? 'Active' : 'Inactive'
+          ])
+        ];
+        break;
+
+      case 'paymentTerms':
+        filename = `MasterData_PaymentTerms_${today}.csv`;
+        rows = [
+          ['Code', 'Name', 'Days', 'Description', 'Is Default'],
+          ...filteredPaymentTerms.map((pt) => [
+            pt.code || '',
+            pt.name || '',
+            pt.days || 0,
+            pt.description || '',
+            pt.isDefault ? 'Yes' : 'No'
+          ])
+        ];
+        break;
+    }
+
+    if (rows.length > 1) {
+      exportToCSV(filename, rows);
+      setCsvToast(`Successfully downloaded ${rows.length - 1} records as ${filename}`);
+      setTimeout(() => setCsvToast(null), 4000);
+    }
+  };
+
   return (
     <div className="space-y-6 pb-12">
       {/* Header Banner */}
@@ -608,6 +740,14 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleDownloadCSV}
+            className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl border border-slate-700 shadow-sm transition-all cursor-pointer"
+            title={`Download current ${activeTab} data as CSV`}
+          >
+            <Download className="w-4 h-4 text-emerald-400" />
+            <span>Download CSV</span>
+          </button>
           {activeTab === 'clients' && (
             <button
               onClick={() => handleOpenClientModal()}
@@ -674,6 +814,22 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
           )}
         </div>
       </div>
+
+      {/* CSV Export Success Toast */}
+      {csvToast && (
+        <div className="p-3 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs text-emerald-800 dark:text-emerald-200 flex items-center justify-between gap-2 shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="font-semibold">{csvToast}</span>
+          </div>
+          <button
+            onClick={() => setCsvToast(null)}
+            className="text-emerald-700 dark:text-emerald-300 font-bold hover:underline cursor-pointer"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Tabs Navigation */}
       <div className="flex items-center gap-2 border-b border-slate-200 overflow-x-auto pb-2">

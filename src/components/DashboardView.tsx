@@ -71,6 +71,7 @@ import { DashboardLayoutManagerModal } from './dashboard/DashboardLayoutManagerM
 import { WhatsAppKpiWidgetCard } from './WhatsAppKpiWidgetCard';
 import { WhatsAppDailyKpiModal } from './WhatsAppDailyKpiModal';
 import { PersonalizedRoleWidgets } from './dashboard/PersonalizedRoleWidgets';
+import { QuickActionFloatingButton } from './QuickActionFloatingButton';
 
 interface DashboardViewProps {
   currentUser?: UserProfile;
@@ -94,6 +95,8 @@ interface DashboardViewProps {
   onOpenNewLead: () => void;
   onOpenNewQuote: () => void;
   onOpenSheetsModal: () => void;
+  onOpenNewPR?: () => void;
+  onOpenNewExpense?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -117,7 +120,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onNavigate,
   onOpenNewLead,
   onOpenNewQuote,
-  onOpenSheetsModal
+  onOpenSheetsModal,
+  onOpenNewPR,
+  onOpenNewExpense
 }) => {
   // Layout Management State
   const [layoutState, setLayoutState] = useState<DashboardLayoutState>(() =>
@@ -1385,6 +1390,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <WhatsAppDailyKpiModal
         isOpen={isWhatsAppModalOpen}
         onClose={() => setIsWhatsAppModalOpen(false)}
+      />
+
+      {/* Quick Action Floating Action Button with Popover Menu */}
+      <QuickActionFloatingButton
+        onOpenNewLead={onOpenNewLead}
+        onOpenNewPR={onOpenNewPR || (() => onNavigate('procurement'))}
+        onOpenNewExpense={onOpenNewExpense || (() => onNavigate('hr'))}
       />
     </div>
   );

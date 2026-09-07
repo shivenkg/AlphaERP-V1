@@ -15,11 +15,13 @@ import {
   ShieldAlert,
   ShoppingCart,
   Zap,
-  Info
+  Info,
+  Download
 } from 'lucide-react';
 import { InventoryItem } from '../types';
 import { storageService } from '../services/storageService';
 import { PredictiveInventoryReorderPanel } from './PredictiveInventoryReorderPanel';
+import { exportToCSV } from '../utils/pdfExportHelper';
 
 interface InventoryWarehouseViewProps {
   inventory: InventoryItem[];
@@ -130,6 +132,60 @@ export const InventoryWarehouseView: React.FC<InventoryWarehouseViewProps> = ({
     setEditingItem(null);
   };
 
+  const handleDownloadCSV = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const filename = `HVAC_Inventory_Warehouse_Ledger_${today}.csv`;
+    const rows: (string | number)[][] = [
+      [
+        'SKU Code',
+        'Item Description',
+        'Category',
+        'Unit',
+        'Avg Unit Cost (INR)',
+        'Physical On-Hand Stock',
+        'Allocated to Projects',
+        'Available Free Stock',
+        'Total Valuation (INR)',
+        'Reorder Level',
+        'Safety Stock Threshold (10%)',
+        'Health Status',
+        'Warehouse Location / Rack',
+        'Lead Time (Days)',
+        'Preferred Vendor'
+      ],
+      ...filteredInventory.map((item) => {
+        const { safetyThreshold, isCritical, isLow } = getSafetyStockDetails(item);
+        const healthStatus = isCritical
+          ? 'CRITICAL DEFICIT (<10% Safety)'
+          : isLow
+          ? 'DEFICIT (Below Reorder)'
+          : 'ADEQUATE';
+
+        return [
+          item.sku || '',
+          item.name || '',
+          item.category || '',
+          item.unit || '',
+          item.averageUnitCost || 0,
+          item.currentStock || 0,
+          item.allocatedStock || 0,
+          item.availableStock || 0,
+          item.currentStock * item.averageUnitCost,
+          item.reorderLevel || 0,
+          safetyThreshold,
+          healthStatus,
+          item.location || 'Rack-A',
+          item.leadTimeDays || 7,
+          item.preferredVendor || ''
+        ];
+      })
+    ];
+
+    exportToCSV(filename, rows);
+    setAuditSuccessMsg(`Successfully exported ${filteredInventory.length} inventory SKUs to ${filename}`);
+    setTimeout(() => setAuditSuccessMsg(null), 4000);
+  };
+
   return (
     <div className="space-y-5 pb-12">
       {/* Top Banner */}
@@ -156,9 +212,18 @@ export const InventoryWarehouseView: React.FC<InventoryWarehouseViewProps> = ({
 
         <div className="flex flex-wrap items-center gap-3">
           <button
+            onClick={handleDownloadCSV}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+            title="Download current filtered inventory table as CSV"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Download CSV</span>
+          </button>
+
+          <button
             onClick={handleRunSafetyAudit}
             disabled={isAuditing}
-            className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition-all shadow-xs"
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
             title="Scan inventory for items under 10% safety stock and dispatch system notifications"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isAuditing ? 'animate-spin text-blue-600' : ''}`} />
