@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   TrendingUp,
   Boxes,
@@ -34,8 +34,14 @@ import {
   ArrowUp,
   ArrowDown,
   LayoutGrid,
-  Check
+  Check,
+  FileDown
 } from 'lucide-react';
+import html2canvasPro from 'html2canvas-pro';
+import rawHtml2Canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+
+const html2canvas = (html2canvasPro || rawHtml2Canvas) as unknown as typeof rawHtml2Canvas;
 import {
   Lead,
   Quote,
@@ -213,6 +219,196 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       setIsSyncingSheets(false);
       setSyncProgress(0);
       setSyncStage('');
+    }
+  };
+
+  // Reference to the dashboard metrics container and PDF export state
+  const dashboardMetricsRef = useRef<HTMLDivElement>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
+
+  /**
+   * Generates a comprehensive, high-resolution, print-ready PDF report of the current
+   * dashboard view metrics leveraging html2canvas and jsPDF with multi-page slicing,
+   * executive headers, timestamps, and page numbering.
+   */
+  const handleDownloadFullReport = async () => {
+    if (isGeneratingPdf) return;
+    const element = dashboardMetricsRef.current;
+    if (!element) return;
+
+    setIsGeneratingPdf(true);
+    try {
+      // 1. Stabilization pause to ensure charts, graphs, and layout finish any active animations
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      const isDarkMode =
+        document.documentElement.classList.contains('dark') ||
+        document.body.classList.contains('dark') ||
+        Boolean(element.closest('.dark'));
+
+      // 2. High-resolution raster capture of the full dashboard UI metrics
+      const canvas = await html2canvas(element, {
+        scale: 2.0,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: isDarkMode ? '#020617' : '#FAF9F5',
+        windowWidth: Math.max(element.scrollWidth || 0, 1366),
+        ignoreElements: (el) => {
+          if (!el || !(el instanceof Element)) return false;
+          return (
+            el.getAttribute?.('data-html2canvas-ignore') === 'true' ||
+            el.classList?.contains('no-print') ||
+            el.classList?.contains('quick-action-fab')
+          );
+        }
+      });
+
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+
+      // 3. Landscape A4 orientation provides natural layout for wide enterprise metrics
+      const isLandscape = imgWidth >= imgHeight * 0.75;
+      const pdf = new jsPDF({
+        orientation: isLandscape ? 'landscape' : 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      // Print Margins (mm)
+      const topMargin = 14;
+      const bottomMargin = 12;
+      const leftMargin = 10;
+      const rightMargin = 10;
+      const printWidth = pageWidth - leftMargin - rightMargin;
+      const printHeight = pageHeight - topMargin - bottomMargin;
+
+      const totalPdfHeightMm = (imgHeight * printWidth) / imgWidth;
+
+      if (totalPdfHeightMm <= printHeight) {
+        // Fits cleanly on a single page
+        const imgData = canvas.toDataURL('image/png', 0.95);
+        pdf.addImage(imgData, 'PNG', leftMargin, topMargin, printWidth, totalPdfHeightMm, undefined, 'FAST');
+      } else {
+        // Multi-page slicing to prevent vertical squishing while preserving print quality
+        const pxPerMm = imgWidth / printWidth;
+        const pageHeightPx = Math.floor(printHeight * pxPerMm);
+        let renderedHeightPx = 0;
+        let pageNum = 1;
+
+        while (renderedHeightPx < imgHeight) {
+          const sliceHeightPx = Math.min(pageHeightPx, imgHeight - renderedHeightPx);
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = imgWidth;
+          pageCanvas.height = sliceHeightPx;
+          const ctx = pageCanvas.getContext('2d');
+
+          if (ctx) {
+            ctx.fillStyle = isDarkMode ? '#020617' : '#FAF9F5';
+            ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+            ctx.drawImage(
+              canvas,
+              0,
+              renderedHeightPx,
+              imgWidth,
+              sliceHeightPx,
+              0,
+              0,
+              imgWidth,
+              sliceHeightPx
+            );
+
+            const sliceData = pageCanvas.toDataURL('image/png', 0.95);
+            const sliceHeightMm = (sliceHeightPx * printWidth) / imgWidth;
+
+            if (pageNum > 1) {
+              pdf.addPage();
+            }
+
+            pdf.addImage(sliceData, 'PNG', leftMargin, topMargin, printWidth, sliceHeightMm, undefined, 'FAST');
+          }
+
+          renderedHeightPx += sliceHeightPx;
+          pageNum++;
+        }
+      }
+
+      // 4. Add executive print-ready header, confidentiality tag, timestamp & page numbers
+      const totalPages = (pdf as any).internal.getNumberOfPages();
+      const timestamp = new Date().toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+
+        // Header rule & banner text
+        pdf.setFontSize(8);
+        pdf.setTextColor(isDarkMode ? 148 : 71, isDarkMode ? 163 : 85, isDarkMode ? 184 : 105);
+        pdf.text(
+          'AlphaERP™ Enterprise Suite • Atmos Aircon HVAC Operations',
+          leftMargin,
+          8
+        );
+        pdf.text(
+          'COMPREHENSIVE EXECUTIVE METRICS REPORT',
+          pageWidth - rightMargin,
+          8,
+          { align: 'right' }
+        );
+
+        // Header thin divider
+        pdf.setDrawColor(isDarkMode ? 51 : 226, isDarkMode ? 65 : 232, isDarkMode ? 85 : 240);
+        pdf.setLineWidth(0.2);
+        pdf.line(leftMargin, 10, pageWidth - rightMargin, 10);
+
+        // Footer thin divider
+        pdf.line(leftMargin, pageHeight - 8, pageWidth - rightMargin, pageHeight - 8);
+
+        // Footer text
+        pdf.setFontSize(7.5);
+        pdf.setTextColor(isDarkMode ? 148 : 100, isDarkMode ? 163 : 116, isDarkMode ? 184 : 139);
+        pdf.text(
+          `CONFIDENTIAL & PROPRIETARY • Generated: ${timestamp}`,
+          leftMargin,
+          pageHeight - 4
+        );
+        pdf.text(
+          `Page ${i} of ${totalPages}`,
+          pageWidth - rightMargin,
+          pageHeight - 4,
+          { align: 'right' }
+        );
+      }
+
+      const dateSlug = new Date().toISOString().split('T')[0];
+      const filename = `AlphaERP_Full_Report_${dateSlug}.pdf`;
+      pdf.save(filename);
+
+      storageService.addNotification(
+        'Full Report Downloaded',
+        `Generated comprehensive print-ready metrics PDF: ${filename}`,
+        'success',
+        'system'
+      );
+    } catch (error) {
+      console.error('Failed to generate Dashboard Full Report PDF:', error);
+      storageService.addNotification(
+        'Report Generation Failed',
+        'An error occurred while generating the comprehensive metrics report.',
+        'error',
+        'system'
+      );
+    } finally {
+      setIsGeneratingPdf(false);
     }
   };
 
@@ -446,16 +642,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Awarded Sales (Won)</span>
-                <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0">
+                <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:rotate-[-4deg] group-hover:bg-emerald-100 dark:bg-emerald-950/60 dark:border-emerald-800/60 dark:group-hover:bg-emerald-900/60">
                   <TrendingUp className="w-4 h-4" />
                 </div>
               </div>
               <div className="mt-3">
-                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 tracking-tight font-mono">
+                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight font-mono transition-transform duration-200 group-hover:translate-x-0.5">
                   ₹{(totalAwardedSales / 100000).toFixed(2)} L
                 </div>
-                <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs text-emerald-600 font-medium">
-                  <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+                <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                  <ArrowUpRight className="w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   <span>
                     {awardedQuotes.length} Won Deals • {winRatePct}% Win Rate
                   </span>
@@ -466,7 +662,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span className="text-slate-500 dark:text-slate-400">Awarded Quotations</span>
               <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 group-hover:underline">
                 <span>View Details</span>
-                <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
               </span>
             </div>
           </div>
@@ -479,15 +675,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Active CRM Pipeline</span>
-                <div className="p-2 sm:p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 shrink-0">
+                <div className="p-2 sm:p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:rotate-[-4deg] group-hover:bg-blue-100 dark:bg-blue-950/60 dark:border-blue-800/60 dark:group-hover:bg-blue-900/60">
                   <Users className="w-4 h-4" />
                 </div>
               </div>
               <div className="mt-3">
-                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 tracking-tight font-mono">
+                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight font-mono transition-transform duration-200 group-hover:translate-x-0.5">
                   ₹{(activePipelineValue / 100000).toFixed(2)} L
                 </div>
-                <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs text-blue-600 font-medium">
+                <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs text-blue-600 dark:text-blue-400 font-medium">
                   <span>{activePipelineLeads.length} In-Flight Deals (5 Stages)</span>
                 </div>
               </div>
@@ -496,7 +692,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span className="text-slate-500 dark:text-slate-400">Prospect Pipeline</span>
               <span className="font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1 group-hover:underline">
                 <span>View Details</span>
-                <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
               </span>
             </div>
           </div>
@@ -509,19 +705,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Inventory Stock Worth</span>
-                <div className="p-2 sm:p-2.5 rounded-xl bg-cyan-50 text-cyan-600 border border-cyan-100 shrink-0">
+                <div className="p-2 sm:p-2.5 rounded-xl bg-cyan-50 text-cyan-600 border border-cyan-100 shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:rotate-[-4deg] group-hover:bg-cyan-100 dark:bg-cyan-950/60 dark:border-cyan-800/60 dark:group-hover:bg-cyan-900/60">
                   <Boxes className="w-4 h-4" />
                 </div>
               </div>
               <div className="mt-3">
-                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 tracking-tight font-mono">
+                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight font-mono transition-transform duration-200 group-hover:translate-x-0.5">
                   ₹{(totalInventoryValue / 100000).toFixed(2)} L
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mt-2 text-xs">
-                  <span className="text-slate-500">{inventory.length} Warehouse SKUs</span>
+                  <span className="text-slate-500 dark:text-slate-400">{inventory.length} Warehouse SKUs</span>
                   <span
                     className={`font-semibold shrink-0 ${
-                      lowStockItems.length > 0 ? 'text-rose-600' : 'text-emerald-600'
+                      lowStockItems.length > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
                     }`}
                   >
                     {lowStockItems.length} Low / Deficit
@@ -533,7 +729,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span className="text-slate-500 dark:text-slate-400">Warehouse Stock</span>
               <span className="font-semibold text-cyan-600 dark:text-cyan-400 flex items-center gap-1 group-hover:underline">
                 <span>View Details</span>
-                <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
               </span>
             </div>
           </div>
@@ -547,17 +743,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Milestone Receivables</span>
-                <div className="p-2 sm:p-2.5 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 shrink-0">
+                <div className="p-2 sm:p-2.5 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:rotate-[-4deg] group-hover:bg-purple-100 dark:bg-purple-950/60 dark:border-purple-800/60 dark:group-hover:bg-purple-900/60">
                   <CreditCard className="w-4 h-4" />
                 </div>
               </div>
               <div className="mt-3">
-                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 tracking-tight font-mono">
+                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight font-mono transition-transform duration-200 group-hover:translate-x-0.5">
                   ₹{(pendingReceivables / 100000).toFixed(2)} L
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mt-2 text-xs">
-                  <span className="text-emerald-600 font-medium">₹{(totalCollected / 100000).toFixed(1)}L Collected</span>
-                  <span className="text-amber-600 font-medium shrink-0">Pending Billing</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">₹{(totalCollected / 100000).toFixed(1)}L Collected</span>
+                  <span className="text-amber-600 dark:text-amber-400 font-medium shrink-0">Pending Billing</span>
                 </div>
               </div>
             </div>
@@ -565,7 +761,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span className="text-slate-500 dark:text-slate-400">Aging & Invoices</span>
               <span className="font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1 group-hover:underline">
                 <span>View Details</span>
-                <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
               </span>
             </div>
           </div>
@@ -598,14 +794,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             onNavigate(target.tab);
           }
         }}
-        className={`relative bg-white dark:bg-slate-900 border rounded-2xl p-4 sm:p-5 shadow-xs transition-all min-w-0 group select-none ${
+        className={`relative bg-white dark:bg-slate-900 border rounded-2xl p-4 sm:p-5 shadow-xs transition-all duration-200 min-w-0 group select-none ${
           isDragged
             ? 'opacity-40 border-dashed border-blue-500 scale-95'
             : isDragOver
             ? 'border-blue-500 ring-2 ring-blue-400/30 scale-[1.02] bg-blue-50/20'
             : isCustomizeMode
             ? 'border-blue-300 dark:border-blue-700 bg-blue-50/10 cursor-grab active:cursor-grabbing hover:shadow-md'
-            : 'border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md hover:-translate-y-0.5 cursor-pointer'
+            : 'border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] cursor-pointer'
         }`}
       >
         {/* Customization Grip Overlay or Quick Navigation Pill on Hover */}
@@ -1068,7 +1264,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     .sort((a, b) => a.order - b.order);
 
   return (
-    <div className="space-y-6 pb-12">
+    <div ref={dashboardMetricsRef} className="space-y-6 pb-12">
       {/* Top Banner / Google Sheet Integration Status & Layout Manager Controls */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all">
         <div className="space-y-1.5">
@@ -1088,7 +1284,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto" data-html2canvas-ignore="true">
+          {/* Download Full Report Action Button */}
+          <button
+            id="download-full-report-btn"
+            data-testid="download-full-report-btn"
+            data-alias="download-dashboard-pdf-btn"
+            onClick={handleDownloadFullReport}
+            disabled={isGeneratingPdf}
+            className={`flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer border ${
+              isGeneratingPdf
+                ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-500 dark:text-blue-400 border-blue-200 dark:border-blue-800 cursor-not-allowed'
+                : 'bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400'
+            }`}
+            title="Download Full Report: Comprehensive print-ready PDF generation of current view metrics"
+          >
+            {isGeneratingPdf ? (
+              <RefreshCw className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
+            ) : (
+              <FileDown className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            )}
+            <span>{isGeneratingPdf ? 'Generating Full Report...' : 'Download Full Report'}</span>
+          </button>
+
           {/* Customize Layout Toolbar Action */}
           <button
             onClick={() => setIsCustomizeMode(!isCustomizeMode)}
@@ -1155,7 +1373,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* Real-time Google Sheets Synchronization Progress Indicator */}
       {isSyncingSheets && (
-        <div className="bg-gradient-to-r from-blue-900 to-indigo-950 text-white rounded-2xl p-4 sm:p-5 shadow-lg border border-blue-700/50 animate-in fade-in zoom-in-95 space-y-3">
+        <div data-html2canvas-ignore="true" className="bg-gradient-to-r from-blue-900 to-indigo-950 text-white rounded-2xl p-4 sm:p-5 shadow-lg border border-blue-700/50 animate-in fade-in zoom-in-95 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-blue-600/40 text-blue-300 border border-blue-400/30 shrink-0 animate-spin">
@@ -1201,7 +1419,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* Sync Success Feedback Toast */}
       {syncSuccessToast && !isSyncingSheets && (
-        <div className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-emerald-900 dark:text-emerald-200 shadow-sm animate-in fade-in">
+        <div data-html2canvas-ignore="true" className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-emerald-900 dark:text-emerald-200 shadow-sm animate-in fade-in">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-emerald-200/80 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
               <CheckCircle2 className="w-5 h-5" />
@@ -1243,7 +1461,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* Customize Mode Persistent Notification Banner */}
       {isCustomizeMode && (
-        <div className="bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 dark:text-amber-200 shadow-sm animate-in fade-in">
+        <div data-html2canvas-ignore="true" className="bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 dark:text-amber-200 shadow-sm animate-in fade-in">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-amber-200/80 dark:bg-amber-900 text-amber-800 dark:text-amber-200">
               <GripVertical className="w-5 h-5" />
@@ -1403,16 +1621,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 role="button"
                 tabIndex={0}
                 title="Click to open Financial General Ledger & P&L"
-                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-600 cursor-pointer transition-all shadow-2xs hover:shadow-md hover:-translate-y-0.5 group flex flex-col justify-between"
+                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-600 cursor-pointer transition-all duration-200 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] group flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Operating EBITDA</span>
-                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md">
+                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md transition-transform duration-200 group-hover:scale-105">
                       {ebitdaMargin}% Margin
                     </span>
                   </div>
-                  <div className="text-xl font-bold font-mono text-emerald-700 dark:text-emerald-400 mt-2">
+                  <div className="text-xl font-bold font-mono text-emerald-700 dark:text-emerald-400 mt-2 transition-transform duration-200 group-hover:translate-x-0.5">
                     ₹{(ebitda / 100000).toFixed(2)} Lakhs
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
@@ -1421,7 +1639,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
                 <div className="flex items-center justify-between pt-2 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 group-hover:underline">
                   <span>View P&L Ledger</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-200" />
                 </div>
               </div>
 
@@ -1431,16 +1649,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 role="button"
                 tabIndex={0}
                 title="Click to open Statutory TDS Deductions & Tax Dues"
-                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-600 cursor-pointer transition-all shadow-2xs hover:shadow-md hover:-translate-y-0.5 group flex flex-col justify-between"
+                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-600 cursor-pointer transition-all duration-200 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] group flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Statutory TDS Pending</span>
-                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md">
+                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md transition-transform duration-200 group-hover:scale-105">
                       Due 7th Next Mo
                     </span>
                   </div>
-                  <div className="text-xl font-bold font-mono text-amber-700 dark:text-amber-400 mt-2">
+                  <div className="text-xl font-bold font-mono text-amber-700 dark:text-amber-400 mt-2 transition-transform duration-200 group-hover:translate-x-0.5">
                     ₹{pendingTdsDeposit.toLocaleString()}
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
@@ -1449,7 +1667,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
                 <div className="flex items-center justify-between pt-2 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-amber-600 dark:text-amber-400 group-hover:underline">
                   <span>View Tax Liabilities</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-200" />
                 </div>
               </div>
 
@@ -1459,16 +1677,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 role="button"
                 tabIndex={0}
                 title="Click to open Staff Directory & Engineering Attendance"
-                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-600 cursor-pointer transition-all shadow-2xs hover:shadow-md hover:-translate-y-0.5 group flex flex-col justify-between"
+                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-600 cursor-pointer transition-all duration-200 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] group flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Staff Deployment</span>
-                    <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md">
+                    <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md transition-transform duration-200 group-hover:scale-105">
                       100% Present
                     </span>
                   </div>
-                  <div className="text-xl font-bold font-mono text-slate-900 dark:text-slate-100 mt-2">
+                  <div className="text-xl font-bold font-mono text-slate-900 dark:text-slate-100 mt-2 transition-transform duration-200 group-hover:translate-x-0.5">
                     {activeStaffCount} Engineers & Staff
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
@@ -1477,7 +1695,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
                 <div className="flex items-center justify-between pt-2 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 group-hover:underline">
                   <span>View HR Staff</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-200" />
                 </div>
               </div>
 
@@ -1487,16 +1705,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 role="button"
                 tabIndex={0}
                 title="Click to open Payroll Disbursal & Job Openings"
-                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-purple-400 dark:hover:border-purple-600 cursor-pointer transition-all shadow-2xs hover:shadow-md hover:-translate-y-0.5 group flex flex-col justify-between"
+                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-purple-400 dark:hover:border-purple-600 cursor-pointer transition-all duration-200 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] group flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Monthly Payroll / Hiring</span>
-                    <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-md">
+                    <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-md transition-transform duration-200 group-hover:scale-105">
                       {openPositionsCount} Openings
                     </span>
                   </div>
-                  <div className="text-xl font-bold font-mono text-slate-900 dark:text-slate-100 mt-2">
+                  <div className="text-xl font-bold font-mono text-slate-900 dark:text-slate-100 mt-2 transition-transform duration-200 group-hover:translate-x-0.5">
                     ₹{(latestPayrollAmount / 100000).toFixed(2)} Lakhs/mo
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
@@ -1505,7 +1723,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
                 <div className="flex items-center justify-between pt-2 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-purple-600 dark:text-purple-400 group-hover:underline">
                   <span>View Payroll & Jobs</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-200" />
                 </div>
               </div>
             </div>
@@ -1544,11 +1762,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       />
 
       {/* Quick Action Floating Action Button with Popover Menu */}
-      <QuickActionFloatingButton
-        onOpenNewLead={onOpenNewLead}
-        onOpenNewPR={onOpenNewPR || (() => onNavigate('procurement'))}
-        onOpenNewExpense={onOpenNewExpense || (() => onNavigate('hr'))}
-      />
+      <div data-html2canvas-ignore="true">
+        <QuickActionFloatingButton
+          onOpenNewLead={onOpenNewLead}
+          onOpenNewPR={onOpenNewPR || (() => onNavigate('procurement'))}
+          onOpenNewExpense={onOpenNewExpense || (() => onNavigate('hr'))}
+        />
+      </div>
     </div>
   );
 };

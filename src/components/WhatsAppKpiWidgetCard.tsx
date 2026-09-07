@@ -176,19 +176,19 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
           title="Click to view CRM Deals & Inbound Leads"
           role="button"
           tabIndex={0}
-          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-blue-400 hover:shadow-sm hover:-translate-y-0.5 transition-all cursor-pointer group select-none"
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-blue-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none"
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
               <span className="flex items-center gap-1 text-blue-700">
-                <Users className="w-3.5 h-3.5" />
+                <Users className="w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-115 group-hover:rotate-[-4deg]" />
                 1. New Leads
               </span>
-              <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 text-[10px] font-bold">
+              <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 text-[10px] font-bold transition-transform duration-200 group-hover:scale-105">
                 {snapshot.newLeadsCount} Leads
               </span>
             </div>
-            <div className="text-base font-extrabold text-slate-900 truncate">
+            <div className="text-base font-extrabold text-slate-900 truncate transition-transform duration-200 group-hover:translate-x-0.5">
               {KpiDigestService.formatCurrency(snapshot.newLeadsValue)}
             </div>
             <div className="text-[10px] text-slate-500 truncate mt-1">
@@ -197,7 +197,7 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
           </div>
           <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-blue-600 group-hover:underline">
             <span>View in CRM</span>
-            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200" />
           </div>
         </div>
 
@@ -207,19 +207,19 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
           title="Click to view Payments & Collections"
           role="button"
           tabIndex={0}
-          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-emerald-400 hover:shadow-sm hover:-translate-y-0.5 transition-all cursor-pointer group select-none"
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-emerald-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none"
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
               <span className="flex items-center gap-1 text-emerald-700">
-                <CreditCard className="w-3.5 h-3.5" />
+                <CreditCard className="w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-115 group-hover:rotate-[-4deg]" />
                 2. Total Collections
               </span>
-              <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 text-[10px] font-bold">
+              <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 text-[10px] font-bold transition-transform duration-200 group-hover:scale-105">
                 {snapshot.collectionEfficiencyPct}% Eff.
               </span>
             </div>
-            <div className="text-base font-extrabold text-emerald-700 truncate">
+            <div className="text-base font-extrabold text-emerald-700 truncate transition-transform duration-200 group-hover:translate-x-0.5">
               {KpiDigestService.formatCurrency(snapshot.totalCollectionsReceived)}
             </div>
             <div className="text-[10px] text-slate-500 truncate mt-1">
@@ -228,7 +228,7 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
           </div>
           <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-emerald-600 group-hover:underline">
             <span>View Payments</span>
-            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200" />
           </div>
         </div>
 
@@ -238,19 +238,19 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
           title="Click to view Receivables & Aging Buckets"
           role="button"
           tabIndex={0}
-          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-amber-400 hover:shadow-sm hover:-translate-y-0.5 transition-all cursor-pointer group select-none"
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-amber-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none"
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
               <span className="flex items-center gap-1 text-amber-700">
-                <Clock className="w-3.5 h-3.5" />
+                <Clock className="w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-115 group-hover:rotate-[-4deg]" />
                 3. Aging Buckets
               </span>
-              <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 text-[10px] font-bold">
+              <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 text-[10px] font-bold transition-transform duration-200 group-hover:scale-105">
                 0-90+ Days
               </span>
             </div>
-            <div className="text-base font-extrabold text-slate-900 truncate">
+            <div className="text-base font-extrabold text-slate-900 truncate transition-transform duration-200 group-hover:translate-x-0.5">
               {KpiDigestService.formatCurrency(snapshot.agingBuckets.totalPendingAmount)}
             </div>
             <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-1 font-mono">
@@ -259,7 +259,7 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
           </div>
           <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-amber-600 group-hover:underline">
             <span>View Receivables</span>
-            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200" />
           </div>
         </div>
 
@@ -269,19 +269,19 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
           title="Click to view Disbursements & Vendor PO Payouts"
           role="button"
           tabIndex={0}
-          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-purple-400 hover:shadow-sm hover:-translate-y-0.5 transition-all cursor-pointer group select-none"
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-purple-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none"
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
               <span className="flex items-center gap-1 text-purple-700">
-                <DollarSign className="w-3.5 h-3.5" />
+                <DollarSign className="w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-115 group-hover:rotate-[-4deg]" />
                 4. Payments Done
               </span>
-              <span className="px-1.5 py-0.5 rounded bg-purple-50 text-purple-800 text-[10px] font-bold">
+              <span className="px-1.5 py-0.5 rounded bg-purple-50 text-purple-800 text-[10px] font-bold transition-transform duration-200 group-hover:scale-105">
                 {snapshot.paymentsDisbursedCount} Outflows
               </span>
             </div>
-            <div className="text-base font-extrabold text-slate-900 truncate">
+            <div className="text-base font-extrabold text-slate-900 truncate transition-transform duration-200 group-hover:translate-x-0.5">
               {KpiDigestService.formatCurrency(snapshot.totalPaymentsDisbursed)}
             </div>
             <div className="text-[10px] text-slate-500 truncate mt-1">
@@ -290,7 +290,7 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
           </div>
           <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-purple-600 group-hover:underline">
             <span>View Disbursements</span>
-            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200" />
           </div>
         </div>
 
@@ -300,19 +300,19 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
           title="Click to view Awarded Quotes & Won Bookings"
           role="button"
           tabIndex={0}
-          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-indigo-400 hover:shadow-sm hover:-translate-y-0.5 transition-all cursor-pointer group select-none"
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-indigo-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none"
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
               <span className="flex items-center gap-1 text-indigo-700">
-                <TrendingUp className="w-3.5 h-3.5" />
+                <TrendingUp className="w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-115 group-hover:rotate-[-4deg]" />
                 5. Net Revenue
               </span>
-              <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-800 text-[10px] font-bold">
+              <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-800 text-[10px] font-bold transition-transform duration-200 group-hover:scale-105">
                 Won Bookings
               </span>
             </div>
-            <div className="text-base font-extrabold text-indigo-900 truncate">
+            <div className="text-base font-extrabold text-indigo-900 truncate transition-transform duration-200 group-hover:translate-x-0.5">
               {KpiDigestService.formatCurrency(snapshot.netRevenueGenerated)}
             </div>
             <div className="text-[10px] text-slate-500 truncate mt-1">
@@ -321,7 +321,7 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
           </div>
           <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-indigo-600 group-hover:underline">
             <span>View Won Quotes</span>
-            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200" />
           </div>
         </div>
 
@@ -331,19 +331,19 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
           title="Click to view Delayed HVAC Projects"
           role="button"
           tabIndex={0}
-          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-red-400 hover:shadow-sm hover:-translate-y-0.5 transition-all cursor-pointer group select-none"
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-red-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none"
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
               <span className="flex items-center gap-1 text-red-700">
-                <AlertTriangle className="w-3.5 h-3.5" />
+                <AlertTriangle className="w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-115 group-hover:rotate-[-4deg]" />
                 6. Delayed Projects
               </span>
-              <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-800 text-[10px] font-bold">
+              <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-800 text-[10px] font-bold transition-transform duration-200 group-hover:scale-105">
                 {snapshot.delayedProjectsCount} Behind
               </span>
             </div>
-            <div className="text-base font-extrabold text-red-700 truncate">
+            <div className="text-base font-extrabold text-red-700 truncate transition-transform duration-200 group-hover:translate-x-0.5">
               {snapshot.delayedProjectsCount} Delayed
             </div>
             <div className="text-[10px] text-slate-500 truncate mt-1">
@@ -351,8 +351,8 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
             </div>
           </div>
           <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-red-600 group-hover:underline">
-            <span>View Projects</span>
-            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            <span>View Delayed Projects</span>
+            <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200" />
           </div>
         </div>
       </div>

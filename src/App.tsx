@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from 'react';
 import confetti from 'canvas-confetti';
 import {
   UserRole,
@@ -13,41 +13,59 @@ import { Header } from './components/Header';
 import { BreadcrumbNav } from './components/BreadcrumbNav';
 import { Sidebar } from './components/Sidebar';
 import { DashboardView } from './components/DashboardView';
-import { CRMLeadsView } from './components/CRMLeadsView';
-import { QuotesView } from './components/QuotesView';
-import { ProjectsBOQView } from './components/ProjectsBOQView';
-import { ProjectCostAnalysisView } from './components/ProjectCostAnalysisView';
-import { ProcurementPRPOView } from './components/ProcurementPRPOView';
-import { InventoryWarehouseView } from './components/InventoryWarehouseView';
-import { WorkOrdersView } from './components/WorkOrdersView';
-import { FinancePaymentsView } from './components/FinancePaymentsView';
-import { FinanceView } from './components/FinanceView';
-import { MasterDataView } from './components/MasterDataView';
-import { HRView } from './components/HRView';
-import { SalesPerformanceView } from './components/SalesPerformanceView';
-import { UserManagementView } from './components/UserManagementView';
-import { AuditLogView } from './components/AuditLogView';
-import { AdminCustomizationView } from './components/AdminCustomizationView';
-import { GlobalSearchView } from './components/GlobalSearchView';
-import { AuthModalOrPage } from './components/AuthModalOrPage';
-import { PitchDeckView } from './components/PitchDeckView';
+import { ViewLoadingFallback } from './components/ViewLoadingFallback';
 
+// Performance Optimization: Dynamic code splitting via React.lazy for sub-modules
+const CRMLeadsView = lazy(() => import('./components/CRMLeadsView').then(m => ({ default: m.CRMLeadsView })));
+const QuotesView = lazy(() => import('./components/QuotesView').then(m => ({ default: m.QuotesView })));
+const ProjectsBOQView = lazy(() => import('./components/ProjectsBOQView').then(m => ({ default: m.ProjectsBOQView })));
+const ProjectCostAnalysisView = lazy(() => import('./components/ProjectCostAnalysisView').then(m => ({ default: m.ProjectCostAnalysisView })));
+const ProcurementPRPOView = lazy(() => import('./components/ProcurementPRPOView').then(m => ({ default: m.ProcurementPRPOView })));
+const InventoryWarehouseView = lazy(() => import('./components/InventoryWarehouseView').then(m => ({ default: m.InventoryWarehouseView })));
+const WorkOrdersView = lazy(() => import('./components/WorkOrdersView').then(m => ({ default: m.WorkOrdersView })));
+const FinancePaymentsView = lazy(() => import('./components/FinancePaymentsView').then(m => ({ default: m.FinancePaymentsView })));
+const FinanceView = lazy(() => import('./components/FinanceView').then(m => ({ default: m.FinanceView })));
+const MasterDataView = lazy(() => import('./components/MasterDataView').then(m => ({ default: m.MasterDataView })));
+const HRView = lazy(() => import('./components/HRView').then(m => ({ default: m.HRView })));
+const SalesPerformanceView = lazy(() => import('./components/SalesPerformanceView').then(m => ({ default: m.SalesPerformanceView })));
+const UserManagementView = lazy(() => import('./components/UserManagementView').then(m => ({ default: m.UserManagementView })));
+const AuditLogView = lazy(() => import('./components/AuditLogView').then(m => ({ default: m.AuditLogView })));
+const AdminCustomizationView = lazy(() => import('./components/AdminCustomizationView').then(m => ({ default: m.AdminCustomizationView })));
+const GlobalSearchView = lazy(() => import('./components/GlobalSearchView').then(m => ({ default: m.GlobalSearchView })));
+const PitchDeckView = lazy(() => import('./components/PitchDeckView').then(m => ({ default: m.PitchDeckView })));
+
+// Heavy Modals Lazy Loaded
+const GoogleSheetIntegrationModal = lazy(() => import('./components/GoogleSheetIntegrationModal').then(m => ({ default: m.GoogleSheetIntegrationModal })));
+const ApiIntegrationAndDeploymentModal = lazy(() => import('./components/ApiIntegrationAndDeploymentModal').then(m => ({ default: m.ApiIntegrationAndDeploymentModal })));
+
+import { AuthModalOrPage } from './components/AuthModalOrPage';
 import { NewLeadModal } from './components/NewLeadModal';
 import { NewQuoteModal } from './components/NewQuoteModal';
 import { LeadDetailModal } from './components/LeadDetailModal';
-import { GoogleSheetIntegrationModal } from './components/GoogleSheetIntegrationModal';
 import { LocalBackupNotification } from './components/LocalBackupNotification';
-import { ApiIntegrationAndDeploymentModal } from './components/ApiIntegrationAndDeploymentModal';
 import { CreatePRModal } from './components/CreatePRModal';
 import { NewExpenseModal } from './components/NewExpenseModal';
 import { QuickActionFloatingButton } from './components/QuickActionFloatingButton';
+import { QuickGuideModal } from './components/QuickGuideModal';
+
+const getInitialTab = (): string => {
+  try {
+    const hash = window.location.hash.replace(/^#\/?/, '').trim();
+    if (hash) return hash;
+  } catch {}
+  return 'dashboard';
+};
 
 export function App() {
   const [data, setData] = useState(storageService.getAllData());
   const [notifications, setNotifications] = useState(storageService.getNotifications());
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [activeTab, setActiveTabState] = useState<string>(getInitialTab);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+
+  // History tracking stack for smooth screen back-navigation
+  const historyStackRef = useRef<string[]>([getInitialTab()]);
+  const isNavigatingFromHistoryRef = useRef<boolean>(false);
 
   // Modals state
   const [isNewLeadOpen, setIsNewLeadOpen] = useState(false);
@@ -57,8 +75,252 @@ export function App() {
   const [isSheetsModalOpen, setIsSheetsModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isApiGuideOpen, setIsApiGuideOpen] = useState(false);
+  const [isQuickGuideOpen, setIsQuickGuideOpen] = useState(false);
   const [isNewPROpen, setIsNewPROpen] = useState(false);
   const [isNewExpenseOpen, setIsNewExpenseOpen] = useState(false);
+
+  // Wrapped setActiveTab that changes active tab
+  const setActiveTab = useCallback((nextTabOrFn: string | ((prev: string) => string)) => {
+    setActiveTabState((prevTab) => {
+      const nextTab = typeof nextTabOrFn === 'function' ? nextTabOrFn(prevTab) : nextTabOrFn;
+      return nextTab;
+    });
+  }, []);
+
+  // Synchronize history stack and URL hash whenever activeTab changes
+  useEffect(() => {
+    if (isNavigatingFromHistoryRef.current) {
+      return;
+    }
+
+    const currentStack = historyStackRef.current;
+    const lastItem = currentStack[currentStack.length - 1];
+
+    // Only push if different from current top of stack to strictly avoid duplicate stack entries
+    if (lastItem !== activeTab) {
+      currentStack.push(activeTab);
+      try {
+        window.history.pushState({ tab: activeTab }, '', `#${activeTab}`);
+      } catch {}
+    }
+  }, [activeTab]);
+
+  // Closes any open modal/overlay first, returning true if one was dismissed
+  const closeAnyOpenModal = useCallback((): boolean => {
+    if (isQuickGuideOpen) {
+      setIsQuickGuideOpen(false);
+      return true;
+    }
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+      return true;
+    }
+    if (selectedLeadDetail) {
+      setSelectedLeadDetail(null);
+      return true;
+    }
+    if (isNewLeadOpen) {
+      setIsNewLeadOpen(false);
+      return true;
+    }
+    if (isNewQuoteOpen) {
+      setIsNewQuoteOpen(false);
+      return true;
+    }
+    if (isSheetsModalOpen) {
+      setIsSheetsModalOpen(false);
+      return true;
+    }
+    if (isAuthModalOpen) {
+      setIsAuthModalOpen(false);
+      return true;
+    }
+    if (isApiGuideOpen) {
+      setIsApiGuideOpen(false);
+      return true;
+    }
+    if (isNewPROpen) {
+      setIsNewPROpen(false);
+      return true;
+    }
+    if (isNewExpenseOpen) {
+      setIsNewExpenseOpen(false);
+      return true;
+    }
+    return false;
+  }, [
+    isQuickGuideOpen,
+    isMobileMenuOpen,
+    selectedLeadDetail,
+    isNewLeadOpen,
+    isNewQuoteOpen,
+    isSheetsModalOpen,
+    isAuthModalOpen,
+    isApiGuideOpen,
+    isNewPROpen,
+    isNewExpenseOpen
+  ]);
+
+  // Master Go-Back handler: Dismisses modal, or returns to the previous screen in a SINGLE press
+  const handleGoBack = useCallback((): boolean => {
+    // 1. If any modal is open, dismiss it first to return to the active screen
+    if (closeAnyOpenModal()) {
+      return true;
+    }
+
+    const stack = historyStackRef.current;
+
+    // 2. Remove all trailing entries matching current activeTab to guarantee moving to a different screen
+    while (stack.length > 1 && stack[stack.length - 1] === activeTab) {
+      stack.pop();
+    }
+
+    // 3. If stack still has more than 1 entry, pop back to previous screen
+    if (stack.length > 1) {
+      stack.pop(); // Remove current screen
+      const previousTab = stack[stack.length - 1];
+      if (previousTab && previousTab !== activeTab) {
+        isNavigatingFromHistoryRef.current = true;
+        setActiveTabState(previousTab);
+        try {
+          window.history.replaceState({ tab: previousTab }, '', `#${previousTab}`);
+        } catch {}
+        setTimeout(() => {
+          isNavigatingFromHistoryRef.current = false;
+        }, 60);
+        return true;
+      }
+    }
+
+    // 4. If history is at root but user is on another screen, return to executive dashboard
+    if (activeTab !== 'dashboard') {
+      isNavigatingFromHistoryRef.current = true;
+      historyStackRef.current = ['dashboard'];
+      setActiveTabState('dashboard');
+      try {
+        window.history.replaceState({ tab: 'dashboard' }, '', '#dashboard');
+      } catch {}
+      setTimeout(() => {
+        isNavigatingFromHistoryRef.current = false;
+      }, 60);
+      return true;
+    }
+    return false;
+  }, [closeAnyOpenModal, activeTab]);
+
+  // Initialize initial history state on mount
+  useEffect(() => {
+    try {
+      const initial = getInitialTab();
+      window.history.replaceState({ tab: initial }, '', `#${initial}`);
+    } catch {}
+  }, []);
+
+  // Listen to browser Back/Forward (popstate)
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (closeAnyOpenModal()) {
+        return;
+      }
+
+      let targetTab = event.state?.tab;
+      if (!targetTab) {
+        const hash = window.location.hash.replace(/^#\/?/, '').trim();
+        targetTab = hash || 'dashboard';
+      }
+
+      if (targetTab && targetTab !== activeTab) {
+        isNavigatingFromHistoryRef.current = true;
+        if (historyStackRef.current.length > 1) {
+          historyStackRef.current.pop();
+        } else {
+          historyStackRef.current = [targetTab];
+        }
+        setActiveTabState(targetTab);
+        setTimeout(() => {
+          isNavigatingFromHistoryRef.current = false;
+        }, 50);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [closeAnyOpenModal, activeTab]);
+
+  // Keyboard Back Key listener (Backspace, BrowserBack, Alt+ArrowLeft, Cmd+[, Escape)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Global shortcut: Cmd+K / Ctrl+K for Global Search
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setActiveTab('search');
+        return;
+      }
+
+      // Check if user is actively typing in an input, textarea, or contentEditable element
+      const target = e.target as HTMLElement | null;
+      const isTyping = Boolean(
+        target && (
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable ||
+          target.getAttribute('role') === 'textbox'
+        )
+      );
+
+      // 0. Toggle Quick Guide modal on '?' or Shift + '/' when NOT actively typing
+      if ((e.key === '?' || (e.shiftKey && e.key === '/')) && !isTyping) {
+        e.preventDefault();
+        setIsQuickGuideOpen((prev) => !prev);
+        return;
+      }
+
+      // 1. Dedicated Hardware/Multimedia "BrowserBack" key
+      if (e.key === 'BrowserBack') {
+        e.preventDefault();
+        handleGoBack();
+        return;
+      }
+
+      // 2. Alt + ArrowLeft (standard Windows / Linux browser back shortcut)
+      if (e.altKey && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handleGoBack();
+        return;
+      }
+
+      // 3. Cmd + [ or Ctrl + [ (macOS / browser back shortcut)
+      if ((e.metaKey || e.ctrlKey) && e.key === '[') {
+        e.preventDefault();
+        handleGoBack();
+        return;
+      }
+
+      // 4. Backspace key when NOT typing in an input field (universal Back key)
+      if (e.key === 'Backspace' && !isTyping) {
+        e.preventDefault();
+        handleGoBack();
+        return;
+      }
+
+      // 5. Escape key: closes open modals or returns from search screen
+      if (e.key === 'Escape') {
+        if (closeAnyOpenModal()) {
+          e.preventDefault();
+          return;
+        }
+        if (activeTab === 'search') {
+          e.preventDefault();
+          handleGoBack();
+          return;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleGoBack, closeAnyOpenModal, activeTab, setActiveTab]);
 
   // Sidebar Pinned state (defaults to collapsed sub-menu bar mode)
   const [isSidebarPinned, setIsSidebarPinned] = useState<boolean>(() => {
@@ -101,18 +363,6 @@ export function App() {
       syncDensity();
     });
     return () => unsubscribe();
-  }, []);
-
-  // Global Keyboard shortcut: Cmd+K / Ctrl+K for Global Search
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setActiveTab('search');
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleRefreshData = () => {
@@ -187,12 +437,27 @@ export function App() {
     );
   }
 
-  // Badge counts
-  const openShortagesCount = data.projects.reduce((sum, p) => sum + p.totalShortageItemsCount, 0);
-  const pendingPRCount = data.prs.filter((p) => p.status === 'Pending Approval').length;
-  const pendingPOCount = data.pos.filter((p) => p.status === 'Sent to Vendor').length;
-  const lowStockCount = data.inventory.filter((i) => i.availableStock <= i.reorderLevel).length;
-  const pendingInvoicesCount = data.payments.filter((p) => p.status !== 'Paid').length;
+  // Memoized badge counts to prevent unnecessary array traversal on every re-render
+  const openShortagesCount = useMemo(
+    () => data.projects.reduce((sum, p) => sum + p.totalShortageItemsCount, 0),
+    [data.projects]
+  );
+  const pendingPRCount = useMemo(
+    () => data.prs.filter((p) => p.status === 'Pending Approval').length,
+    [data.prs]
+  );
+  const pendingPOCount = useMemo(
+    () => data.pos.filter((p) => p.status === 'Sent to Vendor').length,
+    [data.pos]
+  );
+  const lowStockCount = useMemo(
+    () => data.inventory.filter((i) => i.availableStock <= i.reorderLevel).length,
+    [data.inventory]
+  );
+  const pendingInvoicesCount = useMemo(
+    () => data.payments.filter((p) => p.status !== 'Paid').length,
+    [data.payments]
+  );
 
   return (
     <div className="h-screen w-full max-w-full overflow-hidden bg-[#FAF9F5] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-blue-500 selection:text-white transition-colors duration-200">
@@ -208,6 +473,7 @@ export function App() {
         onOpenSheetsModal={() => setIsSheetsModalOpen(true)}
         onOpenAuditLogs={() => setActiveTab('audit')}
         onOpenApiDocs={() => setIsApiGuideOpen(true)}
+        onOpenQuickGuide={() => setIsQuickGuideOpen(true)}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         isMobileMenuOpen={isMobileMenuOpen}
@@ -223,6 +489,8 @@ export function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         currentRole={data.currentUser?.role}
+        onBack={handleGoBack}
+        canGoBack={historyStackRef.current.length > 1 || activeTab !== 'dashboard'}
       />
 
       {/* Main Workspace: Sidebar + Dynamic View Container */}
@@ -247,15 +515,16 @@ export function App() {
         {/* Viewport */}
         <main className="flex-1 h-full min-w-0 overflow-y-auto overflow-x-hidden p-3.5 sm:p-4 lg:p-6 bg-[#FAF9F5] dark:bg-slate-950 transition-colors duration-200">
           <div className="max-w-7xl mx-auto w-full min-w-0">
-            {/* View: Global ERP Search & Lookup */}
-            {activeTab === 'search' && (
-              <GlobalSearchView
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-                onNavigate={setActiveTab}
-                data={data}
-              />
-            )}
+            <Suspense fallback={<ViewLoadingFallback moduleName={activeTab.toUpperCase()} />}>
+              {/* View: Global ERP Search & Lookup */}
+              {activeTab === 'search' && (
+                <GlobalSearchView
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  onNavigate={setActiveTab}
+                  data={data}
+                />
+              )}
 
             {/* View: Management Dashboard */}
             {activeTab === 'dashboard' && (
@@ -524,6 +793,7 @@ export function App() {
                 onOpenSheetsModal={() => setIsSheetsModalOpen(true)}
               />
             )}
+            </Suspense>
           </div>
         </main>
       </div>
@@ -552,11 +822,15 @@ export function App() {
         onAwardLead={handleAwardLead}
       />
 
-      <GoogleSheetIntegrationModal
-        sheetsConfig={data.sheetsConfig}
-        isOpen={isSheetsModalOpen}
-        onClose={() => setIsSheetsModalOpen(false)}
-      />
+      <Suspense fallback={null}>
+        {isSheetsModalOpen && (
+          <GoogleSheetIntegrationModal
+            sheetsConfig={data.sheetsConfig}
+            isOpen={isSheetsModalOpen}
+            onClose={() => setIsSheetsModalOpen(false)}
+          />
+        )}
+      </Suspense>
 
       {/* Switch Account / Auth Modal */}
       {isAuthModalOpen && (
@@ -574,10 +848,14 @@ export function App() {
       )}
 
       {/* Interactive API Integration & Enterprise Deployment Guide Modal */}
-      <ApiIntegrationAndDeploymentModal
-        isOpen={isApiGuideOpen}
-        onClose={() => setIsApiGuideOpen(false)}
-      />
+      <Suspense fallback={null}>
+        {isApiGuideOpen && (
+          <ApiIntegrationAndDeploymentModal
+            isOpen={isApiGuideOpen}
+            onClose={() => setIsApiGuideOpen(false)}
+          />
+        )}
+      </Suspense>
 
       {/* Global Quick Action Modals: Create PR & Log Expense */}
       <CreatePRModal
@@ -611,6 +889,13 @@ export function App() {
           onOpenNewExpense={() => setIsNewExpenseOpen(true)}
         />
       )}
+
+      {/* Quick Guide & Keyboard Shortcuts Overlay Modal */}
+      <QuickGuideModal
+        isOpen={isQuickGuideOpen}
+        onClose={() => setIsQuickGuideOpen(false)}
+        onNavigate={setActiveTab}
+      />
 
       {/* Local Backup Notification & Snapshot Recovery Floating Toast / Modal */}
       <LocalBackupNotification />

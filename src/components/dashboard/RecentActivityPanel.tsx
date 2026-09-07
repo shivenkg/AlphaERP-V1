@@ -315,12 +315,12 @@ export const RecentActivityPanel: React.FC<RecentActivityPanelProps> = ({
                   key={log.id || `recent-log-${index}`}
                   id={`recent-log-entry-${index}`}
                   onClick={() => setSelectedLog(log)}
-                  className="py-3 first:pt-1 last:pb-1 group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 rounded-xl px-2 -mx-2 transition-all cursor-pointer"
+                  className="py-3 first:pt-1 last:pb-1 group hover:bg-slate-50/90 dark:hover:bg-slate-800/60 hover:translate-x-1.5 hover:shadow-xs rounded-xl px-2 -mx-2 transition-all duration-200 cursor-pointer"
                 >
                   <div className="flex items-start gap-3">
                     {/* Event Icon with Badge Style */}
                     <div
-                      className={`p-2 rounded-xl border shrink-0 mt-0.5 transition-transform group-hover:scale-105 ${styling.iconBg}`}
+                      className={`p-2 rounded-xl border shrink-0 mt-0.5 transition-all duration-200 group-hover:scale-115 group-hover:rotate-[-4deg] ${styling.iconBg}`}
                     >
                       <EventIcon className="w-3.5 h-3.5" />
                     </div>
@@ -331,7 +331,7 @@ export const RecentActivityPanel: React.FC<RecentActivityPanelProps> = ({
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <span
-                            className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider shrink-0 ${styling.badgeBg}`}
+                            className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider shrink-0 transition-transform duration-200 group-hover:scale-105 ${styling.badgeBg}`}
                           >
                             {styling.badgeText}
                           </span>
@@ -348,7 +348,7 @@ export const RecentActivityPanel: React.FC<RecentActivityPanelProps> = ({
                       </div>
 
                       {/* Summary Description */}
-                      <p className="text-xs text-slate-800 dark:text-slate-200 leading-snug line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      <p className="text-xs text-slate-800 dark:text-slate-200 leading-snug line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
                         {summaryText}
                       </p>
 
@@ -358,7 +358,7 @@ export const RecentActivityPanel: React.FC<RecentActivityPanelProps> = ({
                           by <strong className="font-semibold text-slate-700 dark:text-slate-300">{userName}</strong>
                         </span>
 
-                        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           {onNavigate && styling.targetTab && (
                             <button
                               type="button"
@@ -367,7 +367,7 @@ export const RecentActivityPanel: React.FC<RecentActivityPanelProps> = ({
                               title={`Jump to ${styling.targetTab.toUpperCase()}`}
                             >
                               <span>View</span>
-                              <ArrowUpRight className="w-2.5 h-2.5" />
+                              <ArrowUpRight className="w-2.5 h-2.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                             </button>
                           )}
                         </div>

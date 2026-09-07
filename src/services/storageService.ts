@@ -222,23 +222,88 @@ const DEFAULT_BACKUP_CONFIG: BackupConfig = {
   maxRetainedSnapshots: 30
 };
 
+// Performance & Security: In-memory cache for fast lookups and debounced persistence
+const memoryCache = new Map<string, any>();
+const pendingSaveTimers = new Map<string, any>();
+
+/**
+ * Security: Deep sanitize object to prevent Prototype Pollution attacks
+ */
+function safeSanitizeValue<T>(val: T): T {
+  if (!val || typeof val !== 'object') return val;
+  if (Array.isArray(val)) {
+    return val.map((item) => safeSanitizeValue(item)) as unknown as T;
+  }
+  const cleanObj: Record<string, any> = {};
+  for (const [k, v] of Object.entries(val as Record<string, any>)) {
+    // Strip dangerous properties
+    if (k === '__proto__' || k === 'constructor' || k === 'prototype') {
+      continue;
+    }
+    cleanObj[k] = safeSanitizeValue(v);
+  }
+  return cleanObj as T;
+}
+
 function load<T>(key: string, fallback: T): T {
+  if (memoryCache.has(key)) {
+    return memoryCache.get(key) as T;
+  }
   try {
-    const item = localStorage.getItem(key);
-    if (!item) return fallback;
-    return JSON.parse(item);
+    const item = typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
+    if (!item) {
+      memoryCache.set(key, fallback);
+      return fallback;
+    }
+    const parsed = JSON.parse(item);
+    const sanitized = safeSanitizeValue(parsed);
+    memoryCache.set(key, sanitized);
+    return sanitized;
   } catch (e) {
     console.error(`Error loading storage key ${key}:`, e);
+    memoryCache.set(key, fallback);
     return fallback;
   }
 }
 
 function save<T>(key: string, data: T): void {
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch (e) {
-    console.error(`Error saving storage key ${key}:`, e);
+  // 1. Immediately update in-memory cache for synchronous reads
+  memoryCache.set(key, data);
+
+  // 2. Debounce serialization & disk write by 15ms to batch rapid successive calls
+  if (pendingSaveTimers.has(key)) {
+    clearTimeout(pendingSaveTimers.get(key));
   }
+
+  const timer = setTimeout(() => {
+    pendingSaveTimers.delete(key);
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(key, JSON.stringify(data));
+      }
+    } catch (e: any) {
+      // 3. Graceful QuotaExceeded recovery: prune oldest audit logs and retry
+      if (e?.name === 'QuotaExceededError' || e?.code === 22) {
+        console.warn(`Storage quota exceeded on key "${key}". Executing automated log cleanup.`);
+        try {
+          const rawLogs = localStorage.getItem(STORAGE_KEYS.AUDIT_LOGS);
+          if (rawLogs) {
+            const logs = JSON.parse(rawLogs);
+            if (Array.isArray(logs) && logs.length > 50) {
+              localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(logs.slice(0, 50)));
+            }
+          }
+          localStorage.setItem(key, JSON.stringify(data));
+        } catch (retryErr) {
+          console.error(`Save retry failed for key ${key}:`, retryErr);
+        }
+      } else {
+        console.error(`Error saving storage key ${key}:`, e);
+      }
+    }
+  }, 15);
+
+  pendingSaveTimers.set(key, timer);
 }
 
 class StorageService {
@@ -4670,8 +4735,9 @@ class StorageService {
 
   public importFullDatabase(jsonString: string): boolean {
     try {
-      const data = JSON.parse(jsonString);
-      if (!data || typeof data !== 'object') return false;
+      const raw = JSON.parse(jsonString);
+      if (!raw || typeof raw !== 'object') return false;
+      const data = safeSanitizeValue(raw);
 
       if (Array.isArray(data.inventory)) {
         this.inventory = data.inventory;

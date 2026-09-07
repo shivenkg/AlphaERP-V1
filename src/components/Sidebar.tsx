@@ -606,24 +606,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <div key={item.id} className="relative flex justify-center">
                       <motion.button
                         onClick={() => handleSelectTab(item.id)}
-                        whileHover={{ scale: 1.06 }}
-                        whileTap={{ scale: 0.96 }}
+                        whileHover={{ scale: 1.12, y: -2 }}
+                        whileTap={{ scale: 0.94 }}
                         animate={{
                           scale: isActive ? 1.05 : 1
                         }}
                         transition={{
                           type: "spring",
-                          stiffness: 400,
-                          damping: 28
+                          stiffness: 450,
+                          damping: 24
                         }}
                         onMouseEnter={(e) => handleRailItemMouseEnter(group, item, e)}
                         onMouseLeave={handleRailItemMouseLeave}
-                        className={`relative w-11 h-11 rounded-xl flex items-center justify-center transition-colors duration-200 overflow-hidden cursor-pointer ${
+                        className={`group relative w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 overflow-hidden cursor-pointer ${
                           isActive
                             ? 'text-white shadow-lg shadow-blue-600/40 ring-2 ring-blue-400'
                             : isHoveredInSubmenu
-                            ? 'text-white bg-[#15234f] ring-1 ring-blue-500/50'
-                            : 'text-slate-300 hover:bg-[#15234f] hover:text-white'
+                            ? 'text-white bg-[#15234f] ring-1 ring-blue-500/50 shadow-md'
+                            : 'text-slate-300 hover:bg-[#15234f] hover:text-white hover:shadow-md hover:shadow-blue-900/30'
                         }`}
                         title={`${item.label} (${group.title})`}
                         aria-label={item.label}
@@ -644,12 +644,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           />
                         )}
 
-                        <Icon className={`relative z-10 w-5 h-5 transition-colors duration-200 ${isActive ? 'text-white' : 'text-slate-300'}`} />
+                        <Icon className={`relative z-10 w-5 h-5 transition-transform duration-200 group-hover:scale-115 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-cyan-300'}`} />
 
                         {/* Notification Dot / Badge on icon */}
                         {item.badge && (
                           <span
-                            className={`absolute top-1 right-1 w-2.5 h-2.5 rounded-full ring-2 ring-[#070d21] z-20 ${
+                            className={`absolute top-1 right-1 w-2.5 h-2.5 rounded-full ring-2 ring-[#070d21] z-20 transition-transform duration-200 group-hover:scale-125 ${
                               item.badgeColor || 'bg-blue-500'
                             }`}
                           />
@@ -666,16 +666,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
           return (
             <div key={group.id} className="space-y-1 rounded-xl p-1 bg-[#0a1128]/70 border border-[#16234b]">
               {/* Group Collapsible Button Header */}
-              <button
+              <motion.button
+                whileHover={{ scale: 1.015, x: 2 }}
+                whileTap={{ scale: 0.99 }}
+                transition={{ type: "spring", stiffness: 450, damping: 25 }}
                 onClick={() => toggleGroup(group.id)}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition-all duration-300 shadow-xs border ${
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition-all duration-200 shadow-xs border cursor-pointer ${
                   hasActiveChild
                     ? `${prominentBg} ring-2 ring-blue-400/50 shadow-md font-extrabold`
-                    : `${prominentBg} opacity-90 hover:opacity-100`
+                    : `${prominentBg} opacity-90 hover:opacity-100 hover:shadow-md hover:border-blue-400/50`
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <GroupIcon className={`w-3.5 h-3.5 ${hasActiveChild ? 'text-cyan-300' : 'text-blue-200'}`} />
+                  <GroupIcon className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${hasActiveChild ? 'text-cyan-300' : 'text-blue-200'}`} />
                   <span className="truncate">{group.title}</span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -688,7 +691,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <ChevronDown className="w-3 h-3 text-blue-200" />
                   )}
                 </div>
-              </button>
+              </motion.button>
 
               {/* Items under Group */}
               {!isGroupCollapsed && (
@@ -700,19 +703,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <motion.button
                         key={item.id}
                         onClick={() => handleSelectTab(item.id)}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ x: 6, scale: 1.015 }}
+                        whileTap={{ scale: 0.97 }}
                         animate={{
                           x: isActive ? 4 : 0
                         }}
                         transition={{
                           type: "spring",
-                          stiffness: 400,
-                          damping: 30
+                          stiffness: 450,
+                          damping: 26
                         }}
-                        className={`w-full relative flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold overflow-hidden transition-colors duration-300 ${
+                        className={`w-full relative flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold overflow-hidden transition-colors duration-200 group cursor-pointer ${
                           isActive
                             ? 'text-white font-bold shadow-md ring-1 ring-blue-300/40'
-                            : 'text-slate-200 hover:bg-[#15234f] hover:text-white'
+                            : 'text-slate-200 hover:bg-[#15234f] hover:text-white hover:shadow-sm'
                         }`}
                       >
                         {/* Smooth Sliding Background Animation */}
@@ -745,12 +749,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         )}
 
                         <div className="relative z-10 flex items-center gap-2 min-w-0">
-                          <Icon className={`w-3.5 h-3.5 shrink-0 transition-colors duration-200 ${isActive ? 'text-white' : 'text-blue-300'}`} />
-                          <span className="truncate">{item.label}</span>
+                          <Icon className={`w-3.5 h-3.5 shrink-0 transition-all duration-200 group-hover:scale-115 group-hover:rotate-[-4deg] ${isActive ? 'text-white' : 'text-blue-300 group-hover:text-cyan-300'}`} />
+                          <span className="truncate transition-transform duration-200 group-hover:translate-x-0.5">{item.label}</span>
                         </div>
                         {item.badge && (
                           <span
-                            className={`relative z-10 text-[9px] px-1.5 py-0.5 rounded-full font-bold text-white shrink-0 ml-1 shadow-xs transition-transform duration-200 ${
+                            className={`relative z-10 text-[9px] px-1.5 py-0.5 rounded-full font-bold text-white shrink-0 ml-1 shadow-xs transition-transform duration-200 group-hover:scale-110 ${
                               item.badgeColor || 'bg-blue-600'
                             }`}
                           >
@@ -803,31 +807,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
               const isFocused = activeFlyoutGroup.hoveredItemId === subItem.id;
 
               return (
-                <button
+                <motion.button
                   key={subItem.id}
                   type="button"
                   onClick={() => handleSelectTab(subItem.id)}
-                  className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-all cursor-pointer group ${
+                  whileHover={{ x: 5, scale: 1.015 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 450,
+                    damping: 26
+                  }}
+                  className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-all duration-200 cursor-pointer group ${
                     isCurrentActive
                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md font-bold ring-1 ring-cyan-400/40'
                       : isFocused
-                      ? 'bg-[#152454] text-white'
-                      : 'text-slate-200 hover:bg-[#13224f] hover:text-white'
+                      ? 'bg-[#152454] text-white shadow-xs'
+                      : 'text-slate-200 hover:bg-[#13224f] hover:text-white hover:shadow-md hover:shadow-blue-950/40'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div
-                      className={`p-1.5 rounded-lg transition-colors shrink-0 ${
+                      className={`p-1.5 rounded-lg transition-all duration-200 shrink-0 group-hover:scale-110 group-hover:rotate-[-4deg] ${
                         isCurrentActive
                           ? 'bg-white/20 text-white'
-                          : 'bg-[#101b3e] text-blue-300 group-hover:bg-[#1c2e63] group-hover:text-cyan-300'
+                          : 'bg-[#101b3e] text-blue-300 group-hover:bg-[#1c2e63] group-hover:text-cyan-300 group-hover:shadow-sm'
                       }`}
                     >
                       <SubIcon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-semibold truncate">
+                        <span className="text-xs font-semibold truncate transition-transform duration-200 group-hover:translate-x-0.5">
                           {subItem.label}
                         </span>
                         {isCurrentActive && (
@@ -836,10 +847,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       </div>
                       {subItem.description && (
                         <div
-                          className={`text-[10px] truncate leading-tight ${
+                          className={`text-[10px] truncate leading-tight transition-colors duration-200 ${
                             isCurrentActive
                               ? 'text-blue-100'
-                              : 'text-slate-400 group-hover:text-slate-300'
+                              : 'text-slate-400 group-hover:text-slate-200'
                           }`}
                         >
                           {subItem.description}
@@ -848,16 +859,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </div>
                   </div>
 
-                  {subItem.badge && (
-                    <span
-                      className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ml-2 shrink-0 ${
-                        subItem.badgeColor || 'bg-blue-600'
-                      }`}
-                    >
-                      {subItem.badge}
-                    </span>
-                  )}
-                </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {subItem.badge && (
+                      <span
+                        className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ml-2 shrink-0 transition-transform duration-200 group-hover:scale-110 ${
+                          subItem.badgeColor || 'bg-blue-600'
+                        }`}
+                      >
+                        {subItem.badge}
+                      </span>
+                    )}
+                    <ChevronRight className="w-3.5 h-3.5 text-blue-400/40 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+                  </div>
+                </motion.button>
               );
             })}
           </div>

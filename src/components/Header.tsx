@@ -30,6 +30,7 @@ import {
   ArrowRight,
   BookOpen,
   Code,
+  HelpCircle,
   Presentation,
   PanelLeft,
   PanelLeftClose,
@@ -53,6 +54,7 @@ interface HeaderProps {
   onOpenSheetsModal: () => void;
   onOpenAuditLogs: () => void;
   onOpenApiDocs?: () => void;
+  onOpenQuickGuide?: () => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   isMobileMenuOpen?: boolean;
@@ -74,6 +76,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSheetsModal,
   onOpenAuditLogs,
   onOpenApiDocs,
+  onOpenQuickGuide,
   activeTab,
   setActiveTab,
   isMobileMenuOpen = false,
@@ -603,13 +606,13 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => setActiveTab('pitch_deck')}
             id="btn-header-pitch-deck"
             title="Open Investor Pitch Deck & System Walkthrough"
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-2xs shrink-0 ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-xs hover:-translate-y-0.5 active:translate-y-0 shrink-0 ${
               activeTab === 'pitch_deck'
                 ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white border-amber-600 shadow-xs'
                 : 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
             }`}
           >
-            <Presentation className="w-3.5 h-3.5 shrink-0" />
+            <Presentation className="w-3.5 h-3.5 shrink-0 transition-transform duration-150 group-hover:scale-110" />
             <span className="hidden sm:inline">Pitch Deck</span>
           </button>
 
@@ -625,7 +628,7 @@ export const Header: React.FC<HeaderProps> = ({
                 ? `Sync issue: ${quickSyncError || 'Click to retry'}`
                 : 'Directly flush all 10 ERP modules to Google Sheets without opening the modal'
             }
-            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-2xs shrink-0 ${
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-xs hover:-translate-y-0.5 active:translate-y-0 shrink-0 ${
               quickSyncState === 'syncing'
                 ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700 animate-pulse'
                 : quickSyncState === 'success'
@@ -652,14 +655,14 @@ export const Header: React.FC<HeaderProps> = ({
               </>
             ) : (
               <>
-                <RefreshCw className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <RefreshCw className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 hover:rotate-180 transition-transform duration-300" />
                 <span className="hidden sm:inline">Quick Sync</span>
               </>
             )}
           </button>
 
           {/* Google Sheets Modal Opener & Status */}
-          <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5 sm:p-1 border border-slate-200 dark:border-slate-700 shrink-0">
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5 sm:p-1 border border-slate-200 dark:border-slate-700 shrink-0 transition-all duration-150 hover:shadow-xs hover:-translate-y-0.5">
             <button
               onClick={onOpenSheetsModal}
               id="btn-header-sheets-modal"
@@ -691,7 +694,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={toggleTheme}
             id="global-theme-toggle"
             title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode (Ctrl+Shift+D)`}
-            className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-amber-400 transition-all cursor-pointer shadow-xs active:scale-95 shrink-0"
+            className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-amber-400 transition-all duration-150 cursor-pointer shadow-xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 shrink-0"
             aria-label={`Toggle theme, current is ${theme}`}
           >
             {isDark ? (
@@ -708,7 +711,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="relative shrink-0">
             <button
               onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-              className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-all whitespace-nowrap"
+              className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 whitespace-nowrap"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
               <div className="text-left hidden 2xl:block">
@@ -827,6 +830,19 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             )}
           </div>
+
+          {/* Quick Guide & Shortcuts Button */}
+          {onOpenQuickGuide && (
+            <button
+              id="header-quick-guide-btn"
+              onClick={onOpenQuickGuide}
+              title="Quick Guide & System Shortcuts (Press '?')"
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 transition-colors inline-flex items-center justify-center cursor-pointer group"
+            >
+              <HelpCircle className="w-4 h-4" />
+              <kbd className="hidden lg:inline-block ml-1 text-[10px] px-1 py-0.2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-slate-500 dark:text-slate-400 font-mono">?</kbd>
+            </button>
+          )}
 
           {/* API & Deployment Guide Quick Button */}
           {onOpenApiDocs && (

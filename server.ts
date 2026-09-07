@@ -1,6 +1,7 @@
 import express from "express";
 import http from "http";
 import path from "path";
+import compression from "compression";
 import { createServer as createViteServer } from "vite";
 import { WebSocketServer, WebSocket } from "ws";
 import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
@@ -12,39 +13,147 @@ const app = express();
 const server = http.createServer(app);
 const PORT = 3000;
 
-app.use(express.json());
+// Security: Disable X-Powered-By header to prevent fingerprinting
+app.disable("x-powered-by");
+
+// Performance: Enable GZIP/Deflate response compression
+app.use(
+  compression({
+    level: 6,
+    threshold: 1024, // only compress responses larger than 1KB
+    filter: (req, res) => {
+      if (req.headers["x-no-compression"]) {
+        return false;
+      }
+      return compression.filter(req, res);
+    },
+  })
+);
+
+// Security: Apply Enterprise HTTP Security Headers
+app.use((req, res, next) => {
+  // Prevent MIME-sniffing
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  // Frame protection (allow framing from same origin or AI Studio parent preview)
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  // Cross-Site Scripting protection for older browsers
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  // Limit referrer data leakage
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  // Restrict sensitive device APIs
+  res.setHeader(
+    "Permissions-Policy",
+    "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), payment=(), usb=()"
+  );
+  next();
+});
+
+// Security: Enforce strict payload size limits to protect against memory exhaustion DoS
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 
 // API health endpoint
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
     model: "gemini-3.1-flash-live-preview",
-    apiKeyConfigured: !!process.env.GEMINI_API_KEY
+    apiKeyConfigured: !!process.env.GEMINI_API_KEY,
+    timestamp: new Date().toISOString(),
   });
 });
 
 // WebSocket Server for Gemini Live API
 const wss = new WebSocketServer({ noServer: true });
 
+// Security: Connection tracking & Rate Limiting per IP for WebSocket connections
+const wsConnectionsByIp = new Map<string, number>();
+const MAX_CONCURRENT_WS_PER_IP = 5;
+
+// Heartbeat ping-pong to clean up dead sockets and prevent connection leaks
+const aliveClients = new WeakSet<WebSocket>();
+
 server.on("upgrade", (request, socket, head) => {
   const parsedUrl = new URL(request.url || "", `http://${request.headers.host || "localhost"}`);
   if (parsedUrl.pathname === "/live") {
+    // Resolve client IP (supporting standard proxy headers)
+    const clientIp =
+      (request.headers["x-forwarded-for"] as string)?.split(",")[0].trim() ||
+      request.socket.remoteAddress ||
+      "unknown";
+
+    const currentConns = wsConnectionsByIp.get(clientIp) || 0;
+    if (currentConns >= MAX_CONCURRENT_WS_PER_IP) {
+      console.warn(`WebSocket connection rejected: IP ${clientIp} exceeded max limit (${MAX_CONCURRENT_WS_PER_IP})`);
+      socket.write("HTTP/1.1 429 Too Many Requests\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+
+    wsConnectionsByIp.set(clientIp, currentConns + 1);
+
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit("connection", ws, request);
     });
   }
 });
 
-wss.on("connection", async (clientWs: WebSocket) => {
-  console.log("Client connected to Gemini Live voice session");
+// Periodically ping clients to clear stale/zombie sockets
+const heartbeatInterval = setInterval(() => {
+  wss.clients.forEach((ws) => {
+    if (!aliveClients.has(ws)) {
+      ws.terminate();
+      return;
+    }
+    aliveClients.delete(ws);
+    try {
+      ws.ping();
+    } catch {}
+  });
+}, 30000);
+
+heartbeatInterval.unref();
+
+wss.on("connection", async (clientWs: WebSocket, request: http.IncomingMessage) => {
+  const clientIp =
+    (request.headers["x-forwarded-for"] as string)?.split(",")[0].trim() ||
+    request.socket.remoteAddress ||
+    "unknown";
+
+  aliveClients.add(clientWs);
+
+  clientWs.on("pong", () => {
+    aliveClients.add(clientWs);
+  });
+
+  const cleanupConnection = () => {
+    const conns = wsConnectionsByIp.get(clientIp) || 1;
+    if (conns <= 1) {
+      wsConnectionsByIp.delete(clientIp);
+    } else {
+      wsConnectionsByIp.set(clientIp, conns - 1);
+    }
+  };
+
+  clientWs.on("close", cleanupConnection);
+  clientWs.on("error", cleanupConnection);
+
+  console.log(`Client connected to Gemini Live voice session from ${clientIp}`);
+
+  const safeSend = (payload: object) => {
+    if (clientWs.readyState === WebSocket.OPEN) {
+      try {
+        clientWs.send(JSON.stringify(payload));
+      } catch (err) {
+        console.error("Error sending message to WebSocket client:", err);
+      }
+    }
+  };
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    clientWs.send(
-      JSON.stringify({
-        error: "GEMINI_API_KEY environment variable is not configured. Please configure it in Settings."
-      })
-    );
+    safeSend({
+      error: "GEMINI_API_KEY environment variable is not configured. Please configure it in Settings.",
+    });
     clientWs.close();
     return;
   }
@@ -58,7 +167,6 @@ wss.on("connection", async (clientWs: WebSocket) => {
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
-          // Puck, Charon, Kore, Fenrir, Zephyr
           voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } },
         },
         systemInstruction:
@@ -69,55 +177,58 @@ wss.on("connection", async (clientWs: WebSocket) => {
           // Model audio chunk (base64 PCM 24kHz)
           const audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
           if (audio) {
-            clientWs.send(JSON.stringify({ audio }));
+            safeSend({ audio });
           }
 
           // Model text transcriptions
           if (message.serverContent?.modelTurn?.parts) {
             for (const part of message.serverContent.modelTurn.parts) {
               if (part.text) {
-                clientWs.send(JSON.stringify({ text: part.text, sender: "model" }));
+                safeSend({ text: part.text, sender: "model" });
               }
             }
           }
 
           if (message.serverContent?.interrupted) {
-            clientWs.send(JSON.stringify({ interrupted: true }));
+            safeSend({ interrupted: true });
           }
 
           if (message.serverContent?.turnComplete) {
-            clientWs.send(JSON.stringify({ turnComplete: true }));
+            safeSend({ turnComplete: true });
           }
         },
         onerror: (err: any) => {
           console.error("Gemini Live API error:", err);
-          try {
-            clientWs.send(JSON.stringify({ error: err?.message || "Live API session error" }));
-          } catch {}
+          safeSend({ error: err?.message || "Live API session error" });
         },
         onclose: () => {
-          try {
-            clientWs.send(JSON.stringify({ closed: true }));
-          } catch {}
-        }
-      }
+          safeSend({ closed: true });
+        },
+      },
     });
 
     clientWs.on("message", (data: any) => {
       try {
-        const parsed = JSON.parse(data.toString());
-        if (parsed.audio) {
+        const rawString = data.toString();
+        // Prevent oversized input payloads
+        if (rawString.length > 500000) {
+          console.warn("Client message exceeded maximum allowed payload size");
+          return;
+        }
+
+        const parsed = JSON.parse(rawString);
+        if (parsed.audio && typeof parsed.audio === "string" && session) {
           session.sendRealtimeInput({
             audio: { data: parsed.audio, mimeType: "audio/pcm;rate=16000" },
           });
         }
-        if (parsed.text) {
+        if (parsed.text && typeof parsed.text === "string" && session) {
           session.send({
             clientContent: {
               turns: [
                 {
                   role: "user",
-                  parts: [{ text: parsed.text }],
+                  parts: [{ text: parsed.text.slice(0, 1000) }],
                 },
               ],
               turnComplete: true,
@@ -139,18 +250,14 @@ wss.on("connection", async (clientWs: WebSocket) => {
     });
   } catch (err: any) {
     console.error("Failed to connect to Gemini Live:", err);
-    try {
-      clientWs.send(
-        JSON.stringify({
-          error: `Failed to connect to Gemini Live (${err?.message || err})`
-        })
-      );
-      clientWs.close();
-    } catch {}
+    safeSend({
+      error: `Failed to connect to Gemini Live (${err?.message || err})`,
+    });
+    clientWs.close();
   }
 });
 
-// Vite middleware in dev or static files in production
+// Vite middleware in dev or high-performance static files in production
 async function setupApp() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -160,8 +267,25 @@ async function setupApp() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+
+    // Performance: Aggressive caching for hashed immutable assets in dist/assets
+    app.use(
+      express.static(distPath, {
+        maxAge: "1d",
+        setHeaders: (res, filePath) => {
+          if (filePath.includes("/assets/")) {
+            // Hashed Vite assets are immutable
+            res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+          } else if (filePath.endsWith(".html")) {
+            // HTML files should revalidate immediately
+            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+          }
+        },
+      })
+    );
+
     app.get("*", (req, res) => {
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
       res.sendFile(path.join(distPath, "index.html"));
     });
   }

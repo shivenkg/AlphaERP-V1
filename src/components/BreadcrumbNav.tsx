@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import {
+  ArrowLeft,
   ChevronRight,
   Home,
   LayoutDashboard,
@@ -31,6 +32,8 @@ interface BreadcrumbNavProps {
   setActiveTab: (tab: string) => void;
   currentRole?: UserRole;
   className?: string;
+  onBack?: () => void;
+  canGoBack?: boolean;
 }
 
 interface ERPNavPath {
@@ -315,7 +318,9 @@ const DEFAULT_PATH: ERPNavPath = {
 export const BreadcrumbNav: React.FC<BreadcrumbNavProps> = ({
   activeTab,
   setActiveTab,
-  className = ''
+  className = '',
+  onBack,
+  canGoBack = false
 }) => {
   const currentPath = ERP_HIERARCHY[activeTab] || DEFAULT_PATH;
   const GroupIcon = currentPath.groupIcon;
@@ -329,6 +334,22 @@ export const BreadcrumbNav: React.FC<BreadcrumbNavProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-2 max-w-7xl mx-auto w-full">
         {/* Left: Breadcrumb Items Trail */}
         <ol className="flex items-center flex-wrap gap-1 sm:gap-1.5 min-w-0 text-slate-500 dark:text-slate-400">
+          {/* Back Action Button */}
+          {canGoBack && onBack && (
+            <li className="inline-flex items-center mr-1">
+              <button
+                id="btn-breadcrumb-back"
+                type="button"
+                onClick={onBack}
+                className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 border border-slate-200/90 dark:border-slate-700/90 shadow-2xs hover:shadow-xs transition-all font-bold text-xs shrink-0 cursor-pointer"
+                title="Go back to previous screen (Backspace or Alt+Left)"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-150 group-hover:-translate-x-0.5 text-slate-500 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+                <span>Back</span>
+              </button>
+            </li>
+          )}
+
           {/* Level 1: Root / Home */}
           <li className="inline-flex items-center">
             <button
