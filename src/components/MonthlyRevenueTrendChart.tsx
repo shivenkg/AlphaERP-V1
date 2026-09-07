@@ -267,31 +267,29 @@ export const MonthlyRevenueTrendChart: React.FC<MonthlyRevenueTrendChartProps> =
   return (
     <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5 transition-all ${className}`}>
       {/* Top Header & Interactive Filter Toolbar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900">
-              <TrendingUp className="w-5 h-5" />
+      <div className="space-y-3.5 pb-2">
+        <div className="flex items-start sm:items-center gap-3">
+          <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900 shrink-0 mt-0.5 sm:mt-0">
+            <TrendingUp className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+                Monthly Revenue Trend & Sales Performance
+              </h3>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 inline-flex items-center gap-1 shrink-0">
+                <Sparkles className="w-3 h-3" />
+                {summary.overallAttainment.toFixed(1)}% Quota Attained
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-                  Monthly Revenue Trend & Sales Performance
-                </h3>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hidden sm:inline-flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" />
-                  {summary.overallAttainment.toFixed(1)}% Quota Attained
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Multi-month sales trajectory, target achievement line, cash collections, and techno-commercial gross margin.
-              </p>
-            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+              Multi-month sales trajectory, target achievement line, cash collections, and techno-commercial gross margin.
+            </p>
           </div>
         </div>
 
-        {/* Filter Controls */}
-        <div className="flex flex-wrap items-center gap-2 self-start lg:self-center">
+        {/* Filter Controls Toolbar Row */}
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
           {/* Time Horizon Filter */}
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold">
             <button
@@ -327,7 +325,7 @@ export const MonthlyRevenueTrendChart: React.FC<MonthlyRevenueTrendChartProps> =
           </div>
 
           {/* Metric View Modes */}
-          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold">
+          <div className="flex flex-wrap items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold">
             <button
               onClick={() => setMetricMode('all')}
               className={`px-2.5 py-1.5 rounded-lg transition-all cursor-pointer ${

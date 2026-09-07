@@ -1900,6 +1900,9 @@ export const INITIAL_SYSTEM_SETTINGS: SystemSettings = {
   currencySymbol: '₹',
   themeColor: 'blue',
   displayDensity: 'spacious',
+  fontSizeMode: 'auto',
+  autoScaleEnabled: true,
+  customFontScale: 1.0,
 
   defaultGstRate: 18,
   quoteValidityDays: 30,

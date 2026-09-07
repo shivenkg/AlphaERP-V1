@@ -25,10 +25,20 @@ import {
   FileSignature,
   AlignJustify,
   Maximize2,
-  Table
+  Table,
+  Type,
+  Monitor,
+  Smartphone,
+  Tablet,
+  Laptop,
+  RefreshCw,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react';
 import { SystemSettings, UserRole, UserProfile } from '../types';
+import { FontSizeScaleMode } from '../types/fontSize';
 import { storageService } from '../services/storageService';
+import { useFontSize } from '../context/FontSizeContext';
 import { ROLE_DEFINITIONS } from '../utils/rbac';
 import { NumberSeriesAdminSection } from './NumberSeriesAdminSection';
 import { ReportTemplateManager } from './ReportTemplateManager';
@@ -43,6 +53,16 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
   currentUser,
   onNavigateTab
 }) => {
+  const {
+    fontSizeMode,
+    isAuto,
+    computedScale,
+    baseFontSizePx,
+    viewportInfo,
+    setFontSizeMode,
+    setCustomScale,
+    resetToAuto
+  } = useFontSize();
   const [settings, setSettings] = useState<SystemSettings>(storageService.getSystemSettings());
   const [activeSubTab, setActiveSubTab] = useState<
     'branding' | 'report_templates' | 'commercial' | 'procurement' | 'number_series' | 'banking' | 'modules' | 'roles' | 'role_modules' | 'backup'
@@ -527,6 +547,126 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
                     Touch & Presentation Ready
                   </span>
                 </div>
+              </div>
+            </div>
+
+            {/* Auto-Rendering & Viewport Typography Scaling Section */}
+            <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 space-y-4 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                    <Type className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-black text-slate-900">
+                        Auto-Rendering & Responsive Viewport Typography
+                      </h4>
+                      {isAuto && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          Active Auto-Scale
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Automatically measures the user's viewport dimensions, DPI, and device orientation to adjust the base typography scale across the entire web application.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <span className="text-[11px] font-mono font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                    {Math.round(computedScale * 100)}% ({baseFontSizePx}px)
+                  </span>
+                </div>
+              </div>
+
+              {/* Viewport Live Diagnostics Pill */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 rounded-xl p-3 border border-slate-200/80 text-xs">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Viewport Size</span>
+                  <span className="font-mono font-bold text-slate-800">{viewportInfo.width} × {viewportInfo.height} px</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Breakpoint</span>
+                  <span className="font-bold text-indigo-600 uppercase">{viewportInfo.breakpoint} ({viewportInfo.orientation})</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Base Root Size</span>
+                  <span className="font-mono font-bold text-slate-800">{baseFontSizePx} px</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Effective Multiplier</span>
+                  <span className="font-mono font-bold text-emerald-600">{computedScale.toFixed(2)}x</span>
+                </div>
+              </div>
+
+              {/* Preset Selection Buttons */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                {[
+                  { mode: 'auto' as FontSizeScaleMode, title: 'Auto (Responsive)', desc: 'Adaptive scale' },
+                  { mode: 'compact' as FontSizeScaleMode, title: 'Compact (90%)', desc: '14.4px dense' },
+                  { mode: 'normal' as FontSizeScaleMode, title: 'Standard (100%)', desc: '16.0px normal' },
+                  { mode: 'large' as FontSizeScaleMode, title: 'Large (110%)', desc: '17.6px readable' },
+                  { mode: 'xlarge' as FontSizeScaleMode, title: 'Extra Large (125%)', desc: '20.0px spacious' },
+                ].map((item) => (
+                  <button
+                    key={item.mode}
+                    type="button"
+                    onClick={() => {
+                      setFontSizeMode(item.mode);
+                      setSettings({ ...settings, fontSizeMode: item.mode });
+                    }}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      fontSizeMode === item.mode
+                        ? 'bg-indigo-50 border-indigo-600 text-indigo-900 shadow-xs ring-2 ring-indigo-500/20'
+                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
+                    }`}
+                  >
+                    <div className="text-xs font-bold">{item.title}</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">{item.desc}</div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Fine-Tuning Slider */}
+              <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3 flex-1">
+                  <span className="text-xs font-bold text-slate-700 whitespace-nowrap">Fine-Tune Scale:</span>
+                  <input
+                    type="range"
+                    min="0.75"
+                    max="1.40"
+                    step="0.05"
+                    value={computedScale}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setCustomScale(val);
+                      if (val >= 1.2) setFontSizeMode('xlarge');
+                      else if (val >= 1.08) setFontSizeMode('large');
+                      else if (val >= 0.98) setFontSizeMode('normal');
+                      else setFontSizeMode('compact');
+                    }}
+                    className="w-full max-w-xs accent-indigo-600 cursor-pointer"
+                  />
+                  <span className="text-xs font-mono font-bold text-indigo-600 w-12 text-right">
+                    {Math.round(computedScale * 100)}%
+                  </span>
+                </div>
+
+                {!isAuto && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetToAuto();
+                      setSettings({ ...settings, fontSizeMode: 'auto' });
+                    }}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700 cursor-pointer"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Reset to Auto-Rendering</span>
+                  </button>
+                )}
               </div>
             </div>
 

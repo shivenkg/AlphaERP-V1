@@ -8,10 +8,83 @@
   --bg-ivory-surface: #FFFFFF;
   --bg-ivory-subtle: #F4F1EA;
   --border-ivory: #E7E3D8;
+  --app-font-scale: 1;
+  --app-base-font-size: 16px;
 }
 
 html.dark {
   color-scheme: dark;
+}
+
+html {
+  font-size: var(--app-base-font-size, 16px);
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  transition: font-size 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Viewport-adaptive responsive base typography fallback for auto mode */
+@media (max-width: 479px) {
+  :root:not([data-font-size-mode="compact"]):not([data-font-size-mode="large"]):not([data-font-size-mode="xlarge"]):not([data-font-size-mode="normal"]) {
+    --app-base-font-size: 14px;
+    --app-font-scale: 0.875;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 639px) {
+  :root:not([data-font-size-mode="compact"]):not([data-font-size-mode="large"]):not([data-font-size-mode="xlarge"]):not([data-font-size-mode="normal"]) {
+    --app-base-font-size: 14.4px;
+    --app-font-scale: 0.90;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+  :root:not([data-font-size-mode="compact"]):not([data-font-size-mode="large"]):not([data-font-size-mode="xlarge"]):not([data-font-size-mode="normal"]) {
+    --app-base-font-size: 15px;
+    --app-font-scale: 0.9375;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  :root:not([data-font-size-mode="compact"]):not([data-font-size-mode="large"]):not([data-font-size-mode="xlarge"]):not([data-font-size-mode="normal"]) {
+    --app-base-font-size: 15.5px;
+    --app-font-scale: 0.96875;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 2559px) {
+  :root:not([data-font-size-mode="compact"]):not([data-font-size-mode="large"]):not([data-font-size-mode="xlarge"]):not([data-font-size-mode="normal"]) {
+    --app-base-font-size: 16px;
+    --app-font-scale: 1;
+  }
+}
+
+@media (min-width: 2560px) {
+  :root:not([data-font-size-mode="compact"]):not([data-font-size-mode="large"]):not([data-font-size-mode="xlarge"]):not([data-font-size-mode="normal"]) {
+    --app-base-font-size: 17px;
+    --app-font-scale: 1.06;
+  }
+}
+
+/* Specific Font Size Preset Overrides */
+html[data-font-size-mode="compact"] {
+  --app-base-font-size: 14.4px;
+  --app-font-scale: 0.90;
+}
+
+html[data-font-size-mode="normal"] {
+  --app-base-font-size: 16px;
+  --app-font-scale: 1.00;
+}
+
+html[data-font-size-mode="large"] {
+  --app-base-font-size: 17.6px;
+  --app-font-scale: 1.10;
+}
+
+html[data-font-size-mode="xlarge"] {
+  --app-base-font-size: 20px;
+  --app-font-scale: 1.25;
 }
 
 html,
@@ -535,4 +608,24 @@ tbody tr.interactive-tr:hover,
     break-after: auto !important;
   }
 }
+
+/* =========================================================================
+   Data Visualizations, Charts & SVG Responsive Typography Scaling
+   ========================================================================= */
+.recharts-cartesian-axis-tick text,
+.recharts-legend-item-text,
+.recharts-label {
+  font-size: calc(var(--app-font-scale, 1) * 11px) !important;
+  transition: font-size 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.recharts-default-tooltip,
+.recharts-tooltip-wrapper {
+  font-size: calc(var(--app-font-scale, 1) * 12px) !important;
+}
+
+.recharts-cartesian-axis-tick-value {
+  font-size: calc(var(--app-font-scale, 1) * 11px) !important;
+}
+
 

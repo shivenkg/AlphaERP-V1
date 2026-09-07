@@ -47,6 +47,7 @@ import { CreatePRModal } from './components/CreatePRModal';
 import { NewExpenseModal } from './components/NewExpenseModal';
 import { QuickActionFloatingButton } from './components/QuickActionFloatingButton';
 import { QuickGuideModal } from './components/QuickGuideModal';
+import { useFontSize } from './context/FontSizeContext';
 
 const getInitialTab = (): string => {
   try {
@@ -57,6 +58,7 @@ const getInitialTab = (): string => {
 };
 
 export function App() {
+  const { increaseFontSize, decreaseFontSize, resetToAuto } = useFontSize();
   const [data, setData] = useState(storageService.getAllData());
   const [notifications, setNotifications] = useState(storageService.getNotifications());
   const [activeTab, setActiveTabState] = useState<string>(getInitialTab);
@@ -273,6 +275,25 @@ export function App() {
       if ((e.key === '?' || (e.shiftKey && e.key === '/')) && !isTyping) {
         e.preventDefault();
         setIsQuickGuideOpen((prev) => !prev);
+        return;
+      }
+
+      // Font Scaling Shortcuts (Alt + + / Alt + - / Alt + 0)
+      if (e.altKey && (e.key === '+' || e.key === '=')) {
+        e.preventDefault();
+        increaseFontSize();
+        return;
+      }
+
+      if (e.altKey && (e.key === '-' || e.key === '_')) {
+        e.preventDefault();
+        decreaseFontSize();
+        return;
+      }
+
+      if (e.altKey && e.key === '0') {
+        e.preventDefault();
+        resetToAuto();
         return;
       }
 

@@ -34,14 +34,17 @@ import {
   Presentation,
   PanelLeft,
   PanelLeftClose,
-  Table
+  Table,
+  Type
 } from 'lucide-react';
 import { UserRole, AppNotification, GoogleSheetsSyncConfig, UserProfile } from '../types';
 import { storageService } from '../services/storageService';
 import { googleSheetsService } from '../services/googleSheets';
 import { useTheme } from '../context/ThemeContext';
+import { useFontSize } from '../context/FontSizeContext';
 import { JSAlphaSoftLogo } from './JSAlphaSoftLogo';
 import { ThemeToggle } from './ThemeToggle';
+import { FontSizeControl } from './FontSizeControl';
 
 interface HeaderProps {
   currentUser: UserProfile;
@@ -87,6 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout
 }) => {
   const { theme, isDark, toggleTheme } = useTheme();
+  const { fontSizeMode, isAuto, computedScale, setFontSizeMode } = useFontSize();
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
@@ -876,6 +880,9 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
+          {/* Auto Font Size & Viewport Rendering Control */}
+          <FontSizeControl />
+
           {/* Theme Toggle (Light / Dark mode) */}
           <ThemeToggle id="header-theme-toggle" className="shrink-0" />
 
@@ -963,6 +970,32 @@ export const Header: React.FC<HeaderProps> = ({
                     </div>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 capitalize border border-indigo-200 dark:border-indigo-800/60">
                       {storageService.getDisplayDensity()} mode
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (isAuto) {
+                        setFontSizeMode('normal');
+                      } else if (fontSizeMode === 'normal') {
+                        setFontSizeMode('large');
+                      } else if (fontSizeMode === 'large') {
+                        setFontSizeMode('xlarge');
+                      } else if (fontSizeMode === 'xlarge') {
+                        setFontSizeMode('compact');
+                      } else {
+                        setFontSizeMode('auto');
+                      }
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 flex items-center justify-between cursor-pointer"
+                    title="Toggle auto viewport rendering or cycle typography scale"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Type className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                      <span>Font Size Scaling</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60">
+                      {isAuto ? `Auto (${Math.round(computedScale * 100)}%)` : `${Math.round(computedScale * 100)}%`}
                     </span>
                   </button>
                 </div>

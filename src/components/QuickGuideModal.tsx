@@ -274,6 +274,29 @@ export const QuickGuideModal: React.FC<QuickGuideModalProps> = ({
                     </kbd>
                   </div>
                 </div>
+
+                {/* Shortcut 7: Font Scaling */}
+                <div className="flex items-start justify-between p-3.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/40 dark:bg-indigo-950/20 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
+                  <div className="space-y-1">
+                    <div className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                      <span>Adjust Font Size & Auto-Rendering</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      Scale application typography up/down, or reset to responsive Auto Viewport mode
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0 ml-3">
+                    <div className="flex items-center gap-1">
+                      <kbd className="px-2 py-1 text-xs font-bold font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md shadow-2xs">Alt</kbd>
+                      <span className="text-slate-400 text-xs">+</span>
+                      <kbd className="px-2 py-1 text-xs font-bold font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md shadow-2xs">+/ -</kbd>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-slate-400">Auto:</span>
+                      <kbd className="px-1.5 py-0.5 text-[10px] font-bold font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded shadow-2xs">Alt + 0</kbd>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

@@ -850,8 +850,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       case 'section_analytics_charts':
         sectionBody = (
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-            <div className="xl:col-span-7 space-y-3">
+          <div className="space-y-6">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold">
                   <button
@@ -897,7 +897,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 />
               )}
             </div>
-            <div className="xl:col-span-5">
+            <div>
               <ProjectStatusDistributionChart projects={projects} onNavigate={onNavigate} />
             </div>
           </div>

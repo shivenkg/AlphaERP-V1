@@ -468,6 +468,9 @@ export interface SystemSettings {
   currencySymbol: string;
   themeColor: 'blue' | 'emerald' | 'indigo' | 'violet' | 'slate';
   displayDensity?: 'compact' | 'spacious';
+  fontSizeMode?: 'auto' | 'compact' | 'normal' | 'large' | 'xlarge';
+  autoScaleEnabled?: boolean;
+  customFontScale?: number;
   
   // Quotation & Commercial Parameters
   defaultGstRate: number; // e.g. 18

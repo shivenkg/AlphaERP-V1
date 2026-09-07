@@ -67,6 +67,7 @@ import {
   BiometricDevice,
   AttendancePunchLog
 } from '../types';
+import { FontSizeScaleMode } from '../types/fontSize';
 
 import {
   DEFAULT_NUMBER_SERIES,
@@ -2160,6 +2161,30 @@ class StorageService {
       }
     } catch {}
     return density;
+  }
+
+  public getFontSizeMode(): FontSizeScaleMode {
+    return this.systemSettings.fontSizeMode || 'auto';
+  }
+
+  public setFontSizeMode(mode: FontSizeScaleMode): FontSizeScaleMode {
+    this.updateSystemSettings({ fontSizeMode: mode, autoScaleEnabled: mode === 'auto' });
+    try {
+      if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-font-size-mode', mode);
+      }
+    } catch {}
+    return mode;
+  }
+
+  public getCustomFontScale(): number {
+    return typeof this.systemSettings.customFontScale === 'number' ? this.systemSettings.customFontScale : 1.0;
+  }
+
+  public setCustomFontScale(scale: number): number {
+    const clamped = Math.max(0.75, Math.min(1.4, Number(scale.toFixed(2))));
+    this.updateSystemSettings({ customFontScale: clamped });
+    return clamped;
   }
 
   public resetSystemSettings(): SystemSettings {
