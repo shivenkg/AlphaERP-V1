@@ -44,7 +44,25 @@ import { NumberSeriesAdminSection } from './NumberSeriesAdminSection';
 import { ReportTemplateManager } from './ReportTemplateManager';
 import { RoleModulePermissionsManager } from './RoleModulePermissionsManager';
 import { GoogleSheetsAdminSection } from './GoogleSheetsAdminSection';
-import { FileSpreadsheet } from 'lucide-react';
+import {
+  FileSpreadsheet,
+  ExternalLink,
+  Database,
+  Cloud,
+  Check,
+  Activity,
+  HardDrive,
+  Info,
+  Clock,
+  ArrowRight,
+  X
+} from 'lucide-react';
+import {
+  GoogleSheetBackupStats,
+  GoogleSheetRestorePreview,
+  GoogleSheetRestoreResult
+} from '../types';
+import { googleSheetsService } from '../services/googleSheets';
 
 interface AdminCustomizationViewProps {
   currentUser: UserProfile;
@@ -76,14 +94,27 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
 
   // Backup & Restore states
   const [jsonInput, setJsonInput] = useState('');
-  const [restoreFeedback, setRestoreFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [restoreFeedback, setRestoreFeedback] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [saveSuccessNotification, setSaveSuccessNotification] = useState(false);
+
+  // Google Sheets Master & Transaction Cloud Backup/Restore states
+  const [sheetsConfig, setSheetsConfig] = useState(storageService.getGoogleSheetsConfig());
+  const [isGSheetBackingUp, setIsGSheetBackingUp] = useState(false);
+  const [isGSheetRestoring, setIsGSheetRestoring] = useState(false);
+  const [isGSheetPreviewing, setIsGSheetPreviewing] = useState(false);
+  const [sheetRestorePreview, setSheetRestorePreview] = useState<GoogleSheetRestorePreview | null>(null);
+  const [sheetRestoreResult, setSheetRestoreResult] = useState<GoogleSheetRestoreResult | null>(null);
+  const [sheetBackupResult, setSheetBackupResult] = useState<GoogleSheetBackupStats | null>(
+    storageService.getGoogleSheetsConfig().lastBackupStats || null
+  );
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
 
   const isAdmin = currentUser.role === 'executive';
 
   useEffect(() => {
     const unsubscribe = storageService.subscribe(() => {
       setSettings(storageService.getSystemSettings());
+      setSheetsConfig(storageService.getGoogleSheetsConfig());
     });
     return () => unsubscribe();
   }, []);
@@ -166,11 +197,82 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
     }
 
     try {
-      storageService.importFullDatabase(jsonInput);
-      setRestoreFeedback({ type: 'success', message: 'Full ERP Database restored successfully!' });
-      setJsonInput('');
+      const report = storageService.importFullDatabaseWithReport(jsonInput);
+      if (report.success) {
+        setRestoreFeedback({
+          type: 'success',
+          message: `Full ERP Database restored! Successfully loaded ${report.totalMaster} master records and ${report.totalTransactions} transaction records.`
+        });
+        setJsonInput('');
+      } else {
+        setRestoreFeedback({ type: 'error', message: report.error || 'Failed to restore database.' });
+      }
     } catch (e: any) {
       setRestoreFeedback({ type: 'error', message: e.message || 'Invalid JSON format.' });
+    }
+  };
+
+  const handleBackupToGoogleSheet = async () => {
+    if (isGSheetBackingUp) return;
+    setIsGSheetBackingUp(true);
+    setRestoreFeedback(null);
+
+    try {
+      const res = await googleSheetsService.backupToGoogleSheet();
+      setSheetBackupResult(res.stats);
+      setRestoreFeedback({
+        type: 'success',
+        message: `Google Sheets Cloud Backup Successful: Backed up ${res.stats.totalMasterRecords} master records and ${res.stats.totalTransactionRecords} transaction records to Google Sheet.`
+      });
+    } catch (err: any) {
+      setRestoreFeedback({
+        type: 'error',
+        message: err.message || 'Failed to backup master and transaction data to Google Sheet.'
+      });
+    } finally {
+      setIsGSheetBackingUp(false);
+    }
+  };
+
+  const handleInitiateGoogleSheetRestore = async () => {
+    if (isGSheetPreviewing || isGSheetRestoring) return;
+    setIsGSheetPreviewing(true);
+    setRestoreFeedback(null);
+
+    try {
+      const preview = await googleSheetsService.previewRestoreFromGoogleSheet();
+      setSheetRestorePreview(preview);
+      setShowRestoreModal(true);
+    } catch (err: any) {
+      setRestoreFeedback({
+        type: 'error',
+        message: err.message || 'Failed to inspect linked Google Sheet for restoration.'
+      });
+    } finally {
+      setIsGSheetPreviewing(false);
+    }
+  };
+
+  const handleExecuteGoogleSheetRestore = async () => {
+    if (isGSheetRestoring) return;
+    setIsGSheetRestoring(true);
+
+    try {
+      const result = await googleSheetsService.restoreFromGoogleSheet();
+      setSheetRestoreResult(result);
+      setShowRestoreModal(false);
+      const totalCollections = Object.keys(result.masterCounts).length + Object.keys(result.transactionCounts).length;
+      setRestoreFeedback({
+        type: 'success',
+        message: `Google Sheets Restoration Complete! Successfully restored ${result.totalMasterRecords} master records and ${result.totalTransactionRecords} transaction records across ${totalCollections} collections.`
+      });
+    } catch (err: any) {
+      setRestoreFeedback({
+        type: 'error',
+        message: err.message || 'Failed to restore database from Google Sheet.'
+      });
+    } finally {
+      setIsGSheetRestoring(false);
     }
   };
 
@@ -1355,109 +1457,470 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
 
       {/* TAB 11: BACKUP, RESTORE & FACTORY RESET */}
       {activeSubTab === 'backup' && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
-          <div>
-            <h3 className="text-base font-black text-slate-900 tracking-tight">
-              Enterprise Data Vault: Backup, Migration & Restoration
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Export complete AlphaERP collections or restore from a previously exported snapshot.
-            </p>
-          </div>
-
-          {restoreFeedback && (
-            <div
-              className={`p-4 rounded-2xl border text-xs font-semibold flex items-center gap-2.5 ${
-                restoreFeedback.type === 'success'
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                  : 'bg-rose-50 border-rose-200 text-rose-800'
-              }`}
-            >
-              {restoreFeedback.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              ) : (
-                <AlertTriangle className="w-4 h-4 text-rose-600" />
-              )}
-              <span>{restoreFeedback.message}</span>
+        <div className="space-y-6">
+          {/* Main Card */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+            <div>
+              <h3 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
+                <Database className="w-5 h-5 text-indigo-600" />
+                <span>Enterprise Data Vault: Backup, Migration & Restoration</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Backup and restore all master data collections and transaction data records using your linked Google Sheet or offline JSON files.
+              </p>
             </div>
-          )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Export */}
-            <div className="p-5 rounded-2xl bg-indigo-50/60 border border-indigo-100 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 font-bold text-xs text-indigo-950 uppercase tracking-wider">
-                  <Download className="w-4 h-4 text-indigo-600" />
-                  <span>Full Database Snapshot Export</span>
+            {restoreFeedback && (
+              <div
+                className={`p-4 rounded-2xl border text-xs font-semibold flex items-center justify-between gap-3 ${
+                  restoreFeedback.type === 'success'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : restoreFeedback.type === 'info'
+                    ? 'bg-blue-50 border-blue-200 text-blue-800'
+                    : 'bg-rose-50 border-rose-200 text-rose-800'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  {restoreFeedback.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  ) : restoreFeedback.type === 'info' ? (
+                    <Info className="w-4 h-4 text-blue-600 shrink-0" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                  )}
+                  <span>{restoreFeedback.message}</span>
                 </div>
-                <p className="text-xs text-indigo-900/80 mt-2 leading-relaxed">
-                  Download all CRM Leads, Quotations, BOQ Line Items, Purchase Requisitions, Vendor POs, Inventory Items, and System Settings in a single JSON file.
+                <button
+                  onClick={() => setRestoreFeedback(null)}
+                  className="text-slate-400 hover:text-slate-600 text-xs font-bold px-1.5 py-0.5"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {/* GOOGLE SHEETS ENTERPRISE CLOUD BACKUP & RESTORE SECTION */}
+            <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50/70 via-teal-50/40 to-slate-50 p-6 space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
+                    <FileSpreadsheet className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-slate-900">
+                        Linked Google Sheet Cloud Vault
+                      </h4>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                        Auto-Vault Enabled
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      Target Spreadsheet:{' '}
+                      <span className="font-semibold text-slate-800">
+                        {sheetsConfig.spreadsheetName || 'AlphaERP_Master_Sync'}
+                      </span>{' '}
+                      {sheetsConfig.spreadsheetId && (
+                        <a
+                          href={`https://docs.google.com/spreadsheets/d/${sheetsConfig.spreadsheetId}/edit`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-emerald-700 hover:underline font-mono text-[11px] ml-1"
+                        >
+                          <span className="truncate max-w-[140px]">{sheetsConfig.spreadsheetId}</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setActiveSubTab('google_sheets')}
+                    className="px-3 py-1.5 rounded-xl border border-emerald-300 hover:bg-emerald-100/60 text-emerald-900 text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    Configure Sheet
+                  </button>
+                </div>
+              </div>
+
+              {/* Master & Transaction Scope Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {/* Master Data Collections */}
+                <div className="p-3.5 rounded-xl bg-white/90 border border-emerald-100/80 shadow-xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <Database className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Master Data Collections</span>
+                    </span>
+                    <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">
+                      {sheetBackupResult?.totalMasterRecords
+                        ? `${sheetBackupResult.totalMasterRecords} Records Backed Up`
+                        : '10 Master Modules'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Clients, Vendors, Inventory Catalog, Sales Reps, Cost Centers, Tax Slabs, Payment Terms, Chart of Accounts, Employees, Shifts & Policies.
+                  </p>
+                </div>
+
+                {/* Transaction Data Collections */}
+                <div className="p-3.5 rounded-xl bg-white/90 border border-teal-100/80 shadow-xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <Activity className="w-3.5 h-3.5 text-teal-600" />
+                      <span>Transaction Data Collections</span>
+                    </span>
+                    <span className="text-[11px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200/60">
+                      {sheetBackupResult?.totalTransactionRecords
+                        ? `${sheetBackupResult.totalTransactionRecords} Records Backed Up`
+                        : '14 Transaction Modules'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    CRM Leads, Quotations, Projects & BOQs, Field Orders, PRs, POs, Goods Receipt Notes, Customer Billing, Journal Vouchers, Attendance, Payroll & Audit Logs.
+                  </p>
+                </div>
+              </div>
+
+              {/* Status Meta */}
+              <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-500 pt-1 border-t border-emerald-100/70">
+                <div className="flex items-center gap-3">
+                  <span>
+                    Last Cloud Backup:{' '}
+                    <strong className="text-slate-700">
+                      {sheetsConfig.lastBackupAt ? new Date(sheetsConfig.lastBackupAt).toLocaleString() : 'Never'}
+                    </strong>
+                  </span>
+                  <span>•</span>
+                  <span>
+                    Last Cloud Restore:{' '}
+                    <strong className="text-slate-700">
+                      {sheetsConfig.lastRestoreAt ? new Date(sheetsConfig.lastRestoreAt).toLocaleString() : 'Never'}
+                    </strong>
+                  </span>
+                </div>
+                <div className="text-emerald-700 font-medium">
+                  Full 24-collection Data Vault serialization active
+                </div>
+              </div>
+
+              {/* Primary Action Buttons */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleBackupToGoogleSheet}
+                  disabled={isGSheetBackingUp || isGSheetRestoring}
+                  className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isGSheetBackingUp ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Backing Up All Master & Transaction Data...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileSpreadsheet className="w-4 h-4" />
+                      <span>Backup to Linked Google Sheet</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleInitiateGoogleSheetRestore}
+                  disabled={isGSheetBackingUp || isGSheetRestoring || isGSheetPreviewing}
+                  className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isGSheetPreviewing ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Reading Sheet Data Vault...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Database className="w-4 h-4 text-emerald-400" />
+                      <span>Restore from Linked Google Sheet</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* RESTORATION RESULT SUMMARY (Shown after successful restoration) */}
+            {sheetRestoreResult && (
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-900">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Google Sheet Restoration Succeeded</span>
+                  </div>
+                  <span className="text-[11px] text-emerald-700">
+                    {new Date(sheetRestoreResult.restoredAt).toLocaleTimeString()}
+                  </span>
+                </div>
+                <p className="text-xs text-emerald-800 leading-relaxed">
+                  Successfully restored <strong>{sheetRestoreResult.totalMasterRecords}</strong> master data records and{' '}
+                  <strong>{sheetRestoreResult.totalTransactionRecords}</strong> transaction data records across{' '}
+                  <strong>{Object.keys(sheetRestoreResult.masterCounts).length + Object.keys(sheetRestoreResult.transactionCounts).length}</strong> collections.
+                </p>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {Object.entries({ ...sheetRestoreResult.masterCounts, ...sheetRestoreResult.transactionCounts }).map(([name, count]) => (
+                    <span
+                      key={name}
+                      className="px-2 py-0.5 bg-white text-emerald-800 border border-emerald-200 rounded-md text-[10px] font-semibold"
+                    >
+                      {name}: {Number(count)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* OFFLINE JSON EXPORT & RESTORE */}
+            <div>
+              <div className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <HardDrive className="w-3.5 h-3.5 text-slate-500" />
+                <span>Offline JSON File Backup & Restoration</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Export */}
+                <div className="p-5 rounded-2xl bg-indigo-50/60 border border-indigo-100 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 font-bold text-xs text-indigo-950 uppercase tracking-wider">
+                      <Download className="w-4 h-4 text-indigo-600" />
+                      <span>Full Database Snapshot Export</span>
+                    </div>
+                    <p className="text-xs text-indigo-900/80 mt-2 leading-relaxed">
+                      Download all Master Collections, Quotations, BOQ Line Items, Vendor POs, Inventory Items, and System Settings in a single JSON file.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleExportJson}
+                    className="mt-4 w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Export AlphaERP_Backup.json</span>
+                  </button>
+                </div>
+
+                {/* Restore */}
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 font-bold text-xs text-slate-800 uppercase tracking-wider">
+                      <Upload className="w-4 h-4 text-blue-600" />
+                      <span>Restore from JSON Backup File</span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+                      Upload an existing AlphaERP backup JSON file to restore all collections and configurations.
+                    </p>
+                  </div>
+
+                  <div className="mt-4 space-y-2">
+                    <input
+                      type="file"
+                      accept=".json"
+                      onChange={handleFileUpload}
+                      className="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                    />
+                    {jsonInput && (
+                      <button
+                        onClick={handleImportJson}
+                        className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Apply & Restore Database</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Hard Reset Card */}
+            <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-rose-950 uppercase tracking-wider">
+                  <AlertTriangle className="w-4 h-4 text-rose-600" />
+                  <span>Factory Demo Data Reset</span>
+                </div>
+                <p className="text-xs text-rose-900/80 mt-0.5">
+                  Restores default sample projects (Apex Health Tower, Daikin VRF, Voltas, Blue Star) and clears changes.
                 </p>
               </div>
               <button
-                onClick={handleExportJson}
-                className="mt-4 w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                onClick={() => {
+                  if (window.confirm('Reset the entire database back to initial factory demo state?')) {
+                    storageService.resetToFactoryDefaults();
+                    setRestoreFeedback({ type: 'success', message: 'System reset to factory demo state.' });
+                  }
+                }}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition-colors shrink-0 cursor-pointer"
               >
-                <Download className="w-4 h-4" />
-                <span>Export AlphaERP_Backup.json</span>
+                Reset to Factory Demo Data
               </button>
             </div>
+          </div>
 
-            {/* Restore */}
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 font-bold text-xs text-slate-800 uppercase tracking-wider">
-                  <Upload className="w-4 h-4 text-blue-600" />
-                  <span>Restore from JSON Backup File</span>
-                </div>
-                <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                  Upload an existing AlphaERP backup JSON file to restore all collections and configurations.
-                </p>
-              </div>
-
-              <div className="mt-4 space-y-2">
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleFileUpload}
-                  className="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-                />
-                {jsonInput && (
+          {/* CONFIRMATION & INSPECTION MODAL BEFORE GOOGLE SHEET RESTORATION */}
+          {showRestoreModal && sheetRestorePreview && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+              <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 space-y-5 max-h-[90vh] overflow-y-auto">
+                <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+                      <Database className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-black text-slate-900">
+                        Confirm Google Sheet Restoration
+                      </h4>
+                      <p className="text-xs text-slate-500">
+                        Review master and transaction records detected in the linked sheet.
+                      </p>
+                    </div>
+                  </div>
                   <button
-                    onClick={handleImportJson}
-                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2"
+                    type="button"
+                    onClick={() => setShowRestoreModal(false)}
+                    className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100"
                   >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Apply & Restore Database</span>
+                    <X className="w-4 h-4" />
                   </button>
-                )}
-              </div>
-            </div>
-          </div>
+                </div>
 
-          {/* Hard Reset Card */}
-          <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-1.5 text-xs font-bold text-rose-950 uppercase tracking-wider">
-                <AlertTriangle className="w-4 h-4 text-rose-600" />
-                <span>Factory Demo Data Reset</span>
+                {/* Source Sheet Info */}
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-medium">Source Spreadsheet:</span>
+                    <a
+                      href={sheetRestorePreview.spreadsheetUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-bold text-emerald-700 hover:underline flex items-center gap-1"
+                    >
+                      <span>{sheetRestorePreview.spreadsheetTitle}</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-medium">Vault Detection:</span>
+                    <span
+                      className={`font-semibold px-2 py-0.5 rounded-md text-[10px] ${
+                        sheetRestorePreview.vaultFound
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-amber-100 text-amber-800'
+                      }`}
+                    >
+                      {sheetRestorePreview.vaultFound
+                        ? 'Full Serialized Data Vault (Accurate)'
+                        : 'Multi-Tab Relational Mode'}
+                    </span>
+                  </div>
+                  {sheetRestorePreview.backupTimestamp && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500 font-medium">Vault Backup Timestamp:</span>
+                      <span className="font-semibold text-slate-700">
+                        {new Date(sheetRestorePreview.backupTimestamp).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Breakdown Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Master Collections */}
+                  <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                        <Database className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>Master Data Collections</span>
+                      </span>
+                      <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md">
+                        {sheetRestorePreview.totalMasterRecords} Total
+                      </span>
+                    </div>
+                    <div className="space-y-1 max-h-40 overflow-y-auto pr-1 text-xs">
+                      {Object.entries(sheetRestorePreview.masterCounts).map(([name, count]) => (
+                        <div
+                          key={name}
+                          className="flex items-center justify-between py-1 px-2 rounded-lg bg-white/80 text-[11px]"
+                        >
+                          <span className="text-slate-700">{name}</span>
+                          <span className="font-bold text-slate-900">{Number(count)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Transaction Collections */}
+                  <div className="p-3.5 rounded-xl bg-teal-50/50 border border-teal-200 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-teal-950 flex items-center gap-1.5">
+                        <Activity className="w-3.5 h-3.5 text-teal-700" />
+                        <span>Transaction Collections</span>
+                      </span>
+                      <span className="text-[11px] font-bold text-teal-800 bg-teal-100 px-2 py-0.5 rounded-md">
+                        {sheetRestorePreview.totalTransactionRecords} Total
+                      </span>
+                    </div>
+                    <div className="space-y-1 max-h-40 overflow-y-auto pr-1 text-xs">
+                      {Object.entries(sheetRestorePreview.transactionCounts).map(([name, count]) => (
+                        <div
+                          key={name}
+                          className="flex items-center justify-between py-1 px-2 rounded-lg bg-white/80 text-[11px]"
+                        >
+                          <span className="text-slate-700">{name}</span>
+                          <span className="font-bold text-slate-900">{Number(count)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Safety Guarantee Callout */}
+                <div className="p-3 rounded-xl bg-indigo-50/70 border border-indigo-200 text-xs text-indigo-900 flex items-center gap-2.5">
+                  <ShieldCheck className="w-5 h-5 text-indigo-600 shrink-0" />
+                  <span>
+                    <strong>Automatic Safety Snapshot:</strong> AlphaERP will automatically record a local safety backup snapshot of your active database right before restoring.
+                  </span>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowRestoreModal(false)}
+                    disabled={isGSheetRestoring}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleExecuteGoogleSheetRestore}
+                    disabled={isGSheetRestoring}
+                    className="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {isGSheetRestoring ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Restoring All Collections...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Confirm & Restore Full Database</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-              <p className="text-xs text-rose-900/80 mt-0.5">
-                Restores default sample projects (Apex Health Tower, Daikin VRF, Voltas, Blue Star) and clears changes.
-              </p>
             </div>
-            <button
-              onClick={() => {
-                if (window.confirm('Reset the entire database back to initial factory demo state?')) {
-                  storageService.resetToFactoryDefaults();
-                  setRestoreFeedback({ type: 'success', message: 'System reset to factory demo state.' });
-                }
-              }}
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition-colors shrink-0 cursor-pointer"
-            >
-              Reset to Factory Demo Data
-            </button>
-          </div>
+          )}
         </div>
       )}
     </div>

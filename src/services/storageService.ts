@@ -4759,92 +4759,308 @@ class StorageService {
   }
 
   public importFullDatabase(jsonString: string): boolean {
+    const report = this.importFullDatabaseWithReport(jsonString);
+    return report.success;
+  }
+
+  public importFullDatabaseWithReport(jsonString: string): {
+    success: boolean;
+    error?: string;
+    masterCounts: Record<string, number>;
+    transactionCounts: Record<string, number>;
+    totalMaster: number;
+    totalTransactions: number;
+  } {
+    const masterCounts: Record<string, number> = {};
+    const transactionCounts: Record<string, number> = {};
+
     try {
-      const raw = JSON.parse(jsonString);
-      if (!raw || typeof raw !== 'object') return false;
+      const raw = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
+      if (!raw || typeof raw !== 'object') {
+        return {
+          success: false,
+          error: 'Provided payload is not a valid JSON object',
+          masterCounts: {},
+          transactionCounts: {},
+          totalMaster: 0,
+          totalTransactions: 0
+        };
+      }
       const data = safeSanitizeValue(raw);
 
-      if (Array.isArray(data.inventory)) {
-        this.inventory = data.inventory;
-        save(STORAGE_KEYS.INVENTORY, this.inventory);
-      }
-      if (Array.isArray(data.prs)) {
-        this.prs = data.prs;
-        save(STORAGE_KEYS.PRS, this.prs);
-      }
-      if (Array.isArray(data.pos)) {
-        this.pos = data.pos;
-        save(STORAGE_KEYS.POS, this.pos);
-      }
-      if (Array.isArray(data.quotes)) {
-        this.quotes = data.quotes;
-        save(STORAGE_KEYS.QUOTES, this.quotes);
-      }
-      if (Array.isArray(data.leads)) {
-        this.leads = data.leads;
-        save(STORAGE_KEYS.LEADS, this.leads);
-      }
-      if (Array.isArray(data.projects)) {
-        this.projects = data.projects;
-        save(STORAGE_KEYS.PROJECTS, this.projects);
-      }
-      if (Array.isArray(data.workOrders)) {
-        this.workOrders = data.workOrders;
-        save(STORAGE_KEYS.WORK_ORDERS, this.workOrders);
-      }
-      if (Array.isArray(data.payments)) {
-        this.payments = data.payments;
-        save(STORAGE_KEYS.PAYMENTS, this.payments);
-      }
-      if (Array.isArray(data.vendors)) {
-        this.vendors = data.vendors;
-        save(STORAGE_KEYS.VENDORS, this.vendors);
+      // --- MASTER DATA COLLECTIONS ---
+      if (data.systemSettings && typeof data.systemSettings === 'object') {
+        this.systemSettings = { ...this.systemSettings, ...data.systemSettings };
+        save(STORAGE_KEYS.SYSTEM_SETTINGS, this.systemSettings);
+        masterCounts['System Settings'] = 1;
       }
       if (Array.isArray(data.clients)) {
         this.clients = data.clients;
         save(STORAGE_KEYS.CLIENTS, this.clients);
+        masterCounts['Clients Master'] = this.clients.length;
+      }
+      if (Array.isArray(data.vendors)) {
+        this.vendors = data.vendors;
+        save(STORAGE_KEYS.VENDORS, this.vendors);
+        masterCounts['Vendors Master'] = this.vendors.length;
+      }
+      if (Array.isArray(data.inventory)) {
+        this.inventory = data.inventory;
+        save(STORAGE_KEYS.INVENTORY, this.inventory);
+        masterCounts['Inventory SKUs'] = this.inventory.length;
+      }
+      if (Array.isArray(data.salesReps)) {
+        this.salesReps = data.salesReps;
+        save(STORAGE_KEYS.SALES_REPS, this.salesReps);
+        masterCounts['Sales Reps'] = this.salesReps.length;
       }
       if (Array.isArray(data.costCenters)) {
         this.costCenters = data.costCenters;
         save(STORAGE_KEYS.COST_CENTERS, this.costCenters);
+        masterCounts['Cost Centers'] = this.costCenters.length;
       }
       if (Array.isArray(data.taxSlabs)) {
         this.taxSlabs = data.taxSlabs;
         save(STORAGE_KEYS.TAX_SLABS, this.taxSlabs);
+        masterCounts['Tax Slabs'] = this.taxSlabs.length;
       }
       if (Array.isArray(data.paymentTerms)) {
         this.paymentTerms = data.paymentTerms;
         save(STORAGE_KEYS.PAYMENT_TERMS, this.paymentTerms);
+        masterCounts['Payment Terms'] = this.paymentTerms.length;
       }
       if (Array.isArray(data.chartOfAccounts || data.accounts)) {
         this.chartOfAccounts = data.chartOfAccounts || data.accounts;
         save(STORAGE_KEYS.CHART_OF_ACCOUNTS, this.chartOfAccounts);
+        masterCounts['Chart of Accounts'] = this.chartOfAccounts.length;
+      }
+      if (Array.isArray(data.employees)) {
+        this.employees = data.employees;
+        save(STORAGE_KEYS.EMPLOYEES, this.employees);
+        masterCounts['Employees & Staff'] = this.employees.length;
+      }
+      if (Array.isArray(data.departments)) {
+        this.departments = data.departments;
+        save(STORAGE_KEYS.DEPARTMENTS, this.departments);
+        masterCounts['Departments'] = this.departments.length;
+      }
+      if (Array.isArray(data.designationGrades || data.designations)) {
+        this.designationGrades = data.designationGrades || data.designations;
+        save(STORAGE_KEYS.DESIGNATION_GRADES, this.designationGrades);
+        masterCounts['Designation Grades'] = this.designationGrades.length;
+      }
+      if (Array.isArray(data.shifts)) {
+        this.shifts = data.shifts;
+        save(STORAGE_KEYS.SHIFTS, this.shifts);
+        masterCounts['Work Shifts'] = this.shifts.length;
+      }
+      if (Array.isArray(data.companyHolidays || data.holidays)) {
+        this.companyHolidays = data.companyHolidays || data.holidays;
+        save(STORAGE_KEYS.HOLIDAYS, this.companyHolidays);
+        masterCounts['Holidays'] = this.companyHolidays.length;
+      }
+      if (Array.isArray(data.policyDocuments)) {
+        this.policyDocuments = data.policyDocuments;
+        save(STORAGE_KEYS.POLICY_DOCS, this.policyDocuments);
+        masterCounts['Policy Documents'] = this.policyDocuments.length;
+      }
+      if (Array.isArray(data.biometricDevices)) {
+        this.biometricDevices = data.biometricDevices;
+        save(STORAGE_KEYS.BIOMETRIC_DEVICES, this.biometricDevices);
+        masterCounts['Biometric Devices'] = this.biometricDevices.length;
+      }
+      if (Array.isArray(data.trainingCourses)) {
+        this.trainingCourses = data.trainingCourses;
+        save(STORAGE_KEYS.TRAINING_COURSES, this.trainingCourses);
+        masterCounts['Training Courses'] = this.trainingCourses.length;
+      }
+
+      // --- TRANSACTION DATA COLLECTIONS ---
+      if (Array.isArray(data.leads)) {
+        this.leads = data.leads;
+        save(STORAGE_KEYS.LEADS, this.leads);
+        transactionCounts['CRM Leads'] = this.leads.length;
+      }
+      if (Array.isArray(data.quotes)) {
+        this.quotes = data.quotes;
+        save(STORAGE_KEYS.QUOTES, this.quotes);
+        transactionCounts['Quotes & Proposals'] = this.quotes.length;
+      }
+      if (Array.isArray(data.projects)) {
+        this.projects = data.projects;
+        save(STORAGE_KEYS.PROJECTS, this.projects);
+        transactionCounts['Projects & BOQs'] = this.projects.length;
+      }
+      if (Array.isArray(data.workOrders)) {
+        this.workOrders = data.workOrders;
+        save(STORAGE_KEYS.WORK_ORDERS, this.workOrders);
+        transactionCounts['Work Orders'] = this.workOrders.length;
+      }
+      if (Array.isArray(data.prs)) {
+        this.prs = data.prs;
+        save(STORAGE_KEYS.PRS, this.prs);
+        transactionCounts['Purchase Requisitions (PR)'] = this.prs.length;
+      }
+      if (Array.isArray(data.pos)) {
+        this.pos = data.pos;
+        save(STORAGE_KEYS.POS, this.pos);
+        transactionCounts['Purchase Orders (PO)'] = this.pos.length;
+      }
+      if (Array.isArray(data.grns)) {
+        this.grns = data.grns;
+        save(STORAGE_KEYS.GRNS, this.grns);
+        transactionCounts['Goods Receipt Notes (GRN)'] = this.grns.length;
+      }
+      if (Array.isArray(data.payments)) {
+        this.payments = data.payments;
+        save(STORAGE_KEYS.PAYMENTS, this.payments);
+        transactionCounts['Payments & Invoices'] = this.payments.length;
       }
       if (Array.isArray(data.journalVouchers || data.vouchers)) {
         this.journalVouchers = data.journalVouchers || data.vouchers;
         save(STORAGE_KEYS.JOURNAL_VOUCHERS, this.journalVouchers);
+        transactionCounts['Journal Vouchers'] = this.journalVouchers.length;
       }
       if (Array.isArray(data.tdsRecords)) {
         this.tdsRecords = data.tdsRecords;
         save(STORAGE_KEYS.TDS_RECORDS, this.tdsRecords);
+        transactionCounts['TDS Filings'] = this.tdsRecords.length;
       }
-      if (data.systemSettings) {
-        this.systemSettings = { ...this.systemSettings, ...data.systemSettings };
-        save(STORAGE_KEYS.SYSTEM_SETTINGS, this.systemSettings);
+      if (Array.isArray(data.attendanceRecords || data.attendance)) {
+        this.attendanceRecords = data.attendanceRecords || data.attendance;
+        save(STORAGE_KEYS.ATTENDANCE, this.attendanceRecords);
+        transactionCounts['Attendance Records'] = this.attendanceRecords.length;
+      }
+      if (Array.isArray(data.timesheetEntries || data.timesheets)) {
+        this.timesheetEntries = data.timesheetEntries || data.timesheets;
+        save(STORAGE_KEYS.TIMESHEETS, this.timesheetEntries);
+        transactionCounts['Timesheet Entries'] = this.timesheetEntries.length;
+      }
+      if (Array.isArray(data.leaveApplications || data.leaves)) {
+        this.leaveApplications = data.leaveApplications || data.leaves;
+        save(STORAGE_KEYS.LEAVES, this.leaveApplications);
+        transactionCounts['Leave Applications'] = this.leaveApplications.length;
+      }
+      if (Array.isArray(data.payrollMonths)) {
+        this.payrollMonths = data.payrollMonths;
+        save(STORAGE_KEYS.PAYROLL_MONTHS, this.payrollMonths);
+        transactionCounts['Payroll Cycles'] = this.payrollMonths.length;
+      }
+      if (Array.isArray(data.jobRequisitions)) {
+        this.jobRequisitions = data.jobRequisitions;
+        save(STORAGE_KEYS.JOB_REQUISITIONS, this.jobRequisitions);
+        transactionCounts['Job Requisitions'] = this.jobRequisitions.length;
+      }
+      if (Array.isArray(data.jobCandidates || data.candidates)) {
+        this.jobCandidates = data.jobCandidates || data.candidates;
+        save(STORAGE_KEYS.JOB_CANDIDATES, this.jobCandidates);
+        transactionCounts['Job Candidates'] = this.jobCandidates.length;
+      }
+      if (Array.isArray(data.expenseClaims)) {
+        this.expenseClaims = data.expenseClaims;
+        save(STORAGE_KEYS.EXPENSE_CLAIMS, this.expenseClaims);
+        transactionCounts['Expense Claims'] = this.expenseClaims.length;
+      }
+      if (Array.isArray(data.travelRequests)) {
+        this.travelRequests = data.travelRequests;
+        save(STORAGE_KEYS.TRAVEL_REQUESTS, this.travelRequests);
+        transactionCounts['Travel Requests'] = this.travelRequests.length;
+      }
+      if (Array.isArray(data.resignationRecords || data.resignations)) {
+        this.resignationRecords = data.resignationRecords || data.resignations;
+        save(STORAGE_KEYS.RESIGNATIONS, this.resignationRecords);
+        transactionCounts['Resignation Records'] = this.resignationRecords.length;
+      }
+      if (Array.isArray(data.employeeAssets)) {
+        this.employeeAssets = data.employeeAssets;
+        save(STORAGE_KEYS.EMPLOYEE_ASSETS, this.employeeAssets);
+        transactionCounts['Employee Assets'] = this.employeeAssets.length;
+      }
+      if (Array.isArray(data.employeeDocuments)) {
+        this.employeeDocuments = data.employeeDocuments;
+        save(STORAGE_KEYS.EMPLOYEE_DOCUMENTS, this.employeeDocuments);
+        transactionCounts['Employee Documents'] = this.employeeDocuments.length;
+      }
+      if (Array.isArray(data.onboardingTasks)) {
+        this.onboardingTasks = data.onboardingTasks;
+        save(STORAGE_KEYS.ONBOARDING_TASKS, this.onboardingTasks);
+        transactionCounts['Onboarding Tasks'] = this.onboardingTasks.length;
+      }
+      if (Array.isArray(data.attendanceRegularizations)) {
+        this.attendanceRegularizations = data.attendanceRegularizations;
+        save(STORAGE_KEYS.ATTENDANCE_REGULARIZATIONS, this.attendanceRegularizations);
+        transactionCounts['Regularizations'] = this.attendanceRegularizations.length;
+      }
+      if (Array.isArray(data.appraisalCycles)) {
+        this.appraisalCycles = data.appraisalCycles;
+        save(STORAGE_KEYS.APPRAISAL_CYCLES, this.appraisalCycles);
+        transactionCounts['Appraisal Cycles'] = this.appraisalCycles.length;
+      }
+      if (Array.isArray(data.employeeAppraisals)) {
+        this.employeeAppraisals = data.employeeAppraisals;
+        save(STORAGE_KEYS.EMPLOYEE_APPRAISALS, this.employeeAppraisals);
+        transactionCounts['Employee Appraisals'] = this.employeeAppraisals.length;
+      }
+      if (Array.isArray(data.skillMatrices)) {
+        this.skillMatrices = data.skillMatrices;
+        save(STORAGE_KEYS.SKILL_MATRICES, this.skillMatrices);
+        transactionCounts['Skill Matrices'] = this.skillMatrices.length;
+      }
+      if (Array.isArray(data.grievanceTickets || data.grievances)) {
+        this.grievanceTickets = data.grievanceTickets || data.grievances;
+        save(STORAGE_KEYS.GRIEVANCES, this.grievanceTickets);
+        transactionCounts['Grievance Tickets'] = this.grievanceTickets.length;
+      }
+      if (Array.isArray(data.workforceForecasts)) {
+        this.workforceForecasts = data.workforceForecasts;
+        save(STORAGE_KEYS.WORKFORCE_FORECASTS, this.workforceForecasts);
+        transactionCounts['Workforce Forecasts'] = this.workforceForecasts.length;
+      }
+      if (Array.isArray(data.biometricPunchLogs)) {
+        this.biometricPunchLogs = data.biometricPunchLogs;
+        save(STORAGE_KEYS.BIOMETRIC_PUNCH_LOGS, this.biometricPunchLogs);
+        transactionCounts['Biometric Punch Logs'] = this.biometricPunchLogs.length;
+      }
+      if (Array.isArray(data.auditLogs)) {
+        this.auditLogs = data.auditLogs;
+        save(STORAGE_KEYS.AUDIT_LOGS, this.auditLogs);
+        transactionCounts['Audit Logs'] = this.auditLogs.length;
       }
 
-      this.logAudit('BACKUP_RESTORE', 'SYSTEM', 'RESTORE_OP', `Successfully restored database state from backup`);
+      const totalMaster = Object.values(masterCounts).reduce((a, b) => a + b, 0);
+      const totalTransactions = Object.values(transactionCounts).reduce((a, b) => a + b, 0);
+
+      this.logAudit(
+        'BACKUP_RESTORE',
+        'SYSTEM',
+        'RESTORE_OP',
+        `Restored database state: ${totalMaster} master records and ${totalTransactions} transaction records.`
+      );
       this.addNotification(
         'Database Restored',
-        'Database state was successfully restored from backup snapshot.',
+        `Successfully restored ${totalMaster} master records and ${totalTransactions} transaction records.`,
         'success',
         'dashboard'
       );
       this.notify();
-      return true;
-    } catch (e) {
+
+      return {
+        success: true,
+        masterCounts,
+        transactionCounts,
+        totalMaster,
+        totalTransactions
+      };
+    } catch (e: any) {
       console.error('Failed to import database from JSON:', e);
-      return false;
+      return {
+        success: false,
+        error: e.message || 'Unknown restoration error',
+        masterCounts: {},
+        transactionCounts: {},
+        totalMaster: 0,
+        totalTransactions: 0
+      };
     }
   }
 }

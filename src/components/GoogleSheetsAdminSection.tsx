@@ -12,11 +12,21 @@ import {
   Copy,
   Check,
   HelpCircle,
-  Database
+  Database,
+  Upload,
+  Download,
+  ShieldCheck,
+  Activity,
+  X
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import { googleSheetsService } from '../services/googleSheets';
-import { GoogleSheetsSyncConfig } from '../types';
+import {
+  GoogleSheetsSyncConfig,
+  GoogleSheetBackupStats,
+  GoogleSheetRestorePreview,
+  GoogleSheetRestoreResult
+} from '../types';
 
 export const GoogleSheetsAdminSection: React.FC = () => {
   const [config, setConfig] = useState<GoogleSheetsSyncConfig>(storageService.getGoogleSheetsConfig());
@@ -27,6 +37,15 @@ export const GoogleSheetsAdminSection: React.FC = () => {
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncStatusMsg, setSyncStatusMsg] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Cloud Master & Transaction Vault Backup / Restore states
+  const [isBackingUp, setIsBackingUp] = useState<boolean>(false);
+  const [isRestoring, setIsRestoring] = useState<boolean>(false);
+  const [isPreviewing, setIsPreviewing] = useState<boolean>(false);
+  const [restorePreview, setRestorePreview] = useState<GoogleSheetRestorePreview | null>(null);
+  const [restoreResult, setRestoreResult] = useState<GoogleSheetRestoreResult | null>(null);
+  const [backupStats, setBackupStats] = useState<GoogleSheetBackupStats | null>(config.lastBackupStats || null);
+  const [showRestoreModal, setShowRestoreModal] = useState<boolean>(false);
 
   useEffect(() => {
     const unsub = storageService.subscribe(() => {
@@ -104,6 +123,74 @@ export const GoogleSheetsAdminSection: React.FC = () => {
       });
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const handleBackupAll = async () => {
+    if (isBackingUp || isSyncing) return;
+    setIsBackingUp(true);
+    setSyncStatusMsg(null);
+
+    try {
+      // Save credentials first if edited
+      googleSheetsService.saveConfigCredentials(sheetIdInput, apiKeyInput);
+
+      const res = await googleSheetsService.backupToGoogleSheet();
+      setBackupStats(res.stats);
+      setSyncStatusMsg({
+        type: 'success',
+        message: `Cloud Backup Succeeded: ${res.stats.totalMasterRecords} master records and ${res.stats.totalTransactionRecords} transaction records backed up to Google Sheet.`
+      });
+    } catch (err: any) {
+      setSyncStatusMsg({
+        type: 'error',
+        message: err.message || 'Failed to backup master and transaction data to Google Sheet.'
+      });
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+
+  const handleInitiateRestore = async () => {
+    if (isPreviewing || isRestoring) return;
+    setIsPreviewing(true);
+    setSyncStatusMsg(null);
+
+    try {
+      googleSheetsService.saveConfigCredentials(sheetIdInput, apiKeyInput);
+      const preview = await googleSheetsService.previewRestoreFromGoogleSheet();
+      setRestorePreview(preview);
+      setShowRestoreModal(true);
+    } catch (err: any) {
+      setSyncStatusMsg({
+        type: 'error',
+        message: err.message || 'Failed to inspect linked Google Sheet for restoration.'
+      });
+    } finally {
+      setIsPreviewing(false);
+    }
+  };
+
+  const handleExecuteRestore = async () => {
+    if (isRestoring) return;
+    setIsRestoring(true);
+
+    try {
+      const result = await googleSheetsService.restoreFromGoogleSheet();
+      setRestoreResult(result);
+      setShowRestoreModal(false);
+      const totalCollections = Object.keys(result.masterCounts).length + Object.keys(result.transactionCounts).length;
+      setSyncStatusMsg({
+        type: 'success',
+        message: `Cloud Restoration Complete: Restored ${result.totalMasterRecords} master records and ${result.totalTransactionRecords} transaction records across ${totalCollections} collections!`
+      });
+    } catch (err: any) {
+      setSyncStatusMsg({
+        type: 'error',
+        message: err.message || 'Failed to restore database from Google Sheet.'
+      });
+    } finally {
+      setIsRestoring(false);
     }
   };
 
@@ -316,6 +403,251 @@ export const GoogleSheetsAdminSection: React.FC = () => {
           </div>
         </form>
       </div>
+
+      {/* ENTERPRISE CLOUD MASTER & TRANSACTION DATA VAULT (BACKUP & RESTORE) */}
+      <div className="bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-5 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-xs">
+              <Database className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  Full Master & Transaction Cloud Vault
+                </h4>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                  24 Collections
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Full-state cloud backup and restoration covering all master definitions and operational transactions.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 p-3.5 bg-emerald-50/50 dark:bg-slate-800/50 rounded-xl border border-emerald-100 dark:border-slate-700 text-xs">
+          <div>
+            <div className="text-[10px] uppercase font-bold text-slate-400">Master Data Records</div>
+            <div className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">
+              {backupStats ? `${backupStats.totalMasterRecords} Records` : 'Clients, Vendors, SKUs, Staff...'}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase font-bold text-slate-400">Transaction Records</div>
+            <div className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">
+              {backupStats ? `${backupStats.totalTransactionRecords} Records` : 'Leads, Quotes, POs, Orders...'}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase font-bold text-slate-400">Last Vault Backup</div>
+            <div className="font-semibold text-slate-700 dark:text-slate-300 mt-0.5">
+              {config.lastBackupAt ? new Date(config.lastBackupAt).toLocaleString() : 'Never backed up'}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase font-bold text-slate-400">Last Vault Restore</div>
+            <div className="font-semibold text-slate-700 dark:text-slate-300 mt-0.5">
+              {config.lastRestoreAt ? new Date(config.lastRestoreAt).toLocaleString() : 'Never restored'}
+            </div>
+          </div>
+        </div>
+
+        {/* Restoration Result Banner */}
+        {restoreResult && (
+          <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 space-y-1">
+            <div className="flex items-center gap-2 font-bold">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>Restoration Succeeded</span>
+            </div>
+            <p>
+              Restored {restoreResult.totalMasterRecords} master data records and {restoreResult.totalTransactionRecords} transactions across {Object.keys(restoreResult.masterCounts).length + Object.keys(restoreResult.transactionCounts).length} collections.
+            </p>
+          </div>
+        )}
+
+        {/* Backup & Restore Action Buttons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <button
+            type="button"
+            onClick={handleBackupAll}
+            disabled={isBackingUp || isSyncing || isRestoring}
+            className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {isBackingUp ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>Serializing & Backing Up to Sheet...</span>
+              </>
+            ) : (
+              <>
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>Backup All Master & Transaction Data</span>
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleInitiateRestore}
+            disabled={isBackingUp || isSyncing || isRestoring || isPreviewing}
+            className="w-full py-2.5 px-4 bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {isPreviewing ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>Reading Sheet Vault...</span>
+              </>
+            ) : (
+              <>
+                <Database className="w-4 h-4 text-emerald-400" />
+                <span>Restore All from Google Sheet</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* RESTORE INSPECTION & CONFIRMATION MODAL */}
+      {showRestoreModal && restorePreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-base font-black text-slate-900 dark:text-slate-100">
+                    Confirm Google Sheet Cloud Restoration
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Verify records to restore into the active AlphaERP database.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRestoreModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Source Info */}
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Source Spreadsheet:</span>
+                <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                  {restorePreview.spreadsheetTitle}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Vault Mode:</span>
+                <span
+                  className={`font-semibold px-2 py-0.5 rounded-md text-[10px] ${
+                    restorePreview.vaultFound
+                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                      : 'bg-amber-100 text-amber-800'
+                  }`}
+                >
+                  {restorePreview.vaultFound
+                    ? 'Serialized Data Vault (DataVault_DoNotEdit)'
+                    : 'Multi-Tab Reconstruction'}
+                </span>
+              </div>
+            </div>
+
+            {/* Collections Breakdown Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-3.5 rounded-xl bg-emerald-50/50 dark:bg-slate-800/60 border border-emerald-200 dark:border-slate-700 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-emerald-950 dark:text-emerald-300">
+                    Master Data Collections
+                  </span>
+                  <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md">
+                    {restorePreview.totalMasterRecords} Total
+                  </span>
+                </div>
+                <div className="space-y-1 max-h-40 overflow-y-auto pr-1 text-xs">
+                  {Object.entries(restorePreview.masterCounts).map(([name, count]) => (
+                    <div
+                      key={name}
+                      className="flex items-center justify-between py-1 px-2 rounded-lg bg-white dark:bg-slate-800 text-[11px]"
+                    >
+                      <span className="text-slate-700 dark:text-slate-300">{name}</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-100">{Number(count)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-teal-50/50 dark:bg-slate-800/60 border border-teal-200 dark:border-slate-700 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-teal-950 dark:text-teal-300">
+                    Transaction Collections
+                  </span>
+                  <span className="text-[11px] font-bold text-teal-800 dark:text-teal-400 bg-teal-100 dark:bg-teal-950 px-2 py-0.5 rounded-md">
+                    {restorePreview.totalTransactionRecords} Total
+                  </span>
+                </div>
+                <div className="space-y-1 max-h-40 overflow-y-auto pr-1 text-xs">
+                  {Object.entries(restorePreview.transactionCounts).map(([name, count]) => (
+                    <div
+                      key={name}
+                      className="flex items-center justify-between py-1 px-2 rounded-lg bg-white dark:bg-slate-800 text-[11px]"
+                    >
+                      <span className="text-slate-700 dark:text-slate-300">{name}</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-100">{Number(count)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Safety Snapshot Guarantee */}
+            <div className="p-3 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs text-indigo-900 dark:text-indigo-200 flex items-center gap-2.5">
+              <ShieldCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <span>
+                <strong>Safety Snapshot:</strong> AlphaERP will record a local safety backup snapshot before restoring, so you can revert anytime if needed.
+              </span>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setShowRestoreModal(false)}
+                disabled={isRestoring}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteRestore}
+                disabled={isRestoring}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isRestoring ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Restoring Database...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Confirm & Restore Full Database</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Explanatory Help Card */}
       <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-xs text-slate-600 dark:text-slate-400 space-y-2">

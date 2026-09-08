@@ -481,12 +481,50 @@ export interface AppNotification {
   linkTab?: string;
 }
 
+export interface GoogleSheetBackupStats {
+  timestamp: string;
+  spreadsheetId: string;
+  spreadsheetUrl: string;
+  totalMasterRecords: number;
+  totalTransactionRecords: number;
+  masterCounts: Record<string, number>;
+  transactionCounts: Record<string, number>;
+}
+
+export interface GoogleSheetRestorePreview {
+  spreadsheetTitle: string;
+  spreadsheetId: string;
+  spreadsheetUrl: string;
+  vaultFound: boolean;
+  backupTimestamp?: string;
+  schemaVersion?: string;
+  totalMasterRecords: number;
+  totalTransactionRecords: number;
+  masterCounts: Record<string, number>;
+  transactionCounts: Record<string, number>;
+}
+
+export interface GoogleSheetRestoreResult {
+  success: boolean;
+  error?: string;
+  vaultFound: boolean;
+  totalMasterRecords: number;
+  totalTransactionRecords: number;
+  masterCounts: Record<string, number>;
+  transactionCounts: Record<string, number>;
+  restoredAt: string;
+}
+
 export interface GoogleSheetsSyncConfig {
   spreadsheetId: string | null;
   spreadsheetUrl: string | null;
   spreadsheetName: string;
   apiKey?: string | null;
   lastSyncAt: string | null;
+  lastBackupAt?: string | null;
+  lastRestoreAt?: string | null;
+  lastBackupStats?: GoogleSheetBackupStats | null;
+  lastRestoreStats?: GoogleSheetRestoreResult | null;
   syncStatus: 'idle' | 'syncing' | 'success' | 'error';
   autoSync: boolean;
   sheetsCreated: string[];

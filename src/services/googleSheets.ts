@@ -9,6 +9,65 @@ import {
 } from 'firebase/auth';
 import firebaseConfig from './firebaseConfig';
 import { storageService } from './storageService';
+import {
+  GoogleSheetBackupStats,
+  GoogleSheetRestorePreview,
+  GoogleSheetRestoreResult,
+  GoogleSheetsSyncConfig
+} from '../types';
+
+export function formatCollectionLabel(key: string): string {
+  const map: Record<string, string> = {
+    systemSettings: 'System Settings',
+    clients: 'Clients Master',
+    vendors: 'Vendors Master',
+    inventory: 'Inventory SKUs',
+    salesReps: 'Sales Reps & Targets',
+    costCenters: 'Cost Centers',
+    taxSlabs: 'Tax Slabs',
+    paymentTerms: 'Payment Terms',
+    chartOfAccounts: 'Chart of Accounts',
+    employees: 'Employees & Staff',
+    departments: 'Departments',
+    designationGrades: 'Designation Grades',
+    shifts: 'Work Shifts',
+    companyHolidays: 'Company Holidays',
+    policyDocuments: 'Policy Documents',
+    biometricDevices: 'Biometric Devices',
+    trainingCourses: 'Training Courses',
+    leads: 'CRM Leads Pipeline',
+    quotes: 'Quotes & Proposals',
+    projects: 'Projects & BOQs',
+    workOrders: 'Work Orders',
+    prs: 'Purchase Requisitions (PR)',
+    pos: 'Purchase Orders (PO)',
+    grns: 'Goods Receipt Notes (GRN)',
+    payments: 'Payments & Invoices',
+    journalVouchers: 'Journal Vouchers',
+    tdsRecords: 'TDS Filings',
+    attendanceRecords: 'Attendance Records',
+    timesheetEntries: 'Timesheet Entries',
+    leaveApplications: 'Leave Applications',
+    payrollMonths: 'Payroll Cycles',
+    jobRequisitions: 'Job Requisitions',
+    jobCandidates: 'Job Candidates',
+    expenseClaims: 'Expense Claims',
+    travelRequests: 'Travel Requests',
+    resignationRecords: 'Resignation Records',
+    employeeAssets: 'Employee Assets',
+    employeeDocuments: 'Employee Documents',
+    onboardingTasks: 'Onboarding Tasks',
+    attendanceRegularizations: 'Attendance Regularizations',
+    appraisalCycles: 'Appraisal Cycles',
+    employeeAppraisals: 'Employee Appraisals',
+    skillMatrices: 'Skill Matrices',
+    grievanceTickets: 'Grievance Tickets',
+    workforceForecasts: 'Workforce Forecasts',
+    biometricPunchLogs: 'Biometric Punch Logs',
+    auditLogs: 'Audit Logs'
+  };
+  return map[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+}
 
 // Initialize Firebase App
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
@@ -182,10 +241,10 @@ class GoogleSheetsService {
     this.currentUser = null;
   }
 
-  // Generate All Formatted Sheets Data Structure for all 10 AlphaERP Modules
+  // Generate All Formatted Sheets Data Structure for all AlphaERP Modules
   public generateAllSheetTabsData(): SheetTabDefinition[] {
     const data = storageService.getAllData();
-    const { leads, quotes, projects, inventory, prs, pos, payments, salesReps, auditLogs, systemSettings } = data;
+    const { leads, quotes, projects, inventory, prs, pos, payments, salesReps, auditLogs, systemSettings, clients, vendors, employees } = data;
     const curr = systemSettings.currencySymbol || '₹';
 
     // 1. Executive Dashboard KPIs
@@ -516,6 +575,58 @@ class GoogleSheetsService {
       ])
     ];
 
+    // 11. Clients Master
+    const clientRows = [
+      ['Client ID', 'Client Code', 'Company Name', 'Contact Person', 'Email', 'Phone', 'City', 'GSTIN', 'Credit Limit', 'Payment Terms', 'Status'],
+      ...(clients || []).map((c) => [
+        c.id,
+        c.clientCode || c.id,
+        c.companyName,
+        c.contactPerson,
+        c.email,
+        c.phone,
+        c.city || 'N/A',
+        c.gstin || 'N/A',
+        c.creditLimit || 0,
+        c.paymentTerms || 'Net 30',
+        c.status || 'Active'
+      ])
+    ];
+
+    // 12. Vendors Master
+    const vendorRows = [
+      ['Vendor ID', 'Vendor Name', 'Category', 'Contact Person', 'Email', 'Phone', 'City', 'GSTIN', 'PAN', 'Rating', 'Status'],
+      ...(vendors || []).map((v) => [
+        v.id,
+        v.name,
+        v.category || 'General HVAC',
+        v.contactPerson || v.name,
+        v.email,
+        v.phone,
+        v.city || 'N/A',
+        v.gstin || 'N/A',
+        v.pan || 'N/A',
+        v.rating || 5,
+        v.status || 'Active'
+      ])
+    ];
+
+    // 13. Employees & HR Master
+    const employeeRows = [
+      ['Emp ID', 'Emp Code', 'Full Name', 'Department', 'Designation', 'Official Email', 'Phone', 'Date of Joining', 'Employment Status'],
+      ...(employees || []).map((e) => [
+        e.id,
+        e.empCode || e.code || e.id,
+        e.fullName || e.name || 'Staff',
+        e.department || 'Operations',
+        e.designation || 'Staff',
+        e.officialEmail || e.email || 'N/A',
+        e.phone || 'N/A',
+        e.dateOfJoining || e.joiningDate || 'N/A',
+        e.employmentStatus || e.status || 'Active'
+      ])
+    ];
+
     return [
       { title: '📊 Management Dashboard & KPIs', values: dashboardRows },
       { title: '🎯 CRM Leads Pipeline', values: leadsRows },
@@ -525,9 +636,99 @@ class GoogleSheetsService {
       { title: '📝 Purchase Requisitions', values: prRows },
       { title: '🛒 Purchase Orders (PO)', values: poRows },
       { title: '💰 Payments & Invoices', values: paymentRows },
+      { title: '🏢 Clients Master', values: clientRows },
+      { title: '🏭 Vendors Master', values: vendorRows },
+      { title: '👔 Employees & HR Master', values: employeeRows },
       { title: '👥 Sales Quota & Comm', values: salesRows },
       { title: '📜 Audit Trail Logs', values: auditRows }
     ];
+  }
+
+  // Generates complete serialized state chunked into spreadsheet rows
+  public generateDataVaultSheetTab(): SheetTabDefinition {
+    const allData = storageService.getAllData();
+    const CHUNK_SIZE = 35000; // Well within Sheets 50,000 char per cell limit
+    const vaultRows: (string | number)[][] = [
+      ['COLLECTION_KEY', 'RECORD_COUNT', 'CHUNK_INDEX', 'TOTAL_CHUNKS', 'PAYLOAD_CHUNK', 'UPDATED_AT', 'APP_VERSION']
+    ];
+
+    const keysToBackup = [
+      // Master collections
+      'systemSettings',
+      'clients',
+      'vendors',
+      'inventory',
+      'salesReps',
+      'costCenters',
+      'taxSlabs',
+      'paymentTerms',
+      'chartOfAccounts',
+      'employees',
+      'departments',
+      'designationGrades',
+      'shifts',
+      'companyHolidays',
+      'policyDocuments',
+      'biometricDevices',
+      'trainingCourses',
+      // Transaction collections
+      'leads',
+      'quotes',
+      'projects',
+      'workOrders',
+      'prs',
+      'pos',
+      'grns',
+      'payments',
+      'journalVouchers',
+      'tdsRecords',
+      'attendanceRecords',
+      'timesheetEntries',
+      'leaveApplications',
+      'payrollMonths',
+      'jobRequisitions',
+      'jobCandidates',
+      'expenseClaims',
+      'travelRequests',
+      'resignationRecords',
+      'employeeAssets',
+      'employeeDocuments',
+      'onboardingTasks',
+      'attendanceRegularizations',
+      'appraisalCycles',
+      'employeeAppraisals',
+      'skillMatrices',
+      'grievanceTickets',
+      'workforceForecasts',
+      'biometricPunchLogs',
+      'auditLogs'
+    ];
+
+    const nowStr = new Date().toISOString();
+    for (const key of keysToBackup) {
+      const val = (allData as any)[key];
+      if (val === undefined || val === null) continue;
+      const count = Array.isArray(val) ? val.length : 1;
+      const jsonStr = JSON.stringify(val);
+      const totalChunks = Math.max(1, Math.ceil(jsonStr.length / CHUNK_SIZE));
+      for (let c = 0; c < totalChunks; c++) {
+        const chunk = jsonStr.slice(c * CHUNK_SIZE, (c + 1) * CHUNK_SIZE);
+        vaultRows.push([
+          key,
+          count,
+          c,
+          totalChunks,
+          chunk,
+          nowStr,
+          '2.5'
+        ]);
+      }
+    }
+
+    return {
+      title: '💾 AlphaERP System Data Vault',
+      values: vaultRows
+    };
   }
 
   // Create a brand new authentic Google Sheet in the user's Google Drive
@@ -543,9 +744,11 @@ class GoogleSheetsService {
       }
 
       const tabs = this.generateAllSheetTabsData();
+      const vaultTab = this.generateDataVaultSheetTab();
+      const allTabs = [...tabs, vaultTab];
       const settings = storageService.getSystemSettings();
 
-      // 1. Create Spreadsheet with all 10 tabs
+      // 1. Create Spreadsheet with all tabs including Data Vault
       const title = `${settings.appTitle || 'AlphaERP'} Master Database - ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
       
       const createResponse = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
@@ -558,7 +761,7 @@ class GoogleSheetsService {
           properties: {
             title
           },
-          sheets: tabs.map((tab, idx) => ({
+          sheets: allTabs.map((tab, idx) => ({
             properties: {
               sheetId: idx,
               title: tab.title,
@@ -580,7 +783,7 @@ class GoogleSheetsService {
       const spreadsheetUrl: string = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
 
       // 2. Batch Update cell values for all sheets
-      const dataPayload = tabs.map((tab) => ({
+      const dataPayload = allTabs.map((tab) => ({
         range: `'${tab.title}'!A1`,
         values: tab.values
       }));
@@ -610,6 +813,7 @@ class GoogleSheetsService {
         spreadsheetUrl,
         spreadsheetName: title,
         lastSyncAt: new Date().toISOString(),
+        lastBackupAt: new Date().toISOString(),
         syncStatus: 'success'
       });
 
@@ -617,12 +821,12 @@ class GoogleSheetsService {
         'SYNC_SHEETS',
         'GOOGLE_SHEET',
         spreadsheetId,
-        `Created brand new live Google Master Spreadsheet with ${tabs.length} tabs in Google Drive: ${title}`
+        `Created master spreadsheet with ${allTabs.length} tabs including AlphaERP Data Vault: ${title}`
       );
 
       storageService.addNotification(
         'Google Sheet Created & Synced',
-        `Created master spreadsheet in Google Drive with ${tabs.length} synced tabs.`,
+        `Created master spreadsheet in Google Drive with ${allTabs.length} synchronized tabs and Data Vault.`,
         'success',
         'sheets'
       );
@@ -635,43 +839,45 @@ class GoogleSheetsService {
     }
   }
 
-  // Synchronize ERP records to the currently linked spreadsheet
-  public async syncToGoogleSheet(targetSheetId?: string): Promise<{ success: boolean; spreadsheetUrl: string }> {
+  // Backup all master data and transaction data to the linked Google Sheet
+  public async backupToGoogleSheet(targetSheetId?: string): Promise<{
+    success: boolean;
+    spreadsheetUrl: string;
+    stats: GoogleSheetBackupStats;
+  }> {
     storageService.updateGoogleSheetsConfig({ syncStatus: 'syncing' });
 
     try {
       const config = storageService.getGoogleSheetsConfig();
-      const spreadsheetId = targetSheetId || config.spreadsheetId;
-
-      if (!spreadsheetId) {
-        // If no sheet is linked yet, create a new one!
-        const created = await this.createMasterGoogleSheet();
-        return { success: true, spreadsheetUrl: created.spreadsheetUrl };
-      }
+      let spreadsheetId = targetSheetId || config.spreadsheetId;
 
       let token = this.getAccessToken();
       if (!token) {
-        // Only prompt if no saved API key or token was provided
         const authRes = await this.signInWithGoogle();
         token = authRes.token;
       }
 
-      const tabs = this.generateAllSheetTabsData();
+      if (!spreadsheetId) {
+        // If no sheet is linked yet, create a new master sheet
+        const created = await this.createMasterGoogleSheet();
+        spreadsheetId = created.spreadsheetId;
+      }
 
-      // First check if the spreadsheet exists and get existing sheet tabs
+      const tabs = this.generateAllSheetTabsData();
+      const vaultTab = this.generateDataVaultSheetTab();
+      const allTabsToSync = [...tabs, vaultTab];
+
       const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`, {
         headers: { Authorization: authHeader }
       });
 
       if (metaRes.status === 401) {
-        throw new Error('Google Sheets authorization expired or invalid API Key. Please update your API key in the Admin Configuration Panel.');
+        throw new Error('Google Sheets authorization expired or invalid. Please re-authenticate or verify your credentials in Admin Settings.');
       }
-
       if (metaRes.status === 404) {
-        throw new Error(`The linked Google Sheet (ID: ${spreadsheetId}) was not found in Google Drive. Please verify the Sheet ID in the Admin Configuration Panel.`);
+        throw new Error(`The linked Google Sheet (ID: ${spreadsheetId}) was not found in Google Drive. Please verify the Sheet ID.`);
       }
-
       if (!metaRes.ok) {
         const err = await metaRes.json().catch(() => ({}));
         throw new Error(err.error?.message || `Failed to access Google Sheet (Status ${metaRes.status})`);
@@ -680,8 +886,8 @@ class GoogleSheetsService {
       const sheetMeta = await metaRes.json();
       const existingTitles: string[] = (sheetMeta.sheets || []).map((s: any) => s.properties?.title);
 
-      // Create any missing sheet tabs
-      const missingTabs = tabs.filter((t) => !existingTitles.includes(t.title));
+      // Create any missing sheet tabs (including the vault tab)
+      const missingTabs = allTabsToSync.filter((t) => !existingTitles.includes(t.title));
       if (missingTabs.length > 0) {
         await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
           method: 'POST',
@@ -701,8 +907,20 @@ class GoogleSheetsService {
         });
       }
 
-      // Batch update data
-      const dataPayload = tabs.map((tab) => ({
+      // Clear the vault sheet tab first to prevent residual rows from previous backups
+      await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${encodeURIComponent(vaultTab.title)}'!A1:Z5000:clear`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: authHeader,
+            'Content-Type': 'application/json'
+          }
+        }
+      ).catch((err) => console.warn('Clear vault range notice:', err));
+
+      // Batch update data across all tabs
+      const dataPayload = allTabsToSync.map((tab) => ({
         range: `'${tab.title}'!A1`,
         values: tab.values
       }));
@@ -724,38 +942,470 @@ class GoogleSheetsService {
 
       if (!batchUpdateRes.ok) {
         const err = await batchUpdateRes.json().catch(() => ({}));
-        throw new Error(err.error?.message || 'Failed to update sheet values');
+        throw new Error(err.error?.message || 'Failed to update Google Sheet values');
       }
 
       const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
+      const allData = storageService.getAllData();
+
+      const masterCounts: Record<string, number> = {
+        'System Settings': 1,
+        'Clients Master': (allData.clients || []).length,
+        'Vendors Master': (allData.vendors || []).length,
+        'Inventory SKUs': (allData.inventory || []).length,
+        'Sales Reps & Targets': (allData.salesReps || []).length,
+        'Cost Centers': (allData.costCenters || []).length,
+        'Tax Slabs': (allData.taxSlabs || []).length,
+        'Payment Terms': (allData.paymentTerms || []).length,
+        'Chart of Accounts': (allData.chartOfAccounts || []).length,
+        'Employees & Staff': (allData.employees || []).length,
+        'Departments': (allData.departments || []).length,
+        'Designation Grades': (allData.designations || []).length,
+        'Work Shifts': (allData.shifts || []).length,
+        'Company Holidays': (allData.holidays || []).length
+      };
+
+      const transactionCounts: Record<string, number> = {
+        'CRM Leads Pipeline': (allData.leads || []).length,
+        'Quotes & Proposals': (allData.quotes || []).length,
+        'Projects & BOQs': (allData.projects || []).length,
+        'Work Orders': (allData.workOrders || []).length,
+        'Purchase Requisitions': (allData.prs || []).length,
+        'Purchase Orders': (allData.pos || []).length,
+        'Goods Receipt Notes': ((allData as any).grns || (allData as any).goodsReceiptNotes || []).length,
+        'Payments & Invoices': (allData.payments || []).length,
+        'Journal Vouchers': (allData.journalVouchers || []).length,
+        'TDS Filings': (allData.tdsRecords || []).length,
+        'Attendance Records': (allData.attendanceRecords || []).length,
+        'Timesheet Entries': (allData.timesheetEntries || []).length,
+        'Leave Applications': (allData.leaveApplications || []).length,
+        'Payroll Cycles': (allData.payrollMonths || []).length,
+        'Audit Logs': (allData.auditLogs || []).length
+      };
+
+      const totalMasterRecords = Object.values(masterCounts).reduce((a, b) => a + b, 0);
+      const totalTransactionRecords = Object.values(transactionCounts).reduce((a, b) => a + b, 0);
+      const nowStr = new Date().toISOString();
+
+      const stats: GoogleSheetBackupStats = {
+        timestamp: nowStr,
+        spreadsheetId,
+        spreadsheetUrl,
+        totalMasterRecords,
+        totalTransactionRecords,
+        masterCounts,
+        transactionCounts
+      };
 
       storageService.updateGoogleSheetsConfig({
         spreadsheetId,
         spreadsheetUrl,
-        lastSyncAt: new Date().toISOString(),
+        lastSyncAt: nowStr,
+        lastBackupAt: nowStr,
+        lastBackupStats: stats,
         syncStatus: 'success'
       });
 
       storageService.logAudit(
-        'SYNC_SHEETS',
+        'BACKUP_CREATE',
         'GOOGLE_SHEET',
         spreadsheetId,
-        `Synchronized ${tabs.length} tabs with Google Sheets successfully`
+        `Backed up ${totalMasterRecords} master records and ${totalTransactionRecords} transaction records to Google Sheet.`
       );
 
       storageService.addNotification(
-        'Google Sheet Synced',
-        `Successfully pushed live ERP data across ${tabs.length} tabs to Google Sheets.`,
+        'Google Sheet Backup Completed',
+        `Backed up ${totalMasterRecords} master records and ${totalTransactionRecords} transaction records across ${allTabsToSync.length} tabs.`,
         'success',
         'sheets'
       );
 
-      return { success: true, spreadsheetUrl };
+      return { success: true, spreadsheetUrl, stats };
     } catch (e: any) {
       storageService.updateGoogleSheetsConfig({ syncStatus: 'error' });
-      storageService.addNotification('Google Sheet Sync Error', e.message || 'Error communicating with Google Sheets', 'alert', 'sheets');
+      storageService.addNotification('Google Sheet Backup Failed', e.message || 'Error communicating with Google Sheets', 'alert', 'sheets');
       throw e;
     }
+  }
+
+  // Synchronize ERP records to the currently linked spreadsheet (calls backupToGoogleSheet)
+  public async syncToGoogleSheet(targetSheetId?: string): Promise<{ success: boolean; spreadsheetUrl: string }> {
+    const res = await this.backupToGoogleSheet(targetSheetId);
+    return { success: res.success, spreadsheetUrl: res.spreadsheetUrl };
+  }
+
+  // Previews data in linked Google Sheet without modifying current state
+  public async previewRestoreFromGoogleSheet(targetSheetId?: string): Promise<GoogleSheetRestorePreview> {
+    const config = storageService.getGoogleSheetsConfig();
+    const spreadsheetId = targetSheetId || config.spreadsheetId;
+
+    if (!spreadsheetId) {
+      throw new Error('No Google Sheet is currently linked. Please link a Google Sheet first.');
+    }
+
+    let token = this.getAccessToken();
+    if (!token) {
+      const authRes = await this.signInWithGoogle();
+      token = authRes.token;
+    }
+
+    const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+
+    const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`, {
+      headers: { Authorization: authHeader }
+    });
+
+    if (!metaRes.ok) {
+      const err = await metaRes.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Failed to fetch spreadsheet metadata (HTTP ${metaRes.status})`);
+    }
+
+    const sheetMeta = await metaRes.json();
+    const spreadsheetTitle = sheetMeta.properties?.title || 'Linked Google Sheet';
+    const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
+    const sheets: any[] = sheetMeta.sheets || [];
+    const vaultSheet = sheets.find(
+      (s) =>
+        s.properties?.title?.includes('AlphaERP System Data Vault') ||
+        s.properties?.title?.includes('Data Vault')
+    );
+
+    const masterCounts: Record<string, number> = {};
+    const transactionCounts: Record<string, number> = {};
+    let backupTimestamp: string | undefined;
+    let schemaVersion: string | undefined;
+
+    if (vaultSheet) {
+      const vaultTitle = vaultSheet.properties.title;
+      const valuesRes = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${encodeURIComponent(vaultTitle)}'!A2:G3000`,
+        { headers: { Authorization: authHeader } }
+      );
+
+      if (valuesRes.ok) {
+        const valuesData = await valuesRes.json();
+        const rows: any[][] = valuesData.values || [];
+
+        for (const row of rows) {
+          if (!row || row.length < 5) continue;
+          const key = String(row[0] || '').trim();
+          const count = Number(row[1]) || 0;
+          const chunkIndex = Number(row[2]) || 0;
+          const timestamp = row[5] ? String(row[5]) : undefined;
+          const ver = row[6] ? String(row[6]) : undefined;
+          if (timestamp && !backupTimestamp) backupTimestamp = timestamp;
+          if (ver && !schemaVersion) schemaVersion = ver;
+
+          if (chunkIndex === 0) {
+            const label = formatCollectionLabel(key);
+            const isMaster = [
+              'systemSettings',
+              'clients',
+              'vendors',
+              'inventory',
+              'salesReps',
+              'costCenters',
+              'taxSlabs',
+              'paymentTerms',
+              'chartOfAccounts',
+              'employees',
+              'departments',
+              'designationGrades',
+              'shifts',
+              'companyHolidays',
+              'policyDocuments',
+              'biometricDevices',
+              'trainingCourses'
+            ].includes(key);
+
+            if (isMaster) {
+              masterCounts[label] = count;
+            } else {
+              transactionCounts[label] = count;
+            }
+          }
+        }
+      }
+    }
+
+    // Fallback: If vault sheet was absent or empty, inspect table tabs
+    if (Object.keys(masterCounts).length === 0 && Object.keys(transactionCounts).length === 0) {
+      for (const sheet of sheets) {
+        const title = sheet.properties?.title || '';
+        const rowCount = Math.max(0, (sheet.properties?.gridProperties?.rowCount || 1) - 1);
+        if (title.includes('Dashboard')) continue;
+        if (title.includes('Lead') || title.includes('CRM')) transactionCounts['CRM Leads Pipeline'] = rowCount;
+        else if (title.includes('Quote')) transactionCounts['Quotes & Proposals'] = rowCount;
+        else if (title.includes('Project')) transactionCounts['Projects & BOQs'] = rowCount;
+        else if (title.includes('Inventory')) masterCounts['Inventory SKUs'] = rowCount;
+        else if (title.includes('Requisition') || title.includes('PR')) transactionCounts['Purchase Requisitions'] = rowCount;
+        else if (title.includes('Order') || title.includes('PO')) transactionCounts['Purchase Orders'] = rowCount;
+        else if (title.includes('Payment') || title.includes('Invoice')) transactionCounts['Payments & Invoices'] = rowCount;
+        else if (title.includes('Client')) masterCounts['Clients Master'] = rowCount;
+        else if (title.includes('Vendor')) masterCounts['Vendors Master'] = rowCount;
+        else if (title.includes('Employee')) masterCounts['Employees & Staff'] = rowCount;
+        else if (title.includes('Quota')) masterCounts['Sales Reps & Targets'] = rowCount;
+        else if (title.includes('Audit')) transactionCounts['Audit Logs'] = rowCount;
+      }
+    }
+
+    const totalMasterRecords = Object.values(masterCounts).reduce((a, b) => a + b, 0);
+    const totalTransactionRecords = Object.values(transactionCounts).reduce((a, b) => a + b, 0);
+
+    return {
+      spreadsheetTitle,
+      spreadsheetId,
+      spreadsheetUrl,
+      vaultFound: Boolean(vaultSheet),
+      backupTimestamp,
+      schemaVersion,
+      totalMasterRecords,
+      totalTransactionRecords,
+      masterCounts,
+      transactionCounts
+    };
+  }
+
+  // Restores all master data and transaction data from the linked Google Sheet
+  public async restoreFromGoogleSheet(targetSheetId?: string): Promise<GoogleSheetRestoreResult> {
+    storageService.updateGoogleSheetsConfig({ syncStatus: 'syncing' });
+
+    try {
+      const config = storageService.getGoogleSheetsConfig();
+      const spreadsheetId = targetSheetId || config.spreadsheetId;
+
+      if (!spreadsheetId) {
+        throw new Error('No Google Sheet linked. Please link a Google Sheet before restoring.');
+      }
+
+      let token = this.getAccessToken();
+      if (!token) {
+        const authRes = await this.signInWithGoogle();
+        token = authRes.token;
+      }
+
+      const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+
+      // 1. Fetch spreadsheet metadata
+      const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`, {
+        headers: { Authorization: authHeader }
+      });
+
+      if (!metaRes.ok) {
+        const err = await metaRes.json().catch(() => ({}));
+        throw new Error(err.error?.message || `Failed to access spreadsheet (HTTP ${metaRes.status})`);
+      }
+
+      const sheetMeta = await metaRes.json();
+      const sheets: any[] = sheetMeta.sheets || [];
+      const vaultSheet = sheets.find(
+        (s) =>
+          s.properties?.title?.includes('AlphaERP System Data Vault') ||
+          s.properties?.title?.includes('Data Vault')
+      );
+
+      let restoredData: Record<string, any> = {};
+      let vaultFound = false;
+
+      if (vaultSheet) {
+        vaultFound = true;
+        const vaultTitle = vaultSheet.properties.title;
+        const valuesRes = await fetch(
+          `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${encodeURIComponent(vaultTitle)}'!A2:G5000`,
+          { headers: { Authorization: authHeader } }
+        );
+
+        if (valuesRes.ok) {
+          const valuesData = await valuesRes.json();
+          const rows: any[][] = valuesData.values || [];
+
+          // Reassemble chunks
+          const chunksByKey: Record<string, { totalChunks: number; chunks: { index: number; data: string }[] }> = {};
+          for (const row of rows) {
+            if (!row || row.length < 5) continue;
+            const key = String(row[0] || '').trim();
+            if (!key || key === 'COLLECTION_KEY') continue;
+            const chunkIndex = Number(row[2]) || 0;
+            const totalChunks = Number(row[3]) || 1;
+            const chunk = String(row[4] || '');
+
+            if (!chunksByKey[key]) {
+              chunksByKey[key] = { totalChunks, chunks: [] };
+            }
+            chunksByKey[key].chunks.push({ index: chunkIndex, data: chunk });
+          }
+
+          for (const [key, item] of Object.entries(chunksByKey)) {
+            item.chunks.sort((a, b) => a.index - b.index);
+            const fullStr = item.chunks.map((c) => c.data).join('');
+            try {
+              restoredData[key] = JSON.parse(fullStr);
+            } catch (err) {
+              console.error(`Failed to parse vault collection ${key}:`, err);
+            }
+          }
+        }
+      }
+
+      // Fallback: If vault was not present or empty, parse standard table tabs
+      if (Object.keys(restoredData).length === 0) {
+        restoredData = await this.fallbackParseStandardTabs(spreadsheetId, authHeader, sheets);
+      }
+
+      if (Object.keys(restoredData).length === 0) {
+        throw new Error('No valid AlphaERP master or transaction data could be located in the linked Google Sheet.');
+      }
+
+      // 2. Automated Safety Snapshot before overwriting database state
+      storageService.recordCriticalSnapshot(
+        'MANUAL_USER',
+        'GoogleSheet' as any,
+        'Automated safety snapshot created before Google Sheet restoration'
+      );
+
+      // 3. Import into database with detailed report
+      const importReport = storageService.importFullDatabaseWithReport(JSON.stringify(restoredData));
+
+      if (!importReport.success) {
+        throw new Error(importReport.error || 'Failed to restore database from Google Sheet data.');
+      }
+
+      const nowStr = new Date().toISOString();
+      const result: GoogleSheetRestoreResult = {
+        success: true,
+        vaultFound,
+        totalMasterRecords: importReport.totalMaster,
+        totalTransactionRecords: importReport.totalTransactions,
+        masterCounts: importReport.masterCounts,
+        transactionCounts: importReport.transactionCounts,
+        restoredAt: nowStr
+      };
+
+      storageService.updateGoogleSheetsConfig({
+        lastRestoreAt: nowStr,
+        lastRestoreStats: result,
+        syncStatus: 'success'
+      });
+
+      storageService.logAudit(
+        'BACKUP_RESTORE',
+        'GOOGLE_SHEET',
+        spreadsheetId,
+        `Restored ${importReport.totalMaster} master records and ${importReport.totalTransactions} transaction records from Google Sheet.`
+      );
+
+      storageService.addNotification(
+        'Google Sheet Restore Completed',
+        `Restored ${importReport.totalMaster} master records and ${importReport.totalTransactions} transaction records into AlphaERP.`,
+        'success',
+        'sheets'
+      );
+
+      return result;
+    } catch (e: any) {
+      storageService.updateGoogleSheetsConfig({ syncStatus: 'error' });
+      storageService.addNotification(
+        'Google Sheet Restore Failed',
+        e.message || 'Error restoring from Google Sheets',
+        'alert',
+        'sheets'
+      );
+      throw e;
+    }
+  }
+
+  // Parses standard tabular tabs as a fallback when Data Vault tab is absent
+  private async fallbackParseStandardTabs(
+    spreadsheetId: string,
+    authHeader: string,
+    sheets: any[]
+  ): Promise<Record<string, any>> {
+    const sheetTitles: string[] = (sheets || []).map((s: any) => s.properties?.title || '');
+    const restored: Record<string, any> = {};
+
+    for (const title of sheetTitles) {
+      if (title.includes('Dashboard')) continue;
+
+      try {
+        const res = await fetch(
+          `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${encodeURIComponent(title)}'!A1:Z500`,
+          { headers: { Authorization: authHeader } }
+        );
+        if (!res.ok) continue;
+        const data = await res.json();
+        const rows: any[][] = data.values || [];
+        if (rows.length < 2) continue;
+
+        const dataRows = rows.slice(1);
+
+        if (title.includes('Leads') || title.includes('CRM')) {
+          restored.leads = dataRows.map((r, idx) => ({
+            id: `lead-restored-${idx + 1}`,
+            leadNumber: r[0] || `LD-${idx + 100}`,
+            companyName: r[1] || 'Lead Client',
+            clientName: r[2] || 'Contact Person',
+            phone: r[3] || '',
+            email: r[4] || '',
+            city: r[5] || 'Mumbai',
+            hvacType: r[6] || 'VRV/VRF Systems',
+            estimatedCapacityTR: Number(r[7]) || 25,
+            estimatedValue: Number(r[8]) || 500000,
+            source: r[9] || 'Website',
+            status: r[10] || 'New Lead',
+            priority: r[11] || 'Medium',
+            assignedToName: r[12] || 'Unassigned',
+            createdAt: r[13] ? new Date(r[13]).toISOString() : new Date().toISOString()
+          }));
+        } else if (title.includes('Inventory') || title.includes('Warehouse')) {
+          restored.inventory = dataRows.map((r, idx) => ({
+            id: `inv-restored-${idx + 1}`,
+            sku: r[0] || `SKU-${idx + 100}`,
+            name: r[1] || 'HVAC Equipment',
+            category: r[2] || 'Equipment',
+            brand: r[3] || 'Daikin',
+            currentStock: Number(r[4]) || 0,
+            allocatedStock: Number(r[5]) || 0,
+            availableStock: Number(r[6]) || 0,
+            uom: r[7] || 'Nos',
+            reorderLevel: Number(r[8]) || 5,
+            averageUnitCost: Number(r[9]) || 0,
+            location: r[11] || 'Main Warehouse'
+          }));
+        } else if (title.includes('Clients')) {
+          restored.clients = dataRows.map((r, idx) => ({
+            id: r[0] || `client-restored-${idx + 1}`,
+            name: r[1] || 'Corporate Client',
+            companyName: r[2] || r[1] || 'Corporate Client',
+            contactPerson: r[3] || r[1],
+            email: r[4] || '',
+            phone: r[5] || '',
+            city: r[6] || 'Mumbai',
+            gstin: r[7] || '',
+            creditLimit: Number(r[8]) || 1000000,
+            paymentTerms: r[9] || 'Net 30',
+            status: r[10] || 'Active'
+          }));
+        } else if (title.includes('Vendors')) {
+          restored.vendors = dataRows.map((r, idx) => ({
+            id: r[0] || `vendor-restored-${idx + 1}`,
+            name: r[1] || 'OEM Vendor',
+            category: r[2] || 'Equipment OEM',
+            contactPerson: r[3] || r[1],
+            email: r[4] || '',
+            phone: r[5] || '',
+            city: r[6] || 'Mumbai',
+            gstin: r[7] || '',
+            pan: r[8] || '',
+            rating: Number(r[9]) || 5,
+            status: r[10] || 'Active'
+          }));
+        }
+      } catch (err) {
+        console.warn(`Failed to parse standard tab ${title}:`, err);
+      }
+    }
+
+    return restored;
   }
 
   // Link an existing Google Sheet by URL or ID
