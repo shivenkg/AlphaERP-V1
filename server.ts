@@ -87,6 +87,8 @@ server.on("upgrade", (request, socket, head) => {
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit("connection", ws, request);
     });
+  } else {
+    socket.destroy();
   }
 });
 
@@ -254,7 +256,10 @@ wss.on("connection", async (clientWs: WebSocket, request: http.IncomingMessage) 
 async function setupApp() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: false,
+      },
       appType: "spa",
     });
     app.use(vite.middlewares);

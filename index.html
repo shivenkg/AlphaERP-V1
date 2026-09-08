@@ -10,6 +10,16 @@
     <meta property="og:description" content="AlphaERP by Atmos Aircon - Full-lifecycle HVAC CRM, Quote-to-Project conversion, BOQ inventory cross-check, PR & PO approval pipeline, Work Orders, Final Handover Billing, and Google Sheets synchronization." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    <script>
+      // Gracefully prevent benign HMR WebSocket disconnects from throwing unhandled rejections
+      window.addEventListener('unhandledrejection', function(event) {
+        var reason = event && (event.reason || event.detail);
+        var msg = (reason && (reason.message || reason)) ? String(reason.message || reason) : '';
+        if (msg.includes('WebSocket') || msg.includes('websocket') || msg.includes('ws:') || msg.includes('wss:')) {
+          event.preventDefault();
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
