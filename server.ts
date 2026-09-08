@@ -34,17 +34,10 @@ app.use(
 app.use((req, res, next) => {
   // Prevent MIME-sniffing
   res.setHeader("X-Content-Type-Options", "nosniff");
-  // Frame protection (allow framing from same origin or AI Studio parent preview)
-  res.setHeader("X-Frame-Options", "SAMEORIGIN");
   // Cross-Site Scripting protection for older browsers
   res.setHeader("X-XSS-Protection", "1; mode=block");
   // Limit referrer data leakage
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  // Restrict sensitive device APIs
-  res.setHeader(
-    "Permissions-Policy",
-    "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), payment=(), usb=()"
-  );
   next();
 });
 

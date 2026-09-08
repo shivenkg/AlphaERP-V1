@@ -689,7 +689,7 @@ export function App() {
               <ProjectsBOQView
                 projects={data.projects}
                 inventory={data.inventory}
-                currentUser={currentUser}
+                currentUser={data.currentUser}
                 onNavigateToProcurement={() => setActiveTab('procurement')}
                 onNavigateToCostAnalysis={() => setActiveTab('cost_analysis')}
                 onOpenSheetsModal={() => setIsSheetsModalOpen(true)}
@@ -885,7 +885,7 @@ export function App() {
         onClose={() => setIsNewPROpen(false)}
         projects={data.projects}
         inventory={data.inventory}
-        currentRole={data.currentUser?.role}
+        currentRole={data.currentUser?.role || 'executive'}
         onPRCreated={() => {
           setIsNewPROpen(false);
           handleRefreshData();

@@ -264,18 +264,25 @@ export const FnfSettlementModal: React.FC<FnfSettlementModalProps> = ({
               <span className="font-bold text-indigo-950">Employee Payout Bank Account Details:</span>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-700 font-mono">
-              <div>
-                Bank: <strong className="text-slate-900">{employee?.bankDetails?.bankName || 'HDFC Bank Ltd.'}</strong>
-              </div>
-              <div>
-                A/C No: <strong className="text-slate-900">{employee?.bankDetails?.accountNumber || '50100492819201'}</strong>
-              </div>
-              <div>
-                IFSC: <strong className="text-slate-900">{employee?.bankDetails?.ifscCode || 'HDFC0000240'}</strong>
-              </div>
-              <div>
-                Branch: <strong className="text-slate-900">{employee?.bankDetails?.branchName || 'Fort Mumbai'}</strong>
-              </div>
+              {(() => {
+                const bank = typeof employee?.bankDetails === 'object' ? employee.bankDetails : null;
+                return (
+                  <>
+                    <div>
+                      Bank: <strong className="text-slate-900">{bank?.bankName || employee?.bankName || 'HDFC Bank Ltd.'}</strong>
+                    </div>
+                    <div>
+                      A/C No: <strong className="text-slate-900">{bank?.accountNumber || employee?.bankAccount || employee?.bankAccountNo || '50100492819201'}</strong>
+                    </div>
+                    <div>
+                      IFSC: <strong className="text-slate-900">{bank?.ifscCode || employee?.ifscCode || employee?.bankIfsc || 'HDFC0000240'}</strong>
+                    </div>
+                    <div>
+                      Branch: <strong className="text-slate-900">{bank?.branchName || bank?.branch || 'Fort Mumbai'}</strong>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 

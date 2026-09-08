@@ -1,0 +1,250 @@
+
+> react-example@0.0.0 lint
+> tsc --noEmit
+
+src/App.tsx(692,30): error TS2304: Cannot find name 'currentUser'.
+src/App.tsx(887,9): error TS2322: Type '{ isOpen: boolean; onClose: () => void; projects: Project[]; inventory: InventoryItem[]; currentRole: UserRole; onPRCreated: () => void; }' is not assignable to type 'IntrinsicAttributes & CreatePRModalProps'.
+  Property 'inventory' does not exist on type 'IntrinsicAttributes & CreatePRModalProps'.
+src/components/AuditLogView.tsx(30,12): error TS2339: Property 'user' does not exist on type 'AuditLog'.
+src/components/AuditLogView.tsx(31,12): error TS2339: Property 'targetId' does not exist on type 'AuditLog'.
+src/components/AuditLogView.tsx(33,12): error TS2339: Property 'module' does not exist on type 'AuditLog'.
+src/components/AuditLogView.tsx(118,79): error TS2339: Property 'user' does not exist on type 'AuditLog'.
+src/components/AuditLogView.tsx(119,100): error TS2339: Property 'role' does not exist on type 'AuditLog'.
+src/components/AuditLogView.tsx(126,91): error TS2339: Property 'module' does not exist on type 'AuditLog'.
+src/components/AuditLogView.tsx(127,77): error TS2339: Property 'targetId' does not exist on type 'AuditLog'.
+src/components/AuthModalOrPage.tsx(170,11): error TS2345: Argument of type '"signin" | "signup"' is not assignable to parameter of type '"login" | "signup"'.
+  Type '"signin"' is not assignable to type '"login" | "signup"'.
+src/components/CRMLeadsView.tsx(195,9): error TS2339: Property 'capacityTR' does not exist on type 'Lead'.
+src/components/ClientQuotationDocumentModal.tsx(655,63): error TS2339: Property 'siteAddress' does not exist on type 'Lead'.
+src/components/ClientQuotationDocumentModal.tsx(655,91): error TS2339: Property 'address' does not exist on type 'Lead'.
+src/components/ClientQuotationDocumentModal.tsx(754,35): error TS2339: Property 'notes' does not exist on type 'QuoteLineItem'.
+src/components/ClientQuotationDocumentModal.tsx(755,95): error TS2339: Property 'notes' does not exist on type 'QuoteLineItem'.
+src/components/CreatePOModal.tsx(229,86): error TS2339: Property 'gstNumber' does not exist on type 'Vendor'.
+src/components/DashboardView.tsx(407,9): error TS2345: Argument of type '"error"' is not assignable to parameter of type '"info" | "success" | "warning" | "alert"'.
+src/components/DashboardView.tsx(565,28): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"Revenue"' have no overlap.
+src/components/DashboardView.tsx(565,77): error TS2339: Property 'currentBalance' does not exist on type 'ChartOfAccount'.
+src/components/DashboardView.tsx(567,28): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"Expense"' have no overlap.
+src/components/DashboardView.tsx(567,52): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"COGS"' have no overlap.
+src/components/DashboardView.tsx(567,98): error TS2339: Property 'currentBalance' does not exist on type 'ChartOfAccount'.
+src/components/DashboardView.tsx(574,33): error TS2339: Property 'tdsAmount' does not exist on type 'TDSRecord'.
+src/components/DashboardView.tsx(579,35): error TS2367: This comparison appears to be unintentional because the types '"Closed" | "Active / Hiring" | "On Hold"' and '"Active"' have no overlap.
+src/components/DashboardView.tsx(579,85): error TS2339: Property 'positionsCount' does not exist on type 'JobRequisition'.
+src/components/DashboardView.tsx(580,49): error TS2339: Property 'totalNetPayable' does not exist on type 'PayrollMonth'.
+src/components/DashboardView.tsx(1077,41): error TS2339: Property 'monthlyTarget' does not exist on type 'SalesRep'.
+src/components/DashboardView.tsx(1078,43): error TS2339: Property 'achievedRevenue' does not exist on type 'SalesRep'.
+src/components/DashboardView.tsx(1079,59): error TS2339: Property 'achievedRevenue' does not exist on type 'SalesRep'.
+src/components/DashboardView.tsx(1079,81): error TS2339: Property 'monthlyTarget' does not exist on type 'SalesRep'.
+src/components/DashboardView.tsx(1093,74): error TS2339: Property 'region' does not exist on type 'SalesRep'.
+src/components/FinancePaymentsView.tsx(54,86): error TS2345: Argument of type '"Bank NEFT"' is not assignable to parameter of type '"UPI" | "Credit Card" | "Cheque" | "Bank Transfer / NEFT" | "RTGS" | "Stripe / Online" | (() => "UPI" | "Credit Card" | "Cheque" | "Bank Transfer / NEFT" | "RTGS" | "Stripe / Online")'.
+src/components/FinancePaymentsView.tsx(76,10): error TS2339: Property 'projectName' does not exist on type 'PaymentRecord'.
+src/components/FinancePaymentsView.tsx(78,10): error TS2339: Property 'milestoneTitle' does not exist on type 'PaymentRecord'.
+src/components/FinancePaymentsView.tsx(456,29): error TS2339: Property 'projectName' does not exist on type 'PaymentRecord'.
+src/components/FinancePaymentsView.tsx(462,111): error TS2339: Property 'milestoneTitle' does not exist on type 'PaymentRecord'.
+src/components/FinancePaymentsView.tsx(465,97): error TS2339: Property 'milestonePercentage' does not exist on type 'PaymentRecord'.
+src/components/FinancePaymentsView.tsx(539,36): error TS2367: This comparison appears to be unintentional because the types '"UPI" | "Credit Card" | "Cheque" | "Bank Transfer / NEFT" | "RTGS" | "Stripe / Online"' and '"Bank NEFT"' have no overlap.
+src/components/FinancePaymentsView.tsx(610,92): error TS2339: Property 'milestoneTitle' does not exist on type 'PaymentRecord'.
+src/components/FinancePaymentsView.tsx(671,108): error TS2339: Property 'name' does not exist on type 'InvoiceAttachment'.
+src/components/FinancePaymentsView.tsx(673,51): error TS2551: Property 'capturedVia' does not exist on type 'InvoiceAttachment'. Did you mean 'capturedAt'?
+src/components/FinancePaymentsView.tsx(673,146): error TS2339: Property 'sizeBytes' does not exist on type 'InvoiceAttachment'.
+src/components/FinancePaymentsView.tsx(715,33): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type 'SetStateAction<InvoiceAttachment>'.
+src/components/FinancePaymentsView.tsx(792,30): error TS2339: Property 'milestoneTitle' does not exist on type 'PaymentRecord'.
+src/components/FinancePaymentsView.tsx(800,90): error TS2339: Property 'projectName' does not exist on type 'PaymentRecord'.
+src/components/FinancePaymentsView.tsx(947,16): error TS2367: This comparison appears to be unintentional because the types '"UPI" | "Credit Card" | "Cheque" | "Bank Transfer / NEFT" | "RTGS" | "Stripe / Online"' and '"Bank NEFT"' have no overlap.
+src/components/FinanceView.tsx(102,63): error TS2339: Property 'code' does not exist on type 'ChartOfAccount'.
+src/components/FinanceView.tsx(103,63): error TS2339: Property 'name' does not exist on type 'ChartOfAccount'.
+src/components/FinanceView.tsx(110,63): error TS2339: Property 'code' does not exist on type 'ChartOfAccount'.
+src/components/FinanceView.tsx(111,63): error TS2339: Property 'name' does not exist on type 'ChartOfAccount'.
+src/components/FinanceView.tsx(132,37): error TS2339: Property 'code' does not exist on type 'ChartOfAccount'.
+src/components/FinanceView.tsx(133,37): error TS2339: Property 'name' does not exist on type 'ChartOfAccount'.
+src/components/FinanceView.tsx(571,29): error TS2367: This comparison appears to be unintentional because the types '"JV" | VoucherType' and '"RV"' have no overlap.
+src/components/FinanceView.tsx(572,29): error TS2367: This comparison appears to be unintentional because the types '"JV" | VoucherType' and '"PV"' have no overlap.
+src/components/FinanceView.tsx(697,29): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"Asset"' have no overlap.
+src/components/FinanceView.tsx(698,29): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"Liability"' have no overlap.
+src/components/FinanceView.tsx(699,29): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"Revenue"' have no overlap.
+src/components/FinanceView.tsx(700,29): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"COGS"' have no overlap.
+src/components/FinanceView.tsx(785,83): error TS2339: Property 'description' does not exist on type 'TDSRecord'.
+src/components/FinanceView.tsx(1116,36): error TS2339: Property 'code' does not exist on type 'ChartOfAccount'.
+src/components/FinanceView.tsx(1116,49): error TS2339: Property 'name' does not exist on type 'ChartOfAccount'.
+src/components/FinanceView.tsx(1229,124): error TS2339: Property 'description' does not exist on type 'TDSRecord'.
+src/components/HRView.tsx(285,7): error TS2353: Object literal may only specify known properties, and 'technicalRequirements' does not exist in type 'Omit<JobRequisition, "createdAt" | "id" | "reqNumber"> & { reqNumber?: string; }'.
+src/components/HRView.tsx(301,33): error TS2345: Argument of type '{ requisitionId: string; name: string; email: string; phone: string; currentCompany: string; experienceYears: number; currentCTC: number; expectedCTC: number; noticePeriodDays: number; rating: number; stage: JobCandidate["stage"]; interviewFeedback: string; }' is not assignable to parameter of type 'Omit<JobCandidate, "id" | "appliedDate">'.
+  Type '{ requisitionId: string; name: string; email: string; phone: string; currentCompany: string; experienceYears: number; currentCTC: number; expectedCTC: number; noticePeriodDays: number; rating: number; stage: "Rejected" | ... 5 more ... | "Screened"; interviewFeedback: string; }' is missing the following properties from type 'Omit<JobCandidate, "id" | "appliedDate">': jobTitle, reqId
+src/components/HRView.tsx(423,19): error TS2367: This comparison appears to be unintentional because the types '"Casual Leave (CL)" | "Earned Leave (PL)" | "Sick Leave (SL)" | "Optional Holiday"' and '"CL"' have no overlap.
+src/components/HRView.tsx(423,72): error TS2367: This comparison appears to be unintentional because the types '"Casual Leave (CL)" | "Earned Leave (PL)" | "Sick Leave (SL)" | "Optional Holiday"' and '"SL"' have no overlap.
+src/components/HRView.tsx(531,12): error TS2367: This comparison appears to be unintentional because the types 'TabType' and '"jds"' have no overlap.
+src/components/HRView.tsx(544,12): error TS2367: This comparison appears to be unintentional because the types 'TabType' and '"candidates"' have no overlap.
+src/components/HRView.tsx(1049,76): error TS2339: Property 'requisitionId' does not exist on type 'JobCandidate'.
+src/components/HRView.tsx(1051,44): error TS2551: Property 'currentCTC' does not exist on type 'JobCandidate'. Did you mean 'currentCtc'?
+src/components/HRView.tsx(1052,43): error TS2551: Property 'expectedCTC' does not exist on type 'JobCandidate'. Did you mean 'expectedCtc'?
+src/components/HRView.tsx(1053,43): error TS2339: Property 'noticePeriodDays' does not exist on type 'JobCandidate'.
+src/components/HRView.tsx(1078,33): error TS2367: This comparison appears to be unintentional because the types '"Rejected" | "Technical Round" | "Applied" | "Offer Issued" | "Management Interview" | "Screened"' and '"Offer Letter"' have no overlap.
+src/components/HRView.tsx(1186,53): error TS2339: Property 'kras' does not exist on type 'JobRequisition'.
+src/components/HRView.tsx(1191,43): error TS2339: Property 'positionsCount' does not exist on type 'JobRequisition'.
+src/components/HRView.tsx(1192,40): error TS2551: Property 'experienceRequired' does not exist on type 'JobRequisition'. Did you mean 'experienceReq'?
+src/components/HRView.tsx(1193,41): error TS2339: Property 'jobSummary' does not exist on type 'JobRequisition'.
+src/components/HRView.tsx(1217,29): error TS2367: This comparison appears to be unintentional because the types '"Closed" | "Active / Hiring" | "On Hold"' and '"Active"' have no overlap.
+src/components/HRView.tsx(1245,75): error TS2353: Object literal may only specify known properties, and 'kras' does not exist in type 'SetStateAction<JobRequisition>'.
+src/components/HRView.tsx(1245,240): error TS2339: Property 'technicalRequirements' does not exist on type 'JobRequisition'.
+src/components/HRView.tsx(1333,43): error TS2339: Property 'employeeName' does not exist on type 'TimesheetEntry'.
+src/components/HRView.tsx(1334,42): error TS2551: Property 'weekEndingDate' does not exist on type 'TimesheetEntry'. Did you mean 'weekEndDate'?
+src/components/HRView.tsx(1335,39): error TS2551: Property 'mondayHours' does not exist on type 'TimesheetEntry'. Did you mean 'monHours'?
+src/components/HRView.tsx(1336,40): error TS2551: Property 'tuesdayHours' does not exist on type 'TimesheetEntry'. Did you mean 'tueHours'?
+src/components/HRView.tsx(1337,39): error TS2339: Property 'wednesdayHours' does not exist on type 'TimesheetEntry'.
+src/components/HRView.tsx(1338,40): error TS2339: Property 'thursdayHours' does not exist on type 'TimesheetEntry'.
+src/components/HRView.tsx(1339,39): error TS2551: Property 'fridayHours' does not exist on type 'TimesheetEntry'. Did you mean 'friHours'?
+src/components/HRView.tsx(1437,43): error TS2339: Property 'employeeName' does not exist on type 'AttendanceRecord'.
+src/components/HRView.tsx(1438,41): error TS2339: Property 'inTime' does not exist on type 'AttendanceRecord'.
+src/components/HRView.tsx(1439,42): error TS2339: Property 'outTime' does not exist on type 'AttendanceRecord'.
+src/components/HRView.tsx(1440,42): error TS2339: Property 'siteAssigned' does not exist on type 'AttendanceRecord'.
+src/components/HRView.tsx(1527,96): error TS2339: Property 'dayOfWeek' does not exist on type 'CompanyHoliday'.
+src/components/HRView.tsx(1527,114): error TS2339: Property 'dayOfWeek' does not exist on type 'CompanyHoliday'.
+src/components/HRView.tsx(1530,23): error TS2367: This comparison appears to be unintentional because the types '"National Mandatory" | "Regional / Festival" | "Company Event"' and '"Gazetted"' have no overlap.
+src/components/HRView.tsx(1555,40): error TS2339: Property 'employeeName' does not exist on type 'LeaveApplication'.
+src/components/HRView.tsx(1633,34): error TS2339: Property 'month' does not exist on type 'PayrollMonth'.
+src/components/HRView.tsx(1634,33): error TS2339: Property 'year' does not exist on type 'PayrollMonth'.
+src/components/HRView.tsx(1635,37): error TS2339: Property 'totalGrossSalary' does not exist on type 'PayrollMonth'.
+src/components/HRView.tsx(1636,35): error TS2339: Property 'totalNetPayable' does not exist on type 'PayrollMonth'.
+src/components/HRView.tsx(1637,35): error TS2339: Property 'totalDeductions' does not exist on type 'PayrollMonth'.
+src/components/HRView.tsx(1638,34): error TS2339: Property 'processedDate' does not exist on type 'PayrollMonth'.
+src/components/HRView.tsx(1639,34): error TS2339: Property 'slips' does not exist on type 'PayrollMonth'.
+src/components/HRView.tsx(2116,46): error TS2345: Argument of type '{ avatar: string; id: string; empCode: string; name: string; fullName?: string; designation: string; department: string; email: string; officialEmail?: string; phone: string; dateOfJoining: string; ... 24 more ...; leaveBalances: { ...; }; } | { ...; }' is not assignable to parameter of type 'SetStateAction<Employee>'.
+  Type '{ avatar: string; id: string; empCode: string; fullName: string; designation: string; department: string; officialEmail: string; phone: string; joiningDate: string; pan: string; aadhaar: string; uan: string; ... 8 more ...; monthlySalaryStructure: { ...; }; }' is not assignable to type 'SetStateAction<Employee>'.
+    Type '{ avatar: string; id: string; empCode: string; fullName: string; designation: string; department: string; officialEmail: string; phone: string; joiningDate: string; pan: string; aadhaar: string; uan: string; ... 8 more ...; monthlySalaryStructure: { ...; }; }' is missing the following properties from type 'Employee': name, email, dateOfJoining, employmentStatus, and 6 more.
+src/components/HRView.tsx(2324,113): error TS2339: Property 'jobSummary' does not exist on type 'JobRequisition'.
+src/components/HRView.tsx(2339,38): error TS2339: Property 'technicalRequirements' does not exist on type 'JobRequisition'.
+src/components/HRView.tsx(2348,38): error TS2339: Property 'kras' does not exist on type 'JobRequisition'.
+src/components/InventoryWarehouseView.tsx(73,13): error TS2339: Property 'manufacturer' does not exist on type 'InventoryItem'.
+src/components/InventoryWarehouseView.tsx(74,13): error TS2339: Property 'location' does not exist on type 'InventoryItem'.
+src/components/InventoryWarehouseView.tsx(177,16): error TS2339: Property 'location' does not exist on type 'InventoryItem'.
+src/components/InventoryWarehouseView.tsx(178,16): error TS2339: Property 'leadTimeDays' does not exist on type 'InventoryItem'.
+src/components/InventoryWarehouseView.tsx(179,16): error TS2339: Property 'preferredVendor' does not exist on type 'InventoryItem'.
+src/components/InventoryWarehouseView.tsx(430,31): error TS2339: Property 'manufacturer' does not exist on type 'InventoryItem'.
+src/components/InventoryWarehouseView.tsx(484,31): error TS2339: Property 'location' does not exist on type 'InventoryItem'.
+src/components/LeadDetailModal.tsx(271,126): error TS2339: Property 'siteAddress' does not exist on type 'Lead'.
+src/components/MasterDataView.tsx(274,53): error TS2345: Argument of type '{ clientCode: string; companyName: string; contactPerson: string; designation: string; email: string; phone: string; billingAddress: string; siteAddress: string; city: string; state: string; pincode: string; ... 7 more ...; notes: string; }' is not assignable to parameter of type 'Partial<ClientMaster>'.
+  Types of property 'status' are incompatible.
+    Type '"active" | "inactive" | "blacklisted"' is not assignable to type '"active" | "inactive"'.
+      Type '"blacklisted"' is not assignable to type '"active" | "inactive"'.
+src/components/MasterDataView.tsx(276,32): error TS2345: Argument of type '{ clientCode: string; companyName: string; contactPerson: string; designation: string; email: string; phone: string; billingAddress: string; siteAddress: string; city: string; state: string; pincode: string; ... 7 more ...; notes: string; }' is not assignable to parameter of type 'Omit<ClientMaster, "createdAt" | "id">'.
+  Types of property 'status' are incompatible.
+    Type '"active" | "inactive" | "blacklisted"' is not assignable to type '"active" | "inactive"'.
+      Type '"blacklisted"' is not assignable to type '"active" | "inactive"'.
+src/components/MasterDataView.tsx(338,61): error TS2345: Argument of type '{ vendorCode: string; name: string; category: string; contactPerson: string; email: string; phone: string; address: string; city: string; state: string; gstin: string; pan: string; rating: number; leadTimeDays: number; creditPeriodDays: number; bankDetails: string; }' is not assignable to parameter of type 'Partial<Vendor>'.
+  Types of property 'bankDetails' are incompatible.
+    Type 'string' is not assignable to type '{ bankName: string; accountNumber: string; ifscCode: string; branch?: string; }'.
+src/components/MasterDataView.tsx(340,40): error TS2345: Argument of type '{ vendorCode: string; name: string; category: string; contactPerson: string; email: string; phone: string; address: string; city: string; state: string; gstin: string; pan: string; rating: number; leadTimeDays: number; creditPeriodDays: number; bankDetails: string; }' is not assignable to parameter of type 'Omit<Vendor, "id"> & { vendorCode?: string; }'.
+  Type '{ vendorCode: string; name: string; category: string; contactPerson: string; email: string; phone: string; address: string; city: string; state: string; gstin: string; pan: string; rating: number; leadTimeDays: number; creditPeriodDays: number; bankDetails: string; }' is not assignable to type 'Omit<Vendor, "id">'.
+    Types of property 'bankDetails' are incompatible.
+      Type 'string' is not assignable to type '{ bankName: string; accountNumber: string; ifscCode: string; branch?: string; }'.
+src/components/MasterDataView.tsx(397,39): error TS2345: Argument of type '{ sku: string; name: string; category: string; description: string; unit: string; currentStock: number; allocatedStock: number; reorderLevel: number; averageUnitCost: number; standardSellingPrice: number; hsnCode: string; gstRatePct: number; storageLocation: string; }' is not assignable to parameter of type 'Omit<InventoryItem, "id" | "availableStock">'.
+  Type '{ sku: string; name: string; category: string; description: string; unit: string; currentStock: number; allocatedStock: number; reorderLevel: number; averageUnitCost: number; standardSellingPrice: number; hsnCode: string; gstRatePct: number; storageLocation: string; }' is missing the following properties from type 'Omit<InventoryItem, "id" | "availableStock">': specification, brand, defaultSupplier, warehouseLocation, lastRestockedDate
+src/components/MasterDataView.tsx(660,15): error TS2339: Property 'leadTimeDays' does not exist on type 'InventoryItem'.
+src/components/MasterDataView.tsx(661,15): error TS2339: Property 'preferredVendor' does not exist on type 'InventoryItem'.
+src/components/MasterDataView.tsx(1032,29): error TS2367: This comparison appears to be unintentional because the types '"inactive"' and '"blacklisted"' have no overlap.
+src/components/MonthlyRevenueTrendChart.tsx(104,90): error TS2339: Property 'monthlyTarget' does not exist on type 'SalesRep'.
+src/components/NewExpenseModal.tsx(69,24): error TS2339: Property 'name' does not exist on type 'Project'.
+src/components/NewExpenseModal.tsx(181,47): error TS2339: Property 'name' does not exist on type 'Project'.
+src/components/NewExpenseModal.tsx(182,24): error TS2339: Property 'projectCode' does not exist on type 'Project'.
+src/components/NewExpenseModal.tsx(182,43): error TS2339: Property 'projectCode' does not exist on type 'Project'.
+src/components/NewExpenseModal.tsx(182,68): error TS2339: Property 'name' does not exist on type 'Project'.
+src/components/PRDetailModal.tsx(221,40): error TS2339: Property 'requiredByDate' does not exist on type 'PurchaseRequisition'.
+src/components/PRDetailModal.tsx(279,80): error TS2339: Property 'requiredByDate' does not exist on type 'PurchaseRequisition'.
+src/components/PitchDeckView.tsx(104,54): error TS2367: This comparison appears to be unintentional because the types 'ProjectStatus' and '"Completed"' have no overlap.
+src/components/ProjectActivityFeed.tsx(270,11): error TS2367: This comparison appears to be unintentional because the types 'POStatus' and '"Received"' have no overlap.
+src/components/ProjectActivityFeed.tsx(282,19): error TS2367: This comparison appears to be unintentional because the types '"Partially Received" | "Sent to Vendor"' and '"Received"' have no overlap.
+src/components/ProjectCompletionBillModal.tsx(40,52): error TS2339: Property 'projectId' does not exist on type 'PaymentRecord'.
+src/components/ProjectsBOQView.tsx(258,7): error TS2322: Type 'string' is not assignable to type '"Other" | "Client Site Clearance" | "Civil / Structural Pending" | "Consultant Drawing Approval" | "OEM Delivery Delay" | "Material / PR Hold" | "Manpower / Labor Shortage" | "Payment Milestone Block"'.
+src/components/QuotePrintPreviewModal.tsx(447,28): error TS2339: Property 'address' does not exist on type 'Lead'.
+src/components/QuotePrintPreviewModal.tsx(462,73): error TS2339: Property 'systemType' does not exist on type 'Quote'.
+src/components/QuotePrintPreviewModal.tsx(465,80): error TS2339: Property 'coolingCapacity' does not exist on type 'Quote'.
+src/components/QuotePrintPreviewModal.tsx(505,33): error TS2339: Property 'notes' does not exist on type 'QuoteLineItem'.
+src/components/QuotePrintPreviewModal.tsx(506,93): error TS2339: Property 'notes' does not exist on type 'QuoteLineItem'.
+src/components/SalesTrendAnalysis.tsx(69,49): error TS2367: This comparison appears to be unintentional because the types '"Awarded" | "Draft" | "Sent" | "Rejected" | "Expired"' and '"Sent to Client"' have no overlap.
+src/components/common/PrintableDocumentTemplate.tsx(256,28): error TS2339: Property 'siteAddress' does not exist on type 'Lead'.
+src/components/common/PrintableDocumentTemplate.tsx(266,29): error TS2339: Property 'location' does not exist on type 'Lead'.
+src/components/common/PrintableDocumentTemplate.tsx(281,25): error TS2339: Property 'notes' does not exist on type 'QuoteLineItem'.
+src/components/common/PrintableDocumentTemplate.tsx(295,24): error TS2339: Property 'termsAndConditions' does not exist on type 'Quote'.
+src/components/common/PrintableDocumentTemplate.tsx(320,40): error TS2339: Property 'projectName' does not exist on type 'PaymentRecord'.
+src/components/common/PrintableDocumentTemplate.tsx(320,65): error TS2339: Property 'milestoneTitle' does not exist on type 'PaymentRecord'.
+src/components/common/PrintableDocumentTemplate.tsx(320,92): error TS2339: Property 'milestonePercentage' does not exist on type 'PaymentRecord'.
+src/components/common/PrintableDocumentTemplate.tsx(339,27): error TS2339: Property 'projectName' does not exist on type 'PaymentRecord'.
+src/components/common/PrintableDocumentTemplate.tsx(340,32): error TS2339: Property 'projectId' does not exist on type 'PaymentRecord'.
+src/components/common/PrintableDocumentTemplate.tsx(341,39): error TS2339: Property 'milestoneTitle' does not exist on type 'PaymentRecord'.
+src/components/common/PrintableDocumentTemplate.tsx(342,42): error TS2339: Property 'milestonePercentage' does not exist on type 'PaymentRecord'.
+src/components/common/PrintableDocumentTemplate.tsx(350,39): error TS2339: Property 'milestoneTitle' does not exist on type 'PaymentRecord'.
+src/components/dashboard/PersonalizedRoleWidgets.tsx(201,59): error TS2339: Property 'monthlyTarget' does not exist on type 'SalesRep'.
+src/components/dashboard/PersonalizedRoleWidgets.tsx(221,28): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"Revenue"' have no overlap.
+src/components/dashboard/PersonalizedRoleWidgets.tsx(221,77): error TS2339: Property 'currentBalance' does not exist on type 'ChartOfAccount'.
+src/components/dashboard/PersonalizedRoleWidgets.tsx(223,28): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"Expense"' have no overlap.
+src/components/dashboard/PersonalizedRoleWidgets.tsx(223,52): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"COGS"' have no overlap.
+src/components/dashboard/PersonalizedRoleWidgets.tsx(223,98): error TS2339: Property 'currentBalance' does not exist on type 'ChartOfAccount'.
+src/components/dashboard/PersonalizedRoleWidgets.tsx(240,74): error TS2367: This comparison appears to be unintentional because the types '"Awarded" | "Sent" | "Approved" | "Rejected" | "Expired"' and '"Sent to Client"' have no overlap.
+src/components/dashboard/PersonalizedRoleWidgets.tsx(249,33): error TS2339: Property 'tdsAmount' does not exist on type 'TDSRecord'.
+src/components/dashboard/PersonalizedRoleWidgets.tsx(250,49): error TS2339: Property 'totalNetPayable' does not exist on type 'PayrollMonth'.
+src/components/dashboard/PersonalizedRoleWidgets.tsx(623,82): error TS2367: This comparison appears to be unintentional because the types 'POStatus' and '"Fully Received"' have no overlap.
+src/components/dashboard/PersonalizedRoleWidgets.tsx(967,36): error TS2339: Property 'targetMarginPct' does not exist on type 'Quote'.
+src/components/finance/GAAPFinancialsView.tsx(50,20): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"Asset"' have no overlap.
+src/components/finance/GAAPFinancialsView.tsx(51,34): error TS2339: Property 'currentBalance' does not exist on type 'ChartOfAccount'.
+src/components/finance/GAAPFinancialsView.tsx(54,20): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"Asset"' have no overlap.
+src/components/finance/GAAPFinancialsView.tsx(55,34): error TS2339: Property 'currentBalance' does not exist on type 'ChartOfAccount'.
+src/components/finance/GAAPFinancialsView.tsx(62,20): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"Liability"' have no overlap.
+src/components/finance/GAAPFinancialsView.tsx(63,34): error TS2339: Property 'currentBalance' does not exist on type 'ChartOfAccount'.
+src/components/finance/GAAPFinancialsView.tsx(66,20): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"Liability"' have no overlap.
+src/components/finance/GAAPFinancialsView.tsx(67,34): error TS2339: Property 'currentBalance' does not exist on type 'ChartOfAccount'.
+src/components/finance/GAAPFinancialsView.tsx(72,47): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"Revenue"' have no overlap.
+src/components/finance/GAAPFinancialsView.tsx(72,97): error TS2339: Property 'currentBalance' does not exist on type 'ChartOfAccount'.
+src/components/finance/GAAPFinancialsView.tsx(73,48): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"Expense"' have no overlap.
+src/components/finance/GAAPFinancialsView.tsx(73,72): error TS2367: This comparison appears to be unintentional because the types 'AccountType' and '"COGS"' have no overlap.
+src/components/finance/GAAPFinancialsView.tsx(73,119): error TS2339: Property 'currentBalance' does not exist on type 'ChartOfAccount'.
+src/components/finance/InvoiceAttachmentGalleryModal.tsx(72,90): error TS2339: Property 'projectName' does not exist on type 'PaymentRecord'.
+src/components/finance/InvoiceAttachmentGalleryModal.tsx(113,26): error TS2339: Property 'projectName' does not exist on type 'PaymentRecord'.
+src/components/finance/InvoiceCameraModal.tsx(250,26): error TS2339: Property 'projectName' does not exist on type 'PaymentRecord'.
+src/components/hr/ESSAttendanceLogView.tsx(56,73): error TS2367: This comparison appears to be unintentional because the types '"Site Visit" | "WFH" | "Half Day" | "Absent" | "On Leave"' and '"Late"' have no overlap.
+src/components/hr/ESSAttendanceLogView.tsx(57,44): error TS2367: This comparison appears to be unintentional because the types '"Present" | "Site Visit" | "WFH" | "Half Day" | "Absent" | "On Leave"' and '"Late"' have no overlap.
+src/components/hr/ESSAttendanceLogView.tsx(81,66): error TS2322: Type '{ className: string; title: string; }' is not assignable to type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+  Property 'title' does not exist on type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+src/components/hr/ESSAttendanceLogView.tsx(85,67): error TS2322: Type '{ className: string; title: string; }' is not assignable to type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+  Property 'title' does not exist on type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+src/components/hr/ESSAttendanceLogView.tsx(87,70): error TS2322: Type '{ className: string; title: string; }' is not assignable to type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+  Property 'title' does not exist on type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+src/components/hr/ESSAttendanceLogView.tsx(155,17): error TS2367: This comparison appears to be unintentional because the types '"Site Visit" | "WFH" | "Half Day" | "Absent" | "On Leave"' and '"Late"' have no overlap.
+src/components/hr/ESSAttendanceLogView.tsx(171,37): error TS2339: Property 'inTime' does not exist on type 'AttendanceRecord | { id: string; date: string; empId: string; empCode: string; empName: string; inTime: string; outTime: string; totalHours: number; status: "Present"; remarks: string; }'.
+  Property 'inTime' does not exist on type 'AttendanceRecord'.
+src/components/hr/ESSAttendanceLogView.tsx(182,37): error TS2339: Property 'outTime' does not exist on type 'AttendanceRecord | { id: string; date: string; empId: string; empCode: string; empName: string; inTime: string; outTime: string; totalHours: number; status: "Present"; remarks: string; }'.
+  Property 'outTime' does not exist on type 'AttendanceRecord'.
+src/components/hr/ESSAttendanceLogView.tsx(282,36): error TS2367: This comparison appears to be unintentional because the types '"Present" | "Site Visit" | "WFH" | "Half Day" | "Absent" | "On Leave"' and '"Late"' have no overlap.
+src/components/hr/ESSAttendanceLogView.tsx(288,44): error TS2339: Property 'inTime' does not exist on type 'AttendanceRecord'.
+src/components/hr/ESSAttendanceLogView.tsx(288,58): error TS2339: Property 'inTime' does not exist on type 'AttendanceRecord'.
+src/components/hr/ESSAttendanceLogView.tsx(301,32): error TS2339: Property 'inTime' does not exist on type 'AttendanceRecord'.
+src/components/hr/ESSAttendanceLogView.tsx(303,36): error TS2339: Property 'inTime' does not exist on type 'AttendanceRecord'.
+src/components/hr/ESSAttendanceLogView.tsx(310,32): error TS2339: Property 'outTime' does not exist on type 'AttendanceRecord'.
+src/components/hr/FnfSettlementModal.tsx(268,69): error TS2339: Property 'bankDetails' does not exist on type 'Employee'.
+src/components/hr/FnfSettlementModal.tsx(271,71): error TS2339: Property 'bankDetails' does not exist on type 'Employee'.
+src/components/hr/FnfSettlementModal.tsx(274,69): error TS2339: Property 'bankDetails' does not exist on type 'Employee'.
+src/components/hr/FnfSettlementModal.tsx(277,71): error TS2339: Property 'bankDetails' does not exist on type 'Employee'.
+src/components/hr/MSSTeamAttendanceView.tsx(109,73): error TS2367: This comparison appears to be unintentional because the types '"Site Visit" | "WFH" | "Half Day" | "Absent" | "On Leave"' and '"Late"' have no overlap.
+src/components/hr/MSSTeamAttendanceView.tsx(110,44): error TS2367: This comparison appears to be unintentional because the types '"Present" | "Site Visit" | "WFH" | "Half Day" | "Absent" | "On Leave"' and '"Late"' have no overlap.
+src/components/hr/MSSTeamAttendanceView.tsx(146,66): error TS2322: Type '{ className: string; title: string; }' is not assignable to type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+  Property 'title' does not exist on type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+src/components/hr/MSSTeamAttendanceView.tsx(150,67): error TS2322: Type '{ className: string; title: string; }' is not assignable to type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+  Property 'title' does not exist on type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+src/components/hr/MSSTeamAttendanceView.tsx(152,70): error TS2322: Type '{ className: string; title: string; }' is not assignable to type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+  Property 'title' does not exist on type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+src/components/hr/MSSTeamAttendanceView.tsx(347,42): error TS2339: Property 'inTime' does not exist on type 'AttendanceRecord'.
+src/components/hr/MSSTeamAttendanceView.tsx(348,43): error TS2339: Property 'outTime' does not exist on type 'AttendanceRecord'.
+src/components/hr/MSSTeamAttendanceView.tsx(350,34): error TS2367: This comparison appears to be unintentional because the types '"Present" | "Site Visit" | "WFH" | "Half Day" | "Absent" | "On Leave"' and '"Late"' have no overlap.
+src/components/hr/MSSTeamAttendanceView.tsx(512,47): error TS2339: Property 'inTime' does not exist on type 'AttendanceRecord'.
+src/components/hr/MSSTeamAttendanceView.tsx(518,47): error TS2339: Property 'outTime' does not exist on type 'AttendanceRecord'.
+src/components/hr/OnboardingWorkflowView.tsx(51,129): error TS2322: Type '"HR Admin"' is not assignable to type '"HR" | "IT Admin" | "Site HSE Safety" | "Reporting Manager" | "Finance / Payroll"'.
+src/components/hr/OrgMasterView.tsx(105,7): error TS2322: Type 'string' is not assignable to type '"Field Operations" | "Junior Engineering" | "Executive Leadership" | "Senior Management" | "Middle Engineering" | "Support Staff"'.
+src/components/hr/OrgMasterView.tsx(140,7): error TS2322: Type 'string' is not assignable to type '"Safety & Site Protocols" | "Travel & Per-Diem" | "Conduct & Ethics" | "Statutory & Compliance" | "Leave & Attendance"'.
+src/components/hr/PayslipModal.tsx(105,50): error TS2339: Property 'code' does not exist on type 'Employee'.
+src/components/hr/PayslipModal.tsx(111,28): error TS2339: Property 'esicNo' does not exist on type 'Employee'.
+src/components/hr/RegisterResignationModal.tsx(96,37): error TS2339: Property 'basicSalary' does not exist on type 'Employee'.
+src/components/hr/RegisterResignationModal.tsx(96,65): error TS2339: Property 'salary' does not exist on type 'Employee'.
+src/components/hr/RegisterResignationModal.tsx(96,97): error TS2339: Property 'salary' does not exist on type 'Employee'.
+src/components/hr/RegisterResignationModal.tsx(104,40): error TS2339: Property 'leavesRemaining' does not exist on type 'Employee'.
+src/components/hr/RegisterResignationModal.tsx(105,43): error TS2339: Property 'leavesRemaining' does not exist on type 'Employee'.
+src/components/hr/RegisterResignationModal.tsx(110,49): error TS2339: Property 'leavesRemaining' does not exist on type 'Employee'.
+src/components/hr/RegisterResignationModal.tsx(119,64): error TS2339: Property 'leavesRemaining' does not exist on type 'Employee'.
+src/components/hr/RegisterResignationModal.tsx(229,75): error TS2339: Property 'leavesRemaining' does not exist on type 'Employee'.

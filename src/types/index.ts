@@ -66,10 +66,14 @@ export interface Lead {
   phone: string;
   email: string;
   projectAddress: string;
+  siteAddress?: string;
+  address?: string;
+  location?: string;
   city: string;
   buildingType: 'Commercial Office' | 'Hospital / Healthcare' | 'Industrial Plant' | 'Luxury Villa / Residential' | 'Retail Mall' | 'Hotel / Hospitality' | 'Data Center';
   hvacType: 'VRV / VRF System' | 'Water Cooled Chiller' | 'Air Cooled Chiller' | 'Ducted Split System' | 'Cleanroom AHU & Ducting' | 'Ventilation & Exhaust';
   estimatedCapacityTR: number; // Tonnage of Refrigeration
+  capacityTR?: number;
   estimatedValue: number;
   source: LeadSource;
   status: LeadStatus;
@@ -96,9 +100,10 @@ export interface QuoteLineItem {
   unitPrice: number;
   totalCost: number;
   totalPrice: number;
+  notes?: string;
 }
 
-export type QuoteStatus = 'Draft' | 'Sent' | 'Approved' | 'Awarded' | 'Rejected' | 'Expired';
+export type QuoteStatus = 'Draft' | 'Sent' | 'Approved' | 'Awarded' | 'Rejected' | 'Expired' | 'Sent to Client' | string;
 
 export interface Quote {
   id: string;
@@ -121,6 +126,7 @@ export interface Quote {
   totalCost: number;
   grossMarginAmount: number;
   grossMarginPct: number;
+  targetMarginPct?: number;
   paymentTerms: string;
   warrantyTerms: string;
   deliveryTimeline: string;
@@ -128,6 +134,9 @@ export interface Quote {
   awardedDate?: string;
   convertedToProjectId?: string;
   notes: string;
+  termsAndConditions?: string[];
+  systemType?: string;
+  coolingCapacity?: string | number;
 }
 
 export interface NewQuoteDraft {
@@ -183,7 +192,7 @@ export interface BOQItem {
   poNumber?: string;
 }
 
-export type ProjectStatus = 'Planning & Engineering' | 'Procurement' | 'Installation' | 'Testing & Commissioning' | 'Handover & Closed';
+export type ProjectStatus = 'Planning & Engineering' | 'Procurement' | 'Installation' | 'Testing & Commissioning' | 'Handover & Closed' | 'Completed' | 'In Progress' | 'On Hold' | string;
 
 export interface ProjectExpenseMilestone {
   phase: string;
@@ -198,7 +207,9 @@ export type ProjectPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 export interface Project {
   id: string;
   projectNumber: string;
+  projectCode?: string;
   projectName: string;
+  name?: string;
   clientName: string;
   leadId: string;
   quoteId: string;
@@ -225,7 +236,7 @@ export interface Project {
   isDelayed?: boolean;
   delayDays?: number;
   delayReason?: string;
-  delayCategory?: 'Client Site Clearance' | 'Material / PR Hold' | 'OEM Delivery Delay' | 'Consultant Drawing Approval' | 'Manpower / Labor Shortage' | 'Payment Milestone Block' | 'Civil / Structural Pending' | 'Other';
+  delayCategory?: 'Client Site Clearance' | 'Material / PR Hold' | 'OEM Delivery Delay' | 'Consultant Drawing Approval' | 'Manpower / Labor Shortage' | 'Payment Milestone Block' | 'Civil / Structural Pending' | 'Other' | string;
   delayMitigationPlan?: string;
   revisedCompletionDate?: string;
 }
@@ -235,9 +246,9 @@ export interface InventoryItem {
   sku: string;
   name: string;
   category: 'VRF / AC Units' | 'Chillers & AHU' | 'Ducting & Sheets' | 'Insulation Material' | 'Copper Pipes & Fittings' | 'Valves & Dampers' | 'Refrigerants' | 'BMS & Thermostats' | 'Air Outlets & Diffusers' | string;
-  specification: string;
+  specification?: string;
   description?: string;
-  brand: string;
+  brand?: string;
   currentStock: number;
   allocatedStock: number;
   availableStock: number; // currentStock - allocatedStock
@@ -247,10 +258,14 @@ export interface InventoryItem {
   standardSellingPrice?: number;
   hsnCode?: string;
   gstRatePct?: number;
-  defaultSupplier: string;
-  warehouseLocation: string; // e.g. Bay A-12, Main Yard
+  defaultSupplier?: string;
+  warehouseLocation?: string; // e.g. Bay A-12, Main Yard
   storageLocation?: string;
-  lastRestockedDate: string;
+  location?: string;
+  manufacturer?: string;
+  leadTimeDays?: number;
+  preferredVendor?: string;
+  lastRestockedDate?: string;
 }
 
 export interface PRItem {
@@ -273,6 +288,7 @@ export interface PurchaseRequisition {
   projectName: string;
   requestedBy: string;
   requestDate: string;
+  requiredByDate?: string;
   priority: 'Urgent' | 'High' | 'Standard';
   items: PRItem[];
   totalEstimatedAmount: number;
@@ -295,7 +311,7 @@ export interface POItem {
   totalAmount: number;
 }
 
-export type POStatus = 'Draft' | 'Pending Approval' | 'Approved' | 'Rejected' | 'Sent to Vendor' | 'Partially Received' | 'Fulfilled' | 'Cancelled';
+export type POStatus = 'Draft' | 'Pending Approval' | 'Approved' | 'Rejected' | 'Sent to Vendor' | 'Partially Received' | 'Fulfilled' | 'Received' | 'Fully Received' | 'Cancelled' | string;
 
 export interface PurchaseOrder {
   id: string;
@@ -341,6 +357,7 @@ export interface Vendor {
   state?: string;
   pincode?: string;
   gstin?: string;
+  gstNumber?: string;
   gstOrTaxId?: string;
   pan?: string;
   categoriesSupplied?: string[];
@@ -348,12 +365,16 @@ export interface Vendor {
   creditPeriodDays: number;
   paymentTerms?: string;
   leadTimeDays?: number;
-  bankDetails?: {
-    bankName: string;
-    accountNumber: string;
-    ifscCode: string;
-    branch?: string;
-  };
+  status?: 'active' | 'inactive' | 'blacklisted' | 'Active' | 'Inactive' | 'Blacklisted' | string;
+  bankDetails?:
+    | {
+        bankName?: string;
+        accountNumber?: string;
+        ifscCode?: string;
+        branch?: string;
+        branchName?: string;
+      }
+    | string;
   createdAt?: string;
 }
 
@@ -371,12 +392,18 @@ export type PaymentStatus = 'Pending' | 'Paid' | 'Partially Paid' | 'Overdue';
 
 export interface InvoiceAttachment {
   id: string;
-  fileName: string;
-  fileType: string;
-  dataUrl: string; // Base64 image data URL
-  capturedAt: string;
+  name?: string;
+  fileName?: string;
+  fileType?: string;
+  mimeType?: string;
+  dataUrl?: string; // Base64 image data URL
+  url?: string;
+  sizeBytes?: number;
+  capturedAt?: string;
   capturedBy?: string;
-  fileSize?: number;
+  capturedVia?: string;
+  fileSize?: number | string;
+  uploadedAt?: string;
   notes?: string;
 }
 
@@ -385,6 +412,10 @@ export interface PaymentRecord {
   invoiceNumber: string;
   referenceType: 'Quote' | 'Project' | 'WorkOrder' | 'PurchaseOrder' | 'EmployeeExit';
   referenceId: string;
+  projectId?: string;
+  projectName?: string;
+  milestoneTitle?: string;
+  milestonePercentage?: number;
   referenceTitle: string;
   clientOrVendorName: string;
   isPayable: boolean; // true = PO payout to vendor, false = Receivable from client
@@ -395,7 +426,7 @@ export interface PaymentRecord {
   dueDate: string;
   paidDate?: string;
   status: PaymentStatus;
-  paymentMethod?: 'Bank Transfer / NEFT' | 'UPI' | 'Credit Card' | 'Cheque' | 'Stripe / Online' | 'RTGS';
+  paymentMethod?: 'Bank Transfer / NEFT' | 'UPI' | 'Credit Card' | 'Cheque' | 'Stripe / Online' | 'RTGS' | 'Bank NEFT' | string;
   transactionReference?: string;
   notes?: string;
   attachments?: InvoiceAttachment[];
@@ -410,24 +441,31 @@ export interface SalesRep {
   whatsapp: string;
   avatar: string;
   monthlyQuota: number;
+  monthlyTarget?: number;
   quarterlyQuota: number;
   baseCommissionPct: number;
   bonusMultiplierPct: number; // If margin > 22%
   achievedSalesMonth: number;
+  achievedRevenue?: number;
   achievedSalesQuarter: number;
   wonDealsCount: number;
   activePipelineValue: number;
   calculatedCommission: number;
+  region?: string;
 }
 
 export interface AuditLog {
   id: string;
   timestamp: string;
-  userId: string;
-  userName: string;
-  userRole: UserRole;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'APPROVE' | 'REJECT' | 'AWARD' | 'CONVERT_TO_PROJECT' | 'GENERATE_PR' | 'CONVERT_TO_PO' | 'SEND_TO_VENDOR' | 'PAYMENT_PROCESSED' | 'SYNC_SHEETS' | 'BACKUP_CREATE' | 'BACKUP_RESTORE';
-  entityType: 'LEAD' | 'QUOTE' | 'WORK_ORDER' | 'PROJECT' | 'BOQ' | 'INVENTORY' | 'PR' | 'PO' | 'PAYMENT' | 'SALES_QUOTA' | 'GOOGLE_SHEET' | 'USER' | 'SYSTEM';
+  userId?: string;
+  userName?: string;
+  user?: string;
+  role?: string;
+  module?: string;
+  targetId?: string;
+  userRole?: UserRole;
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'APPROVE' | 'REJECT' | 'AWARD' | 'CONVERT_TO_PROJECT' | 'GENERATE_PR' | 'CONVERT_TO_PO' | 'SEND_TO_VENDOR' | 'PAYMENT_PROCESSED' | 'SYNC_SHEETS' | 'BACKUP_CREATE' | 'BACKUP_RESTORE' | string;
+  entityType: 'LEAD' | 'QUOTE' | 'WORK_ORDER' | 'PROJECT' | 'BOQ' | 'INVENTORY' | 'PR' | 'PO' | 'PAYMENT' | 'SALES_QUOTA' | 'GOOGLE_SHEET' | 'USER' | 'SYSTEM' | string;
   entityId: string;
   summary: string;
   metadata?: Record<string, any>;
@@ -437,7 +475,7 @@ export interface AppNotification {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'warning' | 'success' | 'alert';
+  type: 'info' | 'warning' | 'success' | 'alert' | 'error';
   timestamp: string;
   read: boolean;
   linkTab?: string;
@@ -723,7 +761,7 @@ export interface ClientMaster {
   creditPeriodDays: number;
   paymentTerms: string;
   industry: string;
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'blacklisted';
   notes?: string;
   createdAt: string;
 }
@@ -776,15 +814,24 @@ export type AccountType =
   | 'Equity & Capital'
   | 'Direct Revenue'
   | 'Direct Cost (COGS)'
-  | 'Indirect Expense';
+  | 'Indirect Expense'
+  | 'Asset'
+  | 'Liability'
+  | 'Revenue'
+  | 'Expense'
+  | 'COGS'
+  | string;
 
 export interface ChartOfAccount {
   id: string;
   accountCode: string;
   accountName: string;
+  code?: string;
+  name?: string;
   type: AccountType;
   subCategory: string;
   balance: number;
+  currentBalance?: number;
   openingBalance: number;
   description?: string;
   isSystemAccount?: boolean;
@@ -796,7 +843,13 @@ export type VoucherType =
   | 'Receipt'
   | 'Sales Invoice'
   | 'Purchase Bill'
-  | 'Contra';
+  | 'Contra'
+  | 'JV'
+  | 'RV'
+  | 'PV'
+  | 'Sales'
+  | 'Purchase'
+  | string;
 
 export interface VoucherEntry {
   id: string;
@@ -832,6 +885,8 @@ export interface TDSRecord {
   ratePct: number;
   paymentAmount: number;
   tdsDeducted: number;
+  tdsAmount?: number;
+  description?: string;
   deductDate: string;
   challanNumber?: string;
   bsrCode?: string;
@@ -876,33 +931,43 @@ export interface JobRequisition {
   jobTitle: string;
   department: string;
   location: string;
-  experienceReq: string;
-  employmentType: 'Full-Time' | 'Contract' | 'Site-Based';
+  experienceReq?: string;
+  experienceRequired?: string;
+  employmentType?: 'Full-Time' | 'Contract' | 'Site-Based' | string;
   salaryRange: string;
-  openPositions: number;
-  filledPositions: number;
-  hiringManager: string;
-  status: 'Active / Hiring' | 'On Hold' | 'Closed';
-  kraList: KRAItem[];
-  responsibilities: string[];
-  requirements: string[];
-  certificationsPreferred: string[];
+  openPositions?: number;
+  positionsCount?: number;
+  filledPositions?: number;
+  hiringManager?: string;
+  status: 'Active / Hiring' | 'On Hold' | 'Closed' | 'Active' | 'Draft' | string;
+  kraList?: KRAItem[];
+  kras?: KRAItem[] | any[];
+  responsibilities?: string[];
+  requirements?: string[];
+  certificationsPreferred?: string[];
+  technicalRequirements?: string[];
+  jobSummary?: string;
   createdAt: string;
 }
 
 export interface JobCandidate {
   id: string;
-  reqId: string;
-  jobTitle: string;
+  reqId?: string;
+  requisitionId?: string;
+  jobTitle?: string;
   name: string;
   email: string;
   phone: string;
   currentCompany?: string;
   experienceYears: number;
   currentCtc?: number;
+  currentCTC?: number;
   expectedCtc?: number;
-  stage: 'Applied' | 'Screened' | 'Technical Round' | 'Management Interview' | 'Offer Issued' | 'Hired' | 'Rejected';
+  expectedCTC?: number;
+  noticePeriodDays?: number;
+  stage: 'Applied' | 'Screened' | 'Technical Round' | 'Management Interview' | 'Offer Issued' | 'Offer Letter' | 'Hired' | 'Rejected' | string;
   interviewNotes?: string;
+  interviewFeedback?: string;
   rating: number;
   appliedDate: string;
 }
@@ -910,33 +975,47 @@ export interface JobCandidate {
 export interface Employee {
   id: string;
   empCode: string;
-  name: string;
+  code?: string;
+  name?: string;
   fullName?: string;
   designation: string;
   department: string;
-  email: string;
+  email?: string;
   officialEmail?: string;
   phone: string;
-  dateOfJoining: string;
+  dateOfJoining?: string;
   joiningDate?: string;
   reportingManager?: string;
-  employmentStatus: 'Active' | 'Probation' | 'Notice Period' | 'Separated';
+  employmentStatus?: 'Active' | 'Probation' | 'Notice Period' | 'Separated' | string;
   status?: 'Active' | 'Probation' | 'Notice Period' | 'Separated' | 'Resigned' | string;
-  baseMonthlySalary: number;
-  grossMonthlySalary: number;
-  ctcAnnual: number;
+  baseMonthlySalary?: number;
+  basicSalary?: number;
+  salary?: number;
+  grossMonthlySalary?: number;
+  ctcAnnual?: number;
   annualCTC?: number;
-  pan: string;
-  aadhaar: string;
+  pan?: string;
+  aadhaar?: string;
   uanNumber?: string;
   uan?: string;
   pfNumber?: string;
   esicNumber?: string;
+  esicNo?: string;
+  leavesRemaining?: number;
   bankName?: string;
-  bankAccount: string;
+  bankAccount?: string;
   bankAccountNo?: string;
-  ifscCode: string;
+  ifscCode?: string;
   bankIfsc?: string;
+  bankDetails?:
+    | {
+        bankName?: string;
+        accountNumber?: string;
+        ifscCode?: string;
+        branchName?: string;
+        branch?: string;
+      }
+    | string;
   taxRegime?: 'New Regime' | 'Old Regime';
   casualLeaveBalance?: number;
   sickLeaveBalance?: number;
@@ -949,7 +1028,7 @@ export interface Employee {
     siteAllowance?: number;
     grossMonthlySalary: number;
   };
-  leaveBalances: {
+  leaveBalances?: {
     cl: number; // Casual Leave
     sl: number; // Sick Leave
     pl: number; // Privilege / Earned Leave
@@ -960,19 +1039,23 @@ export interface Employee {
 export interface AttendanceRecord {
   id: string;
   empId: string;
-  empName: string;
+  empName?: string;
+  employeeName?: string;
   empCode: string;
   date: string;
-  status: 'Present' | 'WFH' | 'Site Visit' | 'Half Day' | 'Absent' | 'On Leave';
+  status: 'Present' | 'WFH' | 'Site Visit' | 'Half Day' | 'Absent' | 'On Leave' | 'Late' | string;
   checkInTime?: string;
   checkOutTime?: string;
+  inTime?: string;
+  outTime?: string;
   totalHours?: number;
   siteProjectName?: string;
+  siteAssigned?: string;
   remarks?: string;
   deviceId?: string;
   deviceName?: string;
   deviceLocation?: string;
-  verificationMode?: 'Fingerprint' | 'Face Recognition' | 'RFID Card' | 'Palm Vein' | 'Mobile Geofence';
+  verificationMode?: 'Fingerprint' | 'Face Recognition' | 'RFID Card' | 'Palm Vein' | 'Mobile Geofence' | string;
   isLate?: boolean;
   shiftCode?: string;
 }
@@ -1017,18 +1100,27 @@ export interface AttendancePunchLog {
 export interface TimesheetEntry {
   id: string;
   empId: string;
-  empName: string;
-  weekStartDate: string;
-  weekEndDate: string;
+  empName?: string;
+  employeeName?: string;
+  weekStartDate?: string;
+  weekEndDate?: string;
+  weekEndingDate?: string;
   projectId: string;
   projectName: string;
   taskDescription: string;
-  monHours: number;
-  tueHours: number;
-  wedHours: number;
-  thuHours: number;
-  friHours: number;
-  satHours: number;
+  monHours?: number;
+  tueHours?: number;
+  wedHours?: number;
+  thuHours?: number;
+  friHours?: number;
+  satHours?: number;
+  mondayHours?: number;
+  tuesdayHours?: number;
+  wednesdayHours?: number;
+  thursdayHours?: number;
+  fridayHours?: number;
+  saturdayHours?: number;
+  sundayHours?: number;
   totalHours: number;
   status: 'Submitted' | 'Approved' | 'Rejected';
   approvedBy?: string;
@@ -1037,9 +1129,10 @@ export interface TimesheetEntry {
 export interface LeaveApplication {
   id: string;
   empId: string;
-  empName: string;
+  empName?: string;
+  employeeName?: string;
   empCode: string;
-  leaveType: 'Casual Leave (CL)' | 'Sick Leave (SL)' | 'Earned Leave (PL)' | 'Optional Holiday';
+  leaveType: 'Casual Leave (CL)' | 'Sick Leave (SL)' | 'Earned Leave (PL)' | 'Optional Holiday' | 'CL' | 'SL' | 'PL' | 'OH' | string;
   startDate: string;
   endDate: string;
   totalDays: number;
@@ -1054,7 +1147,8 @@ export interface CompanyHoliday {
   id: string;
   date: string;
   name: string;
-  type: 'National Mandatory' | 'Regional / Festival' | 'Company Event';
+  type: 'National Mandatory' | 'Regional / Festival' | 'Company Event' | 'Gazetted' | string;
+  dayOfWeek?: string;
   optional: boolean;
 }
 
@@ -1094,9 +1188,15 @@ export interface EmployeeSalarySlip {
 export interface PayrollMonth {
   id: string;
   monthYear: string;
+  month?: string;
+  year?: number;
   runDate: string;
+  processedDate?: string;
   totalGross: number;
+  totalGrossSalary?: number;
   totalNet: number;
+  totalNetPayable?: number;
+  totalDeductions?: number;
   totalPfEe: number;
   totalPfEr: number;
   totalEsic: number;
@@ -1105,6 +1205,7 @@ export interface PayrollMonth {
   totalEmployees: number;
   status: 'Draft' | 'Approved' | 'Disbursed';
   payslips: EmployeeSalarySlip[];
+  slips?: EmployeeSalarySlip[];
 }
 
 export interface ExitApprovalStage {
@@ -1233,7 +1334,7 @@ export interface DesignationGrade {
   id: string;
   gradeCode: string; // e.g. L1, L2, L3, L4, L5, L6
   title: string;
-  band: 'Executive Leadership' | 'Senior Management' | 'Middle Engineering' | 'Junior Engineering' | 'Field Operations' | 'Support Staff';
+  band: 'Executive Leadership' | 'Senior Management' | 'Middle Engineering' | 'Junior Engineering' | 'Field Operations' | 'Support Staff' | string;
   minSalaryAnnual: number;
   maxSalaryAnnual: number;
   noticePeriodDays: number;
@@ -1256,7 +1357,7 @@ export interface ShiftMaster {
 export interface CompanyPolicyDocument {
   id: string;
   title: string;
-  category: 'Safety & Site Protocols' | 'Conduct & Ethics' | 'Travel & Per-Diem' | 'Leave & Attendance' | 'Statutory & Compliance';
+  category: 'Safety & Site Protocols' | 'Conduct & Ethics' | 'Travel & Per-Diem' | 'Leave & Attendance' | 'Statutory & Compliance' | string;
   version: string;
   effectiveDate: string;
   summary: string;
@@ -1297,7 +1398,7 @@ export interface OnboardingTask {
   candidateId: string;
   empName: string;
   title: string;
-  department: 'HR' | 'IT Admin' | 'Finance / Payroll' | 'Site HSE Safety' | 'Reporting Manager';
+  department: 'HR' | 'IT Admin' | 'Finance / Payroll' | 'Site HSE Safety' | 'Reporting Manager' | 'HR Admin' | string;
   dueDate: string;
   status: 'Completed' | 'Pending' | 'In Progress';
   completedAt?: string;

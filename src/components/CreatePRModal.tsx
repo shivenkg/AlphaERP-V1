@@ -11,7 +11,7 @@ import {
   Sparkles,
   ShieldAlert
 } from 'lucide-react';
-import { Project, PRItem, UserRole } from '../types';
+import { Project, PRItem, UserRole, InventoryItem } from '../types';
 import { storageService } from '../services/storageService';
 import { RBAC } from '../utils/rbac';
 
@@ -19,6 +19,7 @@ interface CreatePRModalProps {
   isOpen: boolean;
   onClose: () => void;
   projects: Project[];
+  inventory?: InventoryItem[];
   currentRole: UserRole;
   onPRCreated?: () => void;
 }
@@ -27,6 +28,7 @@ export const CreatePRModal: React.FC<CreatePRModalProps> = ({
   isOpen,
   onClose,
   projects,
+  inventory: propInventory,
   currentRole,
   onPRCreated
 }) => {
@@ -52,7 +54,7 @@ export const CreatePRModal: React.FC<CreatePRModalProps> = ({
   if (!isOpen) return null;
 
   const canCreate = RBAC.canCreatePR(currentRole);
-  const inventory = storageService.getInventory();
+  const inventory = propInventory || storageService.getInventory();
 
   const handleAddItem = () => {
     setItems([

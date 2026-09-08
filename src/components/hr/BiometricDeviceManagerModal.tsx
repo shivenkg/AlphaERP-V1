@@ -33,12 +33,14 @@ interface BiometricDeviceManagerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onRefresh?: () => void;
+  onDataChanged?: () => void;
 }
 
 export const BiometricDeviceManagerModal: React.FC<BiometricDeviceManagerModalProps> = ({
   isOpen,
   onClose,
-  onRefresh
+  onRefresh,
+  onDataChanged
 }) => {
   const [activeTab, setActiveTab] = useState<'devices' | 'punch_logs' | 'enrollment'>('devices');
   const [devices, setDevices] = useState<BiometricDevice[]>(storageService.getBiometricDevices());
@@ -78,6 +80,7 @@ export const BiometricDeviceManagerModal: React.FC<BiometricDeviceManagerModalPr
     setDevices(storageService.getBiometricDevices());
     setPunchLogs(storageService.getAttendancePunchLogs());
     if (onRefresh) onRefresh();
+    if (onDataChanged) onDataChanged();
   };
 
   const handleOpenAddForm = () => {

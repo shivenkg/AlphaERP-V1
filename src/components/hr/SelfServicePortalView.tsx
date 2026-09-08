@@ -136,21 +136,39 @@ export const SelfServicePortalView: React.FC<SelfServicePortalViewProps> = ({
     description: 'Site visit taxi fare and local transit for engineering team inspection'
   });
 
-  const currentEmp = safeEmployees.find(e => e.id === selectedEmpId) || safeEmployees[0] || {
+  const fallbackEmployee: EmployeeMaster = {
     id: 'emp-001',
     empCode: 'EMP-001',
     fullName: 'Shivender Kumar',
     name: 'Shivender Kumar',
     designation: 'Managing Director & Operations Head',
     department: 'Management',
+    email: 'shiven.k@gmail.com',
     officialEmail: 'shiven.k@gmail.com',
     phone: '+91 98201 23456',
+    dateOfJoining: '2023-01-15',
+    joiningDate: '2023-01-15',
+    employmentStatus: 'Active',
+    baseMonthlySalary: 120000,
+    grossMonthlySalary: 200000,
+    ctcAnnual: 2400000,
     annualCTC: 2400000,
+    pan: 'ABCDE1234F',
+    aadhaar: '1234 5678 9012',
+    bankAccount: '123456789012',
+    ifscCode: 'HDFC0001234',
     casualLeaveBalance: 12,
     sickLeaveBalance: 8,
     privilegeLeaveBalance: 15,
-    joiningDate: '2023-01-15'
+    leaveBalances: {
+      cl: 12,
+      sl: 8,
+      pl: 15
+    },
+    avatar: ''
   };
+
+  const currentEmp: EmployeeMaster = safeEmployees.find(e => e.id === selectedEmpId) || safeEmployees[0] || fallbackEmployee;
 
   // Safe Data Retrievals
   const allAssets = (storageService.getEmployeeAssets() || []).filter(a => a.empId === currentEmp?.id);
@@ -1182,7 +1200,7 @@ export const SelfServicePortalView: React.FC<SelfServicePortalViewProps> = ({
                                 netPayable: netVal,
                                 netSalary: netVal
                               };
-                              generateEmployeePayslipPDF(pm, currentEmp, safeSlipObj);
+                              generateEmployeePayslipPDF(currentEmp, `${monthName} ${yearNum}`, safeSlipObj);
                             }}
                             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition-all shadow-2xs"
                             title="Download official PDF salary slip"

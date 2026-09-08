@@ -528,7 +528,7 @@ export const HRView: React.FC<HRViewProps> = ({
             </button>
           )}
 
-          {activeTab === 'jds' && (
+          {activeTab === 'recruitment' && recruitmentSubTab === 'jds' && (
             <button
               onClick={() => {
                 handleLoadTemplate(0);
@@ -541,7 +541,7 @@ export const HRView: React.FC<HRViewProps> = ({
             </button>
           )}
 
-          {activeTab === 'candidates' && (
+          {activeTab === 'recruitment' && recruitmentSubTab === 'candidates' && (
             <button
               onClick={() => setCandidateModalOpen(true)}
               className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-sm transition-all"

@@ -167,7 +167,7 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
       try {
         const res = storageService.requestEmailOtp(
           targetEmail,
-          authMode,
+          authMode === 'signin' ? 'login' : 'signup',
           authMode === 'signup'
             ? {
                 name: signupName.trim(),

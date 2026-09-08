@@ -78,13 +78,25 @@ export const ESSAttendanceLogView: React.FC<ESSAttendanceLogViewProps> = ({
     switch (mode) {
       case 'Face Recognition':
       case 'FACE':
-        return <ScanFace className="w-3.5 h-3.5 text-indigo-600" title="Face Recognition Terminal" />;
+        return (
+          <span title="Face Recognition Terminal" className="inline-flex items-center">
+            <ScanFace className="w-3.5 h-3.5 text-indigo-600" />
+          </span>
+        );
       case 'RFID Card':
       case 'CARD':
       case 'RFID':
-        return <CreditCard className="w-3.5 h-3.5 text-amber-600" title="RFID Card Tap" />;
+        return (
+          <span title="RFID Card Tap" className="inline-flex items-center">
+            <CreditCard className="w-3.5 h-3.5 text-amber-600" />
+          </span>
+        );
       default:
-        return <Fingerprint className="w-3.5 h-3.5 text-emerald-600" title="Biometric Optical Fingerprint" />;
+        return (
+          <span title="Biometric Optical Fingerprint" className="inline-flex items-center">
+            <Fingerprint className="w-3.5 h-3.5 text-emerald-600" />
+          </span>
+        );
     }
   };
 

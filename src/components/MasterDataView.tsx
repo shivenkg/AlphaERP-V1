@@ -637,8 +637,8 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
             v.pan || '',
             v.paymentTerms || '',
             v.rating || '',
-            v.bankDetails?.accountNumber || '',
-            v.bankDetails?.ifscCode || ''
+            typeof v.bankDetails === 'object' ? v.bankDetails?.accountNumber || '' : (typeof v.bankDetails === 'string' ? v.bankDetails : ''),
+            typeof v.bankDetails === 'object' ? v.bankDetails?.ifscCode || '' : ''
           ])
         ];
         break;
