@@ -243,7 +243,9 @@ export const TrainingTalentView: React.FC<TrainingTalentViewProps> = ({
                           <div className="font-bold text-slate-900 flex items-center gap-1.5">
                             <span>{sk.skillName}</span>
                             {sk.certified && (
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 inline" title="Certified" />
+                              <span title="Certified">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 inline" />
+                              </span>
                             )}
                           </div>
                           <div className="text-[10px] text-slate-500 mt-0.5">{sk.category}</div>

@@ -36,9 +36,10 @@ import {
   Share2,
   Flame,
   Users,
-  TrendingUp
+  TrendingUp,
+  UserCheck
 } from 'lucide-react';
-import { Project, BOQItem, InventoryItem, PurchaseRequisition, ProjectPriority } from '../types';
+import { Project, BOQItem, InventoryItem, PurchaseRequisition, ProjectPriority, UserProfile } from '../types';
 import { storageService } from '../services/storageService';
 import { ProjectCompletionBillModal } from './ProjectCompletionBillModal';
 import { ProjectMarginExpenseSparkline } from './ProjectMarginExpenseSparkline';
@@ -46,12 +47,14 @@ import { ProjectSummaryPdfModal } from './ProjectSummaryPdfModal';
 import { ProjectActivityFeed } from './ProjectActivityFeed';
 import { useToastNotification } from '../context/ToastNotificationContext';
 import { MultiSelectFilterDropdown, MultiSelectOption } from './common';
+import { exportTableToCSV } from '../utils/tableExportHelper';
 
 export type ProjectVisibilityFilter = 'active' | 'completed' | 'all';
 
 interface ProjectsBOQViewProps {
   projects: Project[];
   inventory: InventoryItem[];
+  currentUser?: UserProfile;
   onNavigateToProcurement: () => void;
   onNavigateToCostAnalysis?: () => void;
   onOpenSheetsModal: () => void;
@@ -60,6 +63,7 @@ interface ProjectsBOQViewProps {
 export const ProjectsBOQView: React.FC<ProjectsBOQViewProps> = ({
   projects,
   inventory,
+  currentUser,
   onNavigateToProcurement,
   onNavigateToCostAnalysis,
   onOpenSheetsModal
@@ -70,6 +74,7 @@ export const ProjectsBOQView: React.FC<ProjectsBOQViewProps> = ({
   const [projectDetailTab, setProjectDetailTab] = useState<'boq' | 'activity'>('boq');
   const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
   const [selectedManagers, setSelectedManagers] = useState<string[]>([]);
+  const [personalViewOnly, setPersonalViewOnly] = useState<boolean>(false);
   const [search, setSearch] = useState('');
   const [boqCategoryFilter, setBoqCategoryFilter] = useState('ALL');
   const [selectedBoqItemIds, setSelectedBoqItemIds] = useState<string[]>([]);
@@ -91,6 +96,20 @@ export const ProjectsBOQView: React.FC<ProjectsBOQViewProps> = ({
     delayReason: '',
     delayMitigationPlan: ''
   });
+
+  const activeUser = currentUser || storageService.getCurrentUser();
+
+  const personalProjectsCount = useMemo(() => {
+    const userName = (activeUser?.name || '').toLowerCase();
+    const userId = (activeUser?.id || '').toLowerCase();
+    return (projects || []).filter((p) => {
+      const pm = (p.projectManager || '').toLowerCase();
+      return Boolean(
+        (userName && (pm.includes(userName) || userName.includes(pm))) ||
+        (userId && pm.includes(userId))
+      );
+    }).length;
+  }, [projects, activeUser]);
 
   // Priority options with dynamic counts
   const priorityOptions: MultiSelectOption[] = useMemo(() => {
@@ -146,15 +165,74 @@ export const ProjectsBOQView: React.FC<ProjectsBOQViewProps> = ({
       const projPriority = p.priority || 'Medium';
       const matchesPriority = selectedPriorities.length === 0 || selectedPriorities.includes(projPriority);
       const matchesManager = selectedManagers.length === 0 || selectedManagers.some((m) => (p.projectManager || '').includes(m));
-      return matchesPriority && matchesManager;
-    });
-  }, [projects, visibilityFilter, activeProjects, completedProjects, selectedPriorities, selectedManagers]);
 
-  const hasProjectFilters = selectedPriorities.length > 0 || selectedManagers.length > 0;
+      let matchesPersonal = true;
+      if (personalViewOnly) {
+        const userName = (activeUser?.name || '').toLowerCase();
+        const userId = (activeUser?.id || '').toLowerCase();
+        const pm = (p.projectManager || '').toLowerCase();
+        matchesPersonal = Boolean(
+          (userName && (pm.includes(userName) || userName.includes(pm))) ||
+          (userId && pm.includes(userId))
+        );
+      }
+
+      return matchesPriority && matchesManager && matchesPersonal;
+    });
+  }, [projects, visibilityFilter, activeProjects, completedProjects, selectedPriorities, selectedManagers, personalViewOnly, activeUser]);
+
+  const hasProjectFilters = selectedPriorities.length > 0 || selectedManagers.length > 0 || personalViewOnly;
 
   const resetProjectFilters = () => {
     setSelectedPriorities([]);
     setSelectedManagers([]);
+    setPersonalViewOnly(false);
+  };
+
+  const handleExportFilteredProjects = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const filename = `HVAC_Projects_Ledger_${personalViewOnly ? 'Personal_' : ''}${today}.csv`;
+    const headers = [
+      'Project #',
+      'Project Name',
+      'Client',
+      'Contract Value (INR)',
+      'Total Estimated Cost (INR)',
+      'Target Margin %',
+      'Progress %',
+      'Project Manager',
+      'Status',
+      'Priority',
+      'Start Date',
+      'Target Completion',
+      'Schedule Health',
+      'Delay Days',
+      'Delay Category',
+      'Delay Reason',
+      'Shortage Items Count',
+      'Total BOQ Items'
+    ];
+    const rows = displayedProjects.map((p) => [
+      p.projectNumber || '',
+      p.projectName || '',
+      p.clientName || '',
+      p.contractValue || 0,
+      p.totalEstimatedCost || 0,
+      p.targetMarginPct || 0,
+      p.progressPct || 0,
+      p.projectManager || '',
+      p.status || '',
+      p.priority || 'Medium',
+      p.startDate || '',
+      p.targetCompletionDate || '',
+      p.isDelayed ? 'DELAYED' : 'ON SCHEDULE',
+      p.delayDays || 0,
+      p.delayCategory || '',
+      p.delayReason || '',
+      p.totalShortageItemsCount || 0,
+      (p.boqItems || []).length
+    ]);
+    exportTableToCSV(filename, headers, rows);
   };
 
   const currentProject = displayedProjects.find((p) => p.id === selectedProjectId) || displayedProjects[0] || (projects || [])[0];
@@ -227,6 +305,41 @@ export const ProjectsBOQView: React.FC<ProjectsBOQViewProps> = ({
         return matchesCategory && matchesSearch;
       })
     : [];
+
+  const handleExportProjectBOQ = () => {
+    if (!currentProject) return;
+    const today = new Date().toISOString().split('T')[0];
+    const filename = `BOQ_${currentProject.projectNumber}_${today}.csv`;
+    const headers = [
+      'SKU',
+      'Description',
+      'Category',
+      'Required Qty',
+      'Unit',
+      'In Stock Qty',
+      'Shortage Qty',
+      'Unit Cost (INR)',
+      'Total Cost (INR)',
+      'Fulfillment Status',
+      'Linked PR #',
+      'Linked PO #'
+    ];
+    const rows = filteredBoqItems.map((b) => [
+      b.sku || '',
+      b.description || '',
+      b.category || '',
+      b.requiredQty || 0,
+      b.unit || '',
+      b.inStockQty || 0,
+      b.shortageQty || 0,
+      b.unitCost || 0,
+      b.totalCost || 0,
+      b.status || '',
+      b.prNumber || '',
+      b.poNumber || ''
+    ]);
+    exportTableToCSV(filename, headers, rows);
+  };
 
   const shortageItems = currentProject
     ? currentProject.boqItems.filter((item) => item.shortageQty > 0 && item.status === 'Shortage - PR Needed')
@@ -443,9 +556,41 @@ export const ProjectsBOQView: React.FC<ProjectsBOQViewProps> = ({
               <span>Cost Variance</span>
             </button>
           )}
+
+          {/* Personal View Toggle */}
+          <button
+            onClick={() => setPersonalViewOnly(!personalViewOnly)}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+              personalViewOnly
+                ? 'bg-indigo-50 text-indigo-700 border-indigo-300 shadow-xs ring-2 ring-indigo-500/20'
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+            }`}
+            title="Toggle Personal View: Show only projects managed by you"
+          >
+            <UserCheck className={`w-3.5 h-3.5 ${personalViewOnly ? 'text-indigo-600' : 'text-slate-400'}`} />
+            <span>Personal View</span>
+            <span
+              className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                personalViewOnly ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
+              }`}
+            >
+              {personalProjectsCount}
+            </span>
+          </button>
+
+          {/* Export Projects CSV / Excel */}
+          <button
+            onClick={handleExportFilteredProjects}
+            className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 hover:text-emerald-700 border border-slate-200 hover:border-emerald-400 text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+            title="Export currently filtered projects list to CSV / Excel spreadsheet"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Export CSV/Excel</span>
+          </button>
+
           <button
             onClick={onOpenSheetsModal}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
             <span>Sync BOQ</span>
@@ -784,6 +929,16 @@ export const ProjectsBOQView: React.FC<ProjectsBOQViewProps> = ({
               >
                 <FileText className="w-3.5 h-3.5 text-blue-600" />
                 <span>Export Client PDF</span>
+              </button>
+
+              {/* Export BOQ to CSV/Excel */}
+              <button
+                onClick={handleExportProjectBOQ}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 hover:text-emerald-700 text-xs font-bold rounded-xl border border-slate-200 hover:border-emerald-400 transition-colors shadow-2xs cursor-pointer"
+                title="Export this project's BOQ items table to CSV / Excel spreadsheet"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Export BOQ</span>
               </button>
 
               <button

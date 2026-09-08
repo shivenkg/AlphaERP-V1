@@ -214,10 +214,10 @@ export const InventoryWarehouseView: React.FC<InventoryWarehouseViewProps> = ({
           <button
             onClick={handleDownloadCSV}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
-            title="Download current filtered inventory table as CSV"
+            title="Export currently filtered inventory table to CSV / Excel spreadsheet"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Download CSV</span>
+            <span>Export CSV / Excel</span>
           </button>
 
           <button

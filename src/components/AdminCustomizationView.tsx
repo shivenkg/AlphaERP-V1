@@ -43,6 +43,8 @@ import { ROLE_DEFINITIONS } from '../utils/rbac';
 import { NumberSeriesAdminSection } from './NumberSeriesAdminSection';
 import { ReportTemplateManager } from './ReportTemplateManager';
 import { RoleModulePermissionsManager } from './RoleModulePermissionsManager';
+import { GoogleSheetsAdminSection } from './GoogleSheetsAdminSection';
+import { FileSpreadsheet } from 'lucide-react';
 
 interface AdminCustomizationViewProps {
   currentUser: UserProfile;
@@ -65,7 +67,7 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
   } = useFontSize();
   const [settings, setSettings] = useState<SystemSettings>(storageService.getSystemSettings());
   const [activeSubTab, setActiveSubTab] = useState<
-    'branding' | 'report_templates' | 'commercial' | 'procurement' | 'number_series' | 'banking' | 'modules' | 'roles' | 'role_modules' | 'backup'
+    'branding' | 'report_templates' | 'commercial' | 'procurement' | 'number_series' | 'banking' | 'modules' | 'roles' | 'role_modules' | 'google_sheets' | 'backup'
   >('branding');
 
   // Form states for inclusion/exclusion additions
@@ -403,6 +405,18 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
         </button>
 
         <button
+          onClick={() => setActiveSubTab('google_sheets')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+            activeSubTab === 'google_sheets'
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+          <span>10. Google Sheets & API</span>
+        </button>
+
+        <button
           onClick={() => setActiveSubTab('backup')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
             activeSubTab === 'backup'
@@ -411,7 +425,7 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
           }`}
         >
           <Download className="w-4 h-4" />
-          <span>10. Backup & Restore</span>
+          <span>11. Backup & Restore</span>
         </button>
       </div>
 
@@ -1334,7 +1348,12 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
         />
       )}
 
-      {/* TAB 10: BACKUP, RESTORE & FACTORY RESET */}
+      {/* TAB 10: GOOGLE SHEETS API & PERSISTENT CLOUD INTEGRATION */}
+      {activeSubTab === 'google_sheets' && (
+        <GoogleSheetsAdminSection />
+      )}
+
+      {/* TAB 11: BACKUP, RESTORE & FACTORY RESET */}
       {activeSubTab === 'backup' && (
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
           <div>

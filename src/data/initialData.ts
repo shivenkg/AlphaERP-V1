@@ -1869,6 +1869,7 @@ export const INITIAL_GOOGLE_SHEETS_CONFIG: GoogleSheetsSyncConfig = {
   spreadsheetId: null,
   spreadsheetUrl: null,
   spreadsheetName: 'HVAC_Enterprise_ERP_Master_Database',
+  apiKey: null,
   lastSyncAt: null,
   syncStatus: 'idle',
   autoSync: true,

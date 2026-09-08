@@ -689,6 +689,7 @@ export function App() {
               <ProjectsBOQView
                 projects={data.projects}
                 inventory={data.inventory}
+                currentUser={currentUser}
                 onNavigateToProcurement={() => setActiveTab('procurement')}
                 onNavigateToCostAnalysis={() => setActiveTab('cost_analysis')}
                 onOpenSheetsModal={() => setIsSheetsModalOpen(true)}

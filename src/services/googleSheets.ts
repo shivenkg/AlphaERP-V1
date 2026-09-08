@@ -30,15 +30,25 @@ class GoogleSheetsService {
   private tokenExpiry: number = 0;
   private currentUser: FirebaseUser | null = null;
   private isSigningIn: boolean = false;
+  private readonly STORAGE_KEY_TOKEN = 'ALPHA_ERP_GSHEETS_AUTH_TOKEN';
+  private readonly STORAGE_KEY_EXPIRY = 'ALPHA_ERP_GSHEETS_AUTH_EXPIRY';
 
   constructor() {
+    // Load persistently saved token or API key from localStorage
+    try {
+      const savedToken = localStorage.getItem(this.STORAGE_KEY_TOKEN);
+      const savedExpiry = localStorage.getItem(this.STORAGE_KEY_EXPIRY);
+      if (savedToken && savedExpiry && Number(savedExpiry) > Date.now()) {
+        this.accessToken = savedToken;
+        this.tokenExpiry = Number(savedExpiry);
+      }
+    } catch {
+      // localStorage may be restricted in sandbox
+    }
+
     // Listen for auth state changes
     onAuthStateChanged(auth, (user) => {
       this.currentUser = user;
-      if (!user) {
-        this.accessToken = null;
-        this.tokenExpiry = 0;
-      }
     });
   }
 
@@ -50,16 +60,65 @@ class GoogleSheetsService {
     return !!this.accessToken && Date.now() < this.tokenExpiry;
   }
 
-  public setToken(token: string, expiresInSeconds: number = 3600) {
+  public setToken(token: string, expiresInSeconds: number = 86400 * 30) {
     this.accessToken = token;
     this.tokenExpiry = Date.now() + expiresInSeconds * 1000;
+    try {
+      localStorage.setItem(this.STORAGE_KEY_TOKEN, token);
+      localStorage.setItem(this.STORAGE_KEY_EXPIRY, String(this.tokenExpiry));
+    } catch {}
   }
 
   public getAccessToken(): string | null {
-    if (this.hasValidToken()) {
+    if (this.hasValidToken() && this.accessToken) {
       return this.accessToken;
     }
+    // Check saved config in storageService
+    const config = storageService.getGoogleSheetsConfig();
+    if (config?.apiKey && config.apiKey.trim()) {
+      return config.apiKey.trim();
+    }
+    try {
+      const saved = localStorage.getItem(this.STORAGE_KEY_TOKEN);
+      if (saved) return saved;
+    } catch {}
     return null;
+  }
+
+  /**
+   * Save API Key and Sheet ID persistently from Admin Configuration Panel
+   */
+  public saveConfigCredentials(spreadsheetId: string, apiKey: string): { spreadsheetId: string; spreadsheetUrl: string } {
+    let cleanId = (spreadsheetId || '').trim();
+    const match = cleanId.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (match && match[1]) {
+      cleanId = match[1];
+    }
+    const cleanApiKey = (apiKey || '').trim();
+    const spreadsheetUrl = cleanId ? `https://docs.google.com/spreadsheets/d/${cleanId}/edit` : null;
+
+    storageService.updateGoogleSheetsConfig({
+      spreadsheetId: cleanId || null,
+      spreadsheetUrl,
+      apiKey: cleanApiKey || null,
+      syncStatus: 'idle'
+    });
+
+    if (cleanApiKey) {
+      this.setToken(cleanApiKey, 86400 * 30);
+    }
+
+    storageService.logAudit(
+      'UPDATE',
+      'GOOGLE_SHEET',
+      cleanId || 'CONFIG',
+      `Google Sheets API key & Sheet ID updated and saved via Admin Configuration Panel`
+    );
+
+    return {
+      spreadsheetId: cleanId,
+      spreadsheetUrl: spreadsheetUrl || ''
+    };
   }
 
   // Sign in to Google Workspace with popup to acquire Sheets & Drive scopes
@@ -592,6 +651,7 @@ class GoogleSheetsService {
 
       let token = this.getAccessToken();
       if (!token) {
+        // Only prompt if no saved API key or token was provided
         const authRes = await this.signInWithGoogle();
         token = authRes.token;
       }
@@ -599,12 +659,17 @@ class GoogleSheetsService {
       const tabs = this.generateAllSheetTabsData();
 
       // First check if the spreadsheet exists and get existing sheet tabs
+      const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: authHeader }
       });
 
+      if (metaRes.status === 401) {
+        throw new Error('Google Sheets authorization expired or invalid API Key. Please update your API key in the Admin Configuration Panel.');
+      }
+
       if (metaRes.status === 404) {
-        throw new Error(`The linked Google Sheet (ID: ${spreadsheetId}) was not found in Google Drive. It may have been deleted or moved. Please create a new sheet or link another URL.`);
+        throw new Error(`The linked Google Sheet (ID: ${spreadsheetId}) was not found in Google Drive. Please verify the Sheet ID in the Admin Configuration Panel.`);
       }
 
       if (!metaRes.ok) {
@@ -621,7 +686,7 @@ class GoogleSheetsService {
         await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: authHeader,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
@@ -647,7 +712,7 @@ class GoogleSheetsService {
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: authHeader,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({

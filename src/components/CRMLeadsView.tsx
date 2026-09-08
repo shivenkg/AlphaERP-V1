@@ -19,18 +19,22 @@ import {
   AlertCircle,
   MoreVertical,
   ExternalLink,
-  Flame
+  Flame,
+  UserCheck,
+  Download
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { Lead, LeadStatus, LeadSource, SalesRep, Quote } from '../types';
+import { Lead, LeadStatus, LeadSource, SalesRep, Quote, UserProfile } from '../types';
 import { CommunicationService } from '../services/whatsappEmailService';
 import { storageService } from '../services/storageService';
 import { MultiSelectFilterDropdown, MultiSelectOption } from './common';
+import { exportTableToCSV } from '../utils/tableExportHelper';
 
 interface CRMLeadsViewProps {
   leads: Lead[];
   quotes: Quote[];
   salesReps: SalesRep[];
+  currentUser?: UserProfile;
   onOpenNewLead: () => void;
   onCreateQuoteForLead: (lead: Lead) => void;
   onAwardLead: (lead: Lead) => void;
@@ -59,6 +63,7 @@ export const CRMLeadsView: React.FC<CRMLeadsViewProps> = ({
   leads,
   quotes,
   salesReps,
+  currentUser,
   onOpenNewLead,
   onCreateQuoteForLead,
   onAwardLead,
@@ -69,6 +74,24 @@ export const CRMLeadsView: React.FC<CRMLeadsViewProps> = ({
   const [selectedSource, setSelectedSource] = useState<string>('ALL');
   const [selectedReps, setSelectedReps] = useState<string[]>([]);
   const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
+  const [personalViewOnly, setPersonalViewOnly] = useState<boolean>(false);
+
+  // Active user for personal view
+  const activeUser = currentUser || storageService.getCurrentUser();
+
+  // Personal leads count
+  const personalLeadsCount = React.useMemo(() => {
+    const userName = (activeUser?.name || '').toLowerCase();
+    const userId = (activeUser?.id || '').toLowerCase();
+    return (leads || []).filter((lead) => {
+      const repId = (lead.assignedTo || '').toLowerCase();
+      const repName = (lead.assignedToName || '').toLowerCase();
+      return Boolean(
+        (userId && repId === userId) ||
+        (userName && repName && (repName.includes(userName) || userName.includes(repName)))
+      );
+    }).length;
+  }, [leads, activeUser]);
 
   // Rep options with dynamic count and avatar
   const repOptions: MultiSelectOption[] = React.useMemo(() => {
@@ -117,16 +140,67 @@ export const CRMLeadsView: React.FC<CRMLeadsViewProps> = ({
     const matchesRep = selectedReps.length === 0 || selectedReps.includes(lead.assignedTo);
     const matchesPriority = selectedPriorities.length === 0 || selectedPriorities.includes(lead.priority);
 
-    return matchesSearch && matchesSource && matchesRep && matchesPriority;
+    let matchesPersonal = true;
+    if (personalViewOnly) {
+      const userName = (activeUser?.name || '').toLowerCase();
+      const userId = (activeUser?.id || '').toLowerCase();
+      const repId = (lead.assignedTo || '').toLowerCase();
+      const repName = (lead.assignedToName || '').toLowerCase();
+      matchesPersonal = Boolean(
+        (userId && repId === userId) ||
+        (userName && repName && (repName.includes(userName) || userName.includes(repName)))
+      );
+    }
+
+    return matchesSearch && matchesSource && matchesRep && matchesPriority && matchesPersonal;
   });
 
-  const hasActiveFilters = search.trim() !== '' || selectedSource !== 'ALL' || selectedReps.length > 0 || selectedPriorities.length > 0;
+  const hasActiveFilters = search.trim() !== '' || selectedSource !== 'ALL' || selectedReps.length > 0 || selectedPriorities.length > 0 || personalViewOnly;
 
   const resetAllFilters = () => {
     setSearch('');
     setSelectedSource('ALL');
     setSelectedReps([]);
     setSelectedPriorities([]);
+    setPersonalViewOnly(false);
+  };
+
+  const handleExportFilteredLeads = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const filename = `HVAC_CRM_Leads_${personalViewOnly ? 'Personal_' : ''}${today}.csv`;
+    const headers = [
+      'Lead #',
+      'Company Name',
+      'Client Contact',
+      'Phone',
+      'Email',
+      'City',
+      'HVAC System Type',
+      'Capacity (TR)',
+      'Estimated Value (INR)',
+      'Source',
+      'Stage / Pipeline Status',
+      'Priority',
+      'Assigned Sales Rep',
+      'Created Date'
+    ];
+    const rows = filteredLeads.map((l) => [
+      l.leadNumber || '',
+      l.companyName || '',
+      l.clientName || '',
+      l.phone || '',
+      l.email || '',
+      l.city || '',
+      l.hvacType || '',
+      l.capacityTR || 0,
+      l.estimatedValue || 0,
+      l.source || '',
+      l.status || '',
+      l.priority || '',
+      l.assignedToName || l.assignedTo || '',
+      l.createdAt ? new Date(l.createdAt).toLocaleDateString() : ''
+    ]);
+    exportTableToCSV(filename, headers, rows);
   };
 
   const getNextStage = (current: LeadStatus): LeadStatus | null => {
@@ -221,9 +295,40 @@ export const CRMLeadsView: React.FC<CRMLeadsViewProps> = ({
             </button>
           </div>
 
+          {/* Personal View Toggle */}
+          <button
+            onClick={() => setPersonalViewOnly(!personalViewOnly)}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+              personalViewOnly
+                ? 'bg-indigo-50 text-indigo-700 border-indigo-300 shadow-xs ring-2 ring-indigo-500/20'
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+            }`}
+            title="Toggle Personal View: Only display leads assigned to you"
+          >
+            <UserCheck className={`w-3.5 h-3.5 ${personalViewOnly ? 'text-indigo-600' : 'text-slate-400'}`} />
+            <span>Personal View</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                personalViewOnly ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
+              }`}
+            >
+              {personalLeadsCount}
+            </span>
+          </button>
+
+          {/* Export CSV / Excel */}
+          <button
+            onClick={handleExportFilteredLeads}
+            className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 hover:text-emerald-700 border border-slate-200 hover:border-emerald-400 text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+            title="Export currently filtered leads to CSV / Excel spreadsheet"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Export CSV/Excel</span>
+          </button>
+
           <button
             onClick={onOpenNewLead}
-            className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add Lead</span>

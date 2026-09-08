@@ -447,6 +447,7 @@ export interface GoogleSheetsSyncConfig {
   spreadsheetId: string | null;
   spreadsheetUrl: string | null;
   spreadsheetName: string;
+  apiKey?: string | null;
   lastSyncAt: string | null;
   syncStatus: 'idle' | 'syncing' | 'success' | 'error';
   autoSync: boolean;
