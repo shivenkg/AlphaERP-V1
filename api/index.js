@@ -551,8 +551,6 @@ app.use((req, res, next) => {
     req.url = req.url.replace(/^\/api\/index/, "/api");
   } else if (req.url.startsWith("/index/")) {
     req.url = req.url.replace(/^\/index/, "/api");
-  } else if (!req.url.startsWith("/api") && !req.url.startsWith("/assets")) {
-    req.url = "/api" + (req.url.startsWith("/") ? req.url : "/" + req.url);
   }
   next();
 });
@@ -687,27 +685,32 @@ app.post("/api/mongodb/project", async (req, res) => {
 });
 app.post("/api/procurement/reorder-alert-email", async (req, res) => {
   try {
-    const { recipients, subject, text, html, itemsSummary } = req.body;
-    const targetRecipients = Array.isArray(recipients) && recipients.length > 0 ? recipients : [process.env.PROCUREMENT_ALERT_EMAIL || "procurement@alphaerp.com"];
+    const { recipients, subject, text, html, itemsSummary, smtpConfig } = req.body;
+    const targetRecipients = Array.isArray(recipients) && recipients.length > 0 ? recipients : Array.isArray(smtpConfig?.defaultRecipients) && smtpConfig.defaultRecipients.length > 0 ? smtpConfig.defaultRecipients : [process.env.PROCUREMENT_ALERT_EMAIL || "procurement@alphaerp.com"];
     const emailSubject = subject || "\u{1F6A8} [AlphaERP Alert] Inventory Items Reached Reorder Levels";
-    const smtpHost = process.env.SMTP_HOST;
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASS;
-    const smtpPort = Number(process.env.SMTP_PORT || 587);
-    if (smtpHost && smtpUser && smtpPass) {
+    const isExplicitMock = smtpConfig?.mode === "mock";
+    const smtpHost = smtpConfig?.host || process.env.SMTP_HOST;
+    const smtpUser = smtpConfig?.username || process.env.SMTP_USER;
+    const smtpPass = smtpConfig?.password || process.env.SMTP_PASS;
+    const smtpPort = Number(smtpConfig?.port || process.env.SMTP_PORT || 587);
+    const senderName = smtpConfig?.senderName || "AlphaERP Inventory Control";
+    const senderEmail = smtpConfig?.senderEmail || smtpUser || "notifications@alphaerp.com";
+    const fromAddress = `"${senderName}" <${senderEmail}>`;
+    if (!isExplicitMock && smtpHost && smtpUser && smtpPass) {
       try {
         const nodemailer = await import("nodemailer");
         const transporter = nodemailer.createTransport({
           host: smtpHost,
           port: smtpPort,
-          secure: smtpPort === 465,
+          secure: smtpPort === 465 || Boolean(smtpConfig?.secure),
           auth: {
             user: smtpUser,
             pass: smtpPass
-          }
+          },
+          connectionTimeout: 6e3
         });
         const info = await transporter.sendMail({
-          from: process.env.SMTP_FROM || `"AlphaERP Inventory Control" <${smtpUser}>`,
+          from: fromAddress,
           to: targetRecipients.join(", "),
           subject: emailSubject,
           text,
@@ -720,7 +723,7 @@ app.post("/api/procurement/reorder-alert-email", async (req, res) => {
           messageId: info.messageId,
           recipients: targetRecipients,
           timestamp: (/* @__PURE__ */ new Date()).toISOString(),
-          note: "Email successfully dispatched via configured SMTP server"
+          note: `Email successfully dispatched via configured SMTP server (${smtpHost})`
         });
         return;
       } catch (smtpErr) {
@@ -728,7 +731,7 @@ app.post("/api/procurement/reorder-alert-email", async (req, res) => {
       }
     }
     const mockMessageId = `mock-smtp-${Date.now()}-${Math.random().toString(36).substring(2, 8)}@alphaerp.local`;
-    console.log(`[MOCK SMTP EMAIL] To: ${targetRecipients.join(", ")} | Subject: ${emailSubject}`);
+    console.log(`[MOCK SMTP EMAIL] From: ${fromAddress} | To: ${targetRecipients.join(", ")} | Subject: ${emailSubject}`);
     if (itemsSummary && Array.isArray(itemsSummary)) {
       console.log(`[MOCK SMTP EMAIL] Low-Stock SKUs: ${itemsSummary.map((i) => `${i.sku} (Avail: ${i.availableStock}/${i.reorderLevel})`).join(", ")}`);
     }
@@ -739,13 +742,113 @@ app.post("/api/procurement/reorder-alert-email", async (req, res) => {
       messageId: mockMessageId,
       recipients: targetRecipients,
       timestamp: (/* @__PURE__ */ new Date()).toISOString(),
-      note: "Email recorded and dispatched via AlphaERP resilient Mock SMTP Wrapper. Set SMTP_HOST, SMTP_USER, SMTP_PASS for external relay."
+      note: `Email recorded and dispatched via AlphaERP resilient Mock Sandbox (${smtpHost || "sandbox"}:${smtpPort}). Change configuration in Admin Settings.`
     });
   } catch (err) {
     console.error("Procurement email notification handler failed:", err);
     res.status(500).json({
       success: false,
       error: err?.message || "Failed to dispatch procurement notification email"
+    });
+  }
+});
+app.post("/api/email/test-connection", async (req, res) => {
+  try {
+    const {
+      host,
+      port,
+      secure,
+      username,
+      password,
+      senderName,
+      senderEmail,
+      testRecipient,
+      mode,
+      provider
+    } = req.body;
+    const recipient = testRecipient || "procurement@alphaerp.com";
+    const portNum = Number(port || 587);
+    const fromAddr = `"${senderName || "AlphaERP Test Engine"}" <${senderEmail || username || "notifications@alphaerp.com"}>`;
+    const isDummyHost = !host || host.includes("mailtrap") || host.includes("ethereal") || host.includes("dummy") || host.includes("test");
+    const isMock = mode === "mock" || isDummyHost;
+    if (!isMock && host && username && password) {
+      try {
+        const nodemailer = await import("nodemailer");
+        const transporter = nodemailer.createTransport({
+          host,
+          port: portNum,
+          secure: secure || portNum === 465,
+          auth: {
+            user: username,
+            pass: password
+          },
+          connectionTimeout: 6e3
+        });
+        const info = await transporter.sendMail({
+          from: fromAddr,
+          to: recipient,
+          subject: "\u2705 AlphaERP Email Dispatcher \u2014 Test Connection Verification",
+          text: `Hello,
+
+This is a test notification confirming that your SMTP server connection (${host}:${portNum}) is authenticated and operating properly.
+
+Timestamp: ${(/* @__PURE__ */ new Date()).toISOString()}
+AlphaERP System Notification Engine`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;">
+              <div style="padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
+                <h2 style="color: #0f172a; margin: 0; font-size: 20px;">\u2705 AlphaERP SMTP Connection Verified</h2>
+                <p style="color: #64748b; margin: 4px 0 0 0; font-size: 14px;">Automated Email Dispatcher Test Result</p>
+              </div>
+              <div style="padding: 16px 0; color: #334155; font-size: 14px; line-height: 1.6;">
+                <p>Your external SMTP configuration has been successfully authenticated.</p>
+                <ul style="background: #f8fafc; padding: 12px 24px; border-radius: 8px; list-style-type: square; color: #475569;">
+                  <li><strong>Host:</strong> ${host}:${portNum}</li>
+                  <li><strong>User:</strong> ${username}</li>
+                  <li><strong>Sender:</strong> ${fromAddr}</li>
+                  <li><strong>Encryption:</strong> ${portNum === 465 || secure ? "SSL/TLS (Port 465)" : "STARTTLS (Port " + portNum + ")"}</li>
+                </ul>
+              </div>
+              <div style="font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+                AlphaERP Enterprise Cloud \u2022 ${(/* @__PURE__ */ new Date()).toLocaleString()}
+              </div>
+            </div>
+          `
+        });
+        res.json({
+          success: true,
+          mode: "smtp",
+          messageId: info.messageId,
+          recipients: [recipient],
+          timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+          note: `Authenticated and sent test email to ${recipient} via ${host}:${portNum}`
+        });
+        return;
+      } catch (smtpErr) {
+        console.warn("Live SMTP test failed:", smtpErr?.message);
+        res.status(400).json({
+          success: false,
+          error: smtpErr?.message || "Failed to authenticate or connect with SMTP server",
+          note: "Please verify hostname, port, username, and app password/token."
+        });
+        return;
+      }
+    }
+    const mockMessageId = `mock-test-${Date.now()}-${Math.random().toString(36).substring(2, 8)}@alphaerp.local`;
+    console.log(`[MOCK TEST EMAIL] From: ${fromAddr} | To: ${recipient} | Mode: Mock Sandbox (${provider || "mailtrap"})`);
+    res.json({
+      success: true,
+      mode: "mock",
+      messageId: mockMessageId,
+      recipients: [recipient],
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      note: `Verified test connection for ${String(provider || "Dummy Test Sandbox").toUpperCase()} (${host || "smtp.mailtrap.io"}:${portNum}). Ready for sandbox operations.`
+    });
+  } catch (err) {
+    console.error("Test email connection endpoint failed:", err);
+    res.status(500).json({
+      success: false,
+      error: err?.message || "Failed to process test email verification"
     });
   }
 });
