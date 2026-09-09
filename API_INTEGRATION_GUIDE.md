@@ -1,33 +1,57 @@
 # AlphaERP: Complete Step-by-Step API Integration Guide
 ### Enterprise HVAC Techno-Commercial, BOQ Verification, WhatsApp Automated Digest, Email/SMTP Alerts, MongoDB Cloud Sync & Gemini Live APIs
 
+**Document Version:** 3.5.0-Production  
+**Base Production URL:** `https://hvacbiz.vercel.app`  
+**WebSocket Protocol:** `ws://<host>/live` (or `wss://<host>/live` on HTTPS)
+
 ---
 
-## 1. Architecture Overview
+## 1. API Architecture & Microservices Overview
 
-AlphaERP provides a robust, enterprise-grade API architecture supporting real-time data sync, automated messaging triggers, SMTP notification dispatching, MongoDB Atlas persistence, and Gemini AI reasoning.
+AlphaERP exposes a unified REST and WebSocket API architecture that interfaces with persistence engines, automated communication relays, and AI models.
 
-```
-+---------------------------------------------------------------------------------------------------+
-|                                  ALPHA ERP API GATEWAY & MICROSERVICES                            |
-+---------------------------------------------------------------------------------------------------+
-        │                                   │                                   │
-        ▼                                   ▼                                   ▼
-+------------------+             +----------------------+             +--------------------+
-|  Core REST APIs  |             | WhatsApp & SMTP Mail |             | Google Sheets Sync |
-| - Projects & BOQ |             | - wa.me URL Dispatch |             | - 2-Way Sync Engine|
-| - CRM & Leads    |             | - Low-Stock PR Alerts|             | - OAuth2 / API Key |
-| - PR / PO Supply |             | - Test Connection API|             | - Tab Range Mapper |
-| - Payments/GAAP  |             +----------------------+             +--------------------+
-+------------------+                        │                                   │
-        │                                   │                                   │
-        ▼                                   ▼                                   ▼
-+------------------+             +----------------------+             +--------------------+
-|  MongoDB Atlas   |             | Gemini AI Assistant  |             | Gemini Live API    |
-| - Full Migration |             | - Margin Prediction  |             | - Duplex WebSocket |
-| - Status Check   |             | - BOQ Risk Analyzer  |             | - Realtime PCM     |
-| - Project Sync   |             | - Executive Summaries|             | - Voice Assistant  |
-+------------------+             +----------------------+             +--------------------+
+```mermaid
+flowchart TB
+    subgraph API_Gateway["🌐 ALPHA ERP API GATEWAY & ROUTER (/api/*)"]
+        Router["Express App Router (server/app.ts)"]
+        SecurityMW["Security Middleware (nosniff, XSS, Compression)"]
+        BodyParser["Payload Parser (25MB JSON ceiling)"]
+        Router --> SecurityMW --> BodyParser
+    end
+
+    subgraph ServiceRoutes["⚙️ Domain API Endpoints"]
+        Health["1. System Diagnostics (/api/health)"]
+        EmailAlert["2. Reorder Alert Email (/api/procurement/reorder-alert-email)"]
+        EmailTest["3. SMTP Connection Tester (/api/email/test-connection)"]
+        MongoSync["4. MongoDB Atlas Sync & CRUD (/api/mongodb/*)"]
+        GeminiVoice["5. Gemini Live Voice WebSocket (/live)"]
+        WhatsApp["6. WhatsApp Automated Digest Generator"]
+        GoogleSheets["7. Google Sheets 2-Way Sync Engine"]
+    end
+
+    subgraph ExternalServices["☁️ Integrated External Services"]
+        MongoDBAtlas[("MongoDB Atlas Cloud Database")]
+        SMTPTransporter["Nodemailer SMTP Transporter / Mailtrap Sandbox"]
+        GeminiPlatform["Google Gemini Live Model Engine"]
+        GoogleDrive["Google Sheets API v4"]
+        WhatsAppClient["WhatsApp Universal API (wa.me)"]
+    end
+
+    BodyParser --> Health
+    BodyParser --> EmailAlert
+    BodyParser --> EmailTest
+    BodyParser --> MongoSync
+    BodyParser --> GeminiVoice
+    BodyParser --> WhatsApp
+    BodyParser --> GoogleSheets
+
+    MongoSync <--> MongoDBAtlas
+    EmailAlert --> SMTPTransporter
+    EmailTest --> SMTPTransporter
+    GeminiVoice <--> GeminiPlatform
+    GoogleSheets <--> GoogleDrive
+    WhatsApp --> WhatsAppClient
 ```
 
 ---
@@ -59,7 +83,7 @@ Returns backend service health, AI model capability, and database connectivity.
   "model": "gemini-3.1-flash-live-preview",
   "apiKeyConfigured": true,
   "mongoConfigured": true,
-  "timestamp": "2026-09-09T10:00:00.000Z"
+  "timestamp": "2026-09-10T00:00:00.000Z"
 }
 ```
 
@@ -68,49 +92,66 @@ Returns backend service health, AI model capability, and database connectivity.
 ### 3.2 Automated Procurement & Email Alert APIs
 
 #### `POST /api/procurement/reorder-alert-email`
-Sends an automated, itemized email alert to the procurement team whenever inventory falls below safety thresholds. Supports both dummy sandbox mode (Mailtrap/Ethereal) and live SMTP relays.
+Sends an automated, itemized email alert to the procurement team whenever inventory falls below safety thresholds. Supports both dummy sandbox mode (Mailtrap/Ethereal) and live authenticated SMTP relays.
 
 **Request Payload:**
 ```json
 {
   "recipients": ["procurement@atmosaircon.com", "inventory@atmosaircon.com"],
   "subject": "URGENT: HVAC Critical Material Reorder Alert",
-  "items": [
+  "itemsSummary": [
     {
       "name": "Hard Drawn Copper Pipe 1/2 inch",
       "sku": "COP-PIPE-12-HD",
       "category": "Piping & Valves",
-      "currentStock": 4,
+      "availableStock": 4,
       "reorderLevel": 12,
       "deficit": 8,
       "unit": "Lengths",
       "warehouseLocation": "Bay B-02"
     }
   ],
-  "notes": "Generated by AlphaERP Predictive Inventory Engine",
+  "html": "<h3>Critical Reorder Required</h3><p>Deficit items list...</p>",
+  "text": "Critical Reorder Required: 8 Lengths of Hard Drawn Copper Pipe 1/2 inch",
   "smtpConfig": {
     "host": "smtp.mailtrap.io",
     "port": 587,
-    "user": "sandbox_user",
-    "pass": "sandbox_pass",
-    "fromEmail": "procurement@alphaerp.com",
-    "fromName": "AlphaERP Procurement System",
-    "isDummy": false
+    "username": "sandbox_user",
+    "password": "sandbox_pass",
+    "senderEmail": "procurement@alphaerp.com",
+    "senderName": "AlphaERP Procurement System",
+    "mode": "smtp"
   }
 }
 ```
 
-**Response `200 OK`:**
+**Response `200 OK` (Live SMTP):**
 ```json
 {
   "success": true,
+  "mode": "smtp",
+  "isRealSmtp": true,
   "messageId": "<c28d49a-78b1-42e1-a08b-1234567890ab@alphaerp.com>",
-  "accepted": ["procurement@atmosaircon.com"],
-  "rejected": [],
-  "mode": "production_smtp",
-  "itemsCount": 1
+  "recipients": ["procurement@atmosaircon.com", "inventory@atmosaircon.com"],
+  "timestamp": "2026-09-10T00:00:00.000Z",
+  "note": "Email successfully dispatched via configured SMTP server (smtp.mailtrap.io)"
 }
 ```
+
+**Response `200 OK` (Sandbox / Mock Mode):**
+```json
+{
+  "success": true,
+  "mode": "mock_wrapper",
+  "isRealSmtp": false,
+  "messageId": "mock-smtp-1725926400000-a1b2c3@alphaerp.local",
+  "recipients": ["procurement@atmosaircon.com"],
+  "timestamp": "2026-09-10T00:00:00.000Z",
+  "note": "Email recorded and dispatched via AlphaERP resilient Mock Sandbox."
+}
+```
+
+---
 
 #### `POST /api/email/test-connection`
 Verifies SMTP host credentials and triggers a test email dispatch.
@@ -118,16 +159,16 @@ Verifies SMTP host credentials and triggers a test email dispatch.
 **Request Payload:**
 ```json
 {
-  "recipientEmail": "admin@atmosaircon.com",
-  "smtpConfig": {
-    "host": "smtp.mailtrap.io",
-    "port": 587,
-    "user": "user_id",
-    "pass": "secret_key",
-    "fromEmail": "no-reply@alphaerp.com",
-    "fromName": "AlphaERP Alerts",
-    "secure": false
-  }
+  "host": "smtp.mailtrap.io",
+  "port": 587,
+  "secure": false,
+  "username": "sandbox_user",
+  "password": "sandbox_pass",
+  "senderName": "AlphaERP Test Engine",
+  "senderEmail": "notifications@alphaerp.com",
+  "testRecipient": "admin@atmosaircon.com",
+  "mode": "smtp",
+  "provider": "Mailtrap Sandbox"
 }
 ```
 
@@ -135,9 +176,11 @@ Verifies SMTP host credentials and triggers a test email dispatch.
 ```json
 {
   "success": true,
-  "message": "SMTP Connection verified and test email delivered successfully!",
+  "mode": "smtp",
   "messageId": "<test-12345@alphaerp.com>",
-  "verifiedHost": "smtp.mailtrap.io:587"
+  "recipients": ["admin@atmosaircon.com"],
+  "timestamp": "2026-09-10T00:00:00.000Z",
+  "note": "Authenticated and sent test email to admin@atmosaircon.com via smtp.mailtrap.io:587"
 }
 ```
 
@@ -154,6 +197,7 @@ Checks MongoDB Atlas cluster connectivity, ping latency, and collection statisti
   "configured": true,
   "connected": true,
   "databaseName": "alphaerp",
+  "pingMs": 42,
   "collectionsCount": 8,
   "collections": {
     "projects": 14,
@@ -165,16 +209,21 @@ Checks MongoDB Atlas cluster connectivity, ping latency, and collection statisti
 }
 ```
 
-#### `POST /api/mongodb/migrate-full`
+#### `POST /api/mongodb/test`
+Performs an active database ping to measure round-trip latency.
+
+#### `POST /api/mongodb/migrate`
 Transfers the complete local state payload into linked MongoDB collections.
 
 **Request Payload:**
 ```json
 {
-  "projects": [ /* array of project objects */ ],
-  "quotes": [ /* array of quote objects */ ],
-  "leads": [ /* array of lead objects */ ],
-  "inventory": [ /* array of inventory objects */ ]
+  "payload": {
+    "projects": [ /* array of project objects */ ],
+    "quotes": [ /* array of quote objects */ ],
+    "leads": [ /* array of lead objects */ ],
+    "inventory": [ /* array of inventory objects */ ]
+  }
 }
 ```
 
@@ -182,7 +231,7 @@ Transfers the complete local state payload into linked MongoDB collections.
 ```json
 {
   "success": true,
-  "migratedAt": "2026-09-09T10:00:00.000Z",
+  "migratedAt": "2026-09-10T00:00:00.000Z",
   "counts": {
     "projects": 14,
     "quotes": 26,
@@ -192,8 +241,14 @@ Transfers the complete local state payload into linked MongoDB collections.
 }
 ```
 
+#### `GET /api/mongodb/export`
+Exports a full snapshot backup of all collections from MongoDB Atlas.
+
 #### `GET /api/mongodb/projects` & `POST /api/mongodb/projects`
-Bi-directionally read and bulk-upsert HVAC project execution records in MongoDB.
+Reads or bulk-saves HVAC project execution records in MongoDB Atlas.
+
+#### `POST /api/mongodb/project`
+Upserts a single project record by its unique `id` in MongoDB Atlas.
 
 ---
 
@@ -202,41 +257,61 @@ Bi-directionally read and bulk-upsert HVAC project execution records in MongoDB.
 AlphaERP includes an ultra-low latency real-time voice assistant powered by Gemini Live:
 
 - **Endpoint**: `ws://<host>/live` (or `wss://<host>/live` on HTTPS)
-- **Protocol**: Duplex WebSocket with PCM 16kHz audio upstream and 24kHz audio downstream.
-- **Payload Format**:
-  - Client sends: `{"audio": "<base64 PCM 16kHz chunk>"}` or `{"text": "<user prompt>"}`
-  - Server streams: `{"audio": "<base64 PCM 24kHz chunk>"}` and `{"text": "<transcription>", "sender": "model"}`
+- **Audio Specification**:
+  - Upstream: Raw Linear PCM 16kHz, 16-bit Mono (Base64 encoded chunks).
+  - Downstream: Raw Linear PCM 24kHz, 16-bit Mono (Base64 encoded chunks).
+- **Message Framing**:
+  ```json
+  // Client upstream audio frame
+  { "audio": "<base64 PCM 16kHz chunk>" }
+
+  // Client upstream text prompt
+  { "text": "Calculate duct aspect ratio for 2400 CFM at 1200 FPM velocity" }
+
+  // Server downstream audio response
+  { "audio": "<base64 PCM 24kHz chunk>" }
+
+  // Server downstream transcription
+  { "text": "For 2400 CFM at 1200 FPM, required area is 2.0 sq ft...", "sender": "model" }
+  ```
 
 ---
 
-### 3.5 Automated WhatsApp Daily KPI Trigger API
+### 3.5 Automated WhatsApp Daily KPI Trigger
 
-#### `POST /api/kpi/whatsapp-trigger`
-Calculates previous-day business metrics and generates formatted WhatsApp text digests:
+Generates automated previous-day business metrics and dispatches via `https://wa.me`:
 
 ```
-📊 *ALPHA HVAC ENTERPRISE — PREVIOUS DAY BUSINESS KEY KPIS DIGEST*
-📅 *Snapshot Date:* 09 Sep 2026
+📊 *ALPHA HVAC ENTERPRISE — DAILY BUSINESS KPI DIGEST*
+📅 *Snapshot Date:* 10 Sep 2026
 
 1️⃣ *NEW LEADS GENERATED (Sales Pipeline)*
-• Total New Leads: *3 Leads* (Pipeline: ₹46.50 Lakhs)
+• Total New Leads: *3 Leads* (Pipeline Value: ₹46.50 Lakhs)
 
 2️⃣ *BILL COLLECTIONS RECEIVED*
-• Total Collection Received: *₹4,85,000* (Efficiency: 78.5%)
+• Total Collection: *₹4,85,000* (Efficiency: 78.5%)
 
 3️⃣ *PENDING RECEIVABLES AGING*
 • 0–30 Days: ₹8,20,000 | 31–60 Days: ₹5,10,000 | >90 Days: ₹2,00,000
 
 4️⃣ *DELAYED PROJECTS & ROOT CAUSES*
-⚠️ *PRJ-2026-001 (One BKC Tower)*: 14 Days Delayed (Client civil clearance)
+⚠️ *PRJ-2026-001 (One BKC Tower)*: 14 Days Delayed (Client civil site clearance)
 ```
 
 ---
 
-### 3.6 Google Sheets Bi-Directional Integration API
+### 3.6 Google Sheets Bi-Directional Integration
 
-#### `POST /api/google-sheets/sync`
-Synchronizes leads, quotes, inventory, and projects across 9 tabs with designated Google Spreadsheets using Google Identity Services (GIS) OAuth 2.0.
+Synchronizes 9 distinct sheets across Google Spreadsheets:
+- `Leads_Master`
+- `Quotations_Register`
+- `Projects_BOQ`
+- `Inventory_Warehouse`
+- `Purchase_Requisitions`
+- `Purchase_Orders`
+- `Goods_Receipt_Notes`
+- `Milestone_Invoices`
+- `HR_Employee_Master`
 
 ---
 

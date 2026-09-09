@@ -1,158 +1,226 @@
 ---
-description: Instructions building apps with MCP
+description: Instructions for AI agents, developers, and MCP tools building and maintaining AlphaERP
 globs: *
 alwaysApply: true
 ---
 
-# InsForge SDK Documentation - Overview
+# AlphaERP — AI Agent & Developer Architecture Guidelines
+### Enterprise HVAC Techno-Commercial, BOQ Engineering, Multi-Tier Procurement & Multi-Cloud Backend
 
-## What is InsForge?
+**Target Repository:** `AlphaERP-V1`  
+**Live Production Applet:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
+**Version:** 3.5.0-Production
 
-Backend-as-a-service (BaaS) platform providing:
+---
 
-- **Database**: PostgreSQL with PostgREST API
-- **Authentication**: Email/password + OAuth (Google, GitHub)
-- **Storage**: File upload/download
-- **AI**: OpenRouter key provisioning and model catalog for direct OpenAI-compatible integrations
-- **Functions**: Serverless function deployment
-- **Realtime**: WebSocket pub/sub (database + client events)
+## 1. System Architecture & Component Interactions
 
-## Installation
+```mermaid
+flowchart TD
+    subgraph AgentOrchestration["🤖 AI Agents & Developer Tooling"]
+        Agent["Antigravity / Coding Agent"]
+        MCP["MCP Server Tools (Database, Storage, Docs, DevTools)"]
+        Agent --> MCP
+    end
 
-The following is a step-by-step guide to installing and using the InsForge TypeScript SDK for Web applications. If you are building other types of applications, please refer to:
-- [Swift SDK documentation](/sdks/swift/overview) for iOS, macOS, tvOS, and watchOS applications.
-- [Kotlin SDK documentation](/sdks/kotlin/overview) for Android applications.
-- [REST API documentation](/sdks/rest/overview) for direct HTTP API access.
+    subgraph ClientApplication["🖥️ Presentation Layer (React 19 + TypeScript + Vite 6 + Tailwind CSS)"]
+        UI["SPA Views (Dashboard, CRM, Quotes, BOQ, PR/PO, Inventory, Finance, HR)"]
+        Storage["Storage Service & PubSub State (storageService.ts)"]
+        Audio["Duplex PCM Audio Worklet (Gemini Live Voice)"]
+        UI --> Storage
+        UI --> Audio
+    end
 
-### 🚨 CRITICAL: Follow these steps in order
+    subgraph BackendRuntimes["⚙️ Hybrid Server Runtimes"]
+        VercelServerless["Vercel Serverless Function (api/index.js)"]
+        DedicatedNode["Dedicated Node.js Server & WebSocket Hub (dist/server.cjs)"]
+        ExpressRouter["Express API Router (server/app.ts)"]
+        
+        VercelServerless --> ExpressRouter
+        DedicatedNode --> ExpressRouter
+    end
 
-### Step 1: Download Template
+    subgraph PersistenceLayer["☁️ Cloud Persistence & Backend-as-a-Service"]
+        InsForgeBaaS[("InsForge BaaS (PostgreSQL + PostgREST + Auth + Storage)")]
+        MongoDBAtlas[("MongoDB Atlas Cloud Database (alphaerp)")]
+        GoogleDrive["Google Sheets 9-Tab Synchronization Engine"]
+        SMTPRelay["Nodemailer SMTP Transporter / Mailtrap Sandbox"]
+        GeminiPlatform["Google Gemini Live AI Engine (/live)"]
+    end
 
-Use the `download-template` MCP tool to create a new project with your backend URL and anon key pre-configured.
-
-### Step 2: Install SDK
-
-```bash
-npm install @insforge/sdk@latest
+    Agent -->|Code Edits & CLI| ClientApplication
+    Agent -->|API & Server Maintenance| BackendRuntimes
+    ClientApplication <-->|HTTPS REST| BackendRuntimes
+    ClientApplication <-->|WSS Duplex Audio| DedicatedNode
+    ExpressRouter <--> InsForgeBaaS
+    ExpressRouter <--> MongoDBAtlas
+    ExpressRouter --> SMTPRelay
+    DedicatedNode <--> GeminiPlatform
+    Storage <-->|GIS OAuth 2.0| GoogleDrive
 ```
 
-### Step 3: Create SDK Client
+---
 
-You must create a client instance using `createClient()` with your base URL and anon key:
+## 2. Technology Stack & Hard Constraints
 
-```javascript
+1. **Frontend**: React 19, TypeScript 5.8+, Vite 6, Tailwind CSS v4, Lucide React icons, Motion animations.
+2. **Backend**: Express 4.21+ running on Node.js 20+ with esbuild bundling:
+   - `dist/server.cjs`: Standalone Node.js bundle for Docker, Cloud Run, and Ubuntu Systemd/PM2.
+   - `api/index.js`: Serverless bundle for Vercel Serverless Functions.
+3. **Database Options**:
+   - **InsForge BaaS / PostgreSQL 14+**: Relational schemas in `database/schema.sql` and `database/insforge_schema.sql`.
+   - **MongoDB Atlas**: Document store with endpoints in `server/mongodb.ts` and `/api/mongodb/*`.
+   - **Browser Storage**: IndexedDB and reactive LocalStorage in `src/services/storageService.ts`.
+4. **AI & Voice Engine**: Google GenAI SDK (`@google/genai`) and WebSocket duplex streaming (`/live`).
+5. **Email System**: Nodemailer with dynamic fallback to Mock Sandbox wrapper when SMTP credentials are absent.
+
+---
+
+## 3. InsForge Backend-as-a-Service (BaaS) Architecture
+
+This project is configured with [InsForge](https://insforge.dev) for PostgreSQL database operations, user authentication, file storage, edge functions, and real-time events.
+
+- **Project Name:** **hvac-biz**
+- **API Base URL:** `https://as2hwz72.us-east.insforge.app`
+
+### 3.1 SDK Client Initialization
+
+```typescript
 import { createClient } from '@insforge/sdk';
 
-const client = createClient({
-  baseUrl: 'https://your-app.region.insforge.app',  // Your InsForge backend URL
-  anonKey: 'your-anon-key-here'       // Get this from backend metadata
+export const insforge = createClient({
+  baseUrl: process.env.VITE_INSFORGE_URL || 'https://as2hwz72.us-east.insforge.app',
+  anonKey: process.env.VITE_INSFORGE_ANON_KEY || 'your-anon-key-here'
 });
-
 ```
 
-**API BASE URL**: Your API base URL is `https://your-app.region.insforge.app`.
+### 3.2 Critical InsForge Implementation Rules
 
-## Getting Detailed Documentation
+- **Array Insert Rule**: All database inserts **MUST** use array format:
+  ```typescript
+  // CORRECT
+  const { data, error } = await insforge.database
+    .from('projects')
+    .insert([{ project_code: 'PRJ-2026-001', name: 'One BKC Tower' }]);
 
-### 🚨 CRITICAL: Always Fetch Documentation Before Writing Code
+  // INCORRECT - WILL FAIL
+  // .insert({ project_code: 'PRJ-2026-001' })
+  ```
+- **Error Handling**: All SDK methods return a `{ data, error }` tuple. Always check `if (error)` before proceeding.
+- **User Association**: Reference users via `auth.users(id)` and use `auth.uid()` in Row Level Security (RLS) policies.
+- **Storage Operations**: When uploading files, always persist both the returned `url` and `key`.
 
-InsForge provides official SDKs and REST APIs, use them to interact with InsForge services from your application code.
+---
 
-- [TypeScript SDK](/sdks/typescript/overview) - JavaScript/TypeScript
-- [Swift SDK](/sdks/swift/overview) - iOS, macOS, tvOS, and watchOS
-- [Kotlin SDK](/sdks/kotlin/overview) - Android and Kotlin Multiplatform
-- [REST API](/sdks/rest/overview) - Direct HTTP API access
+## 4. End-to-End HVAC Engineering & Techno-Commercial Workflows
 
-Before writing or editing any InsForge integration code, you **MUST** call the `fetch-docs` or `fetch-sdk-docs` MCP tool to get the latest SDK documentation. This ensures you have accurate, up-to-date implementation patterns.
+### 4.1 HVAC Quotation to Project BOQ Lifecycle
 
-### Use the InsForge `fetch-docs` MCP tool to get specific SDK documentation:
+```mermaid
+flowchart TD
+    Lead["Lead Created in CRM"] --> Survey["On-Site Survey & Heat Load (TR/CFM)"]
+    Survey --> Quote["Techno-Commercial Quote with 18% GST"]
+    Quote --> Award{"Quote Approved / Awarded"}
+    Award --> Project["Initialize Project Workspace"]
+    Project --> BOQ["Generate BOQ Line Items"]
+    BOQ --> Check{"Warehouse Stock Check"}
+    Check -- Stock Deficit --> PR["Auto-Generate Purchase Requisition (PR)"]
+    Check -- Stock Available --> Allocate["Allocate Stock to Project"]
+    PR --> PO["Procurement Head Releases Vendor PO"]
+    PO --> GRN["Warehouse Goods Receipt Note (GRN) Inwarding"]
+    GRN --> Allocate
+    Allocate --> Dispatch["Site Dispatch & Installation"]
+    Dispatch --> WO["Commissioning Work Order & Signoff"]
+    WO --> Invoice["Milestone Invoicing & GAAP Ledger"]
+```
 
-Available documentation types:
+### 4.2 Predictive Inventory Safety-Stock Alert Process
 
-- `"instructions"` - Essential backend setup (START HERE)
-- `"real-time"` - Real-time pub/sub (database + client events) via WebSockets
-- `"db-sdk-typescript"` - Database operations with TypeScript SDK
-- **Authentication** - Choose based on implementation:
-  - `"auth-sdk-typescript"` - TypeScript SDK methods for custom auth flows
-  - `"auth-components-react"` - Pre-built auth UI for React+Vite (single-page app)
-  - `"auth-components-react-router"` - Pre-built auth UI for React(Vite+React Router) (multi-page app)
-  - `"auth-components-nextjs"` - Pre-built auth UI for Next.js (SSR app)
-- `"storage-sdk"` - File storage operations
-- `"functions-sdk"` - Serverless functions invocation
-- `"ai-integration-sdk"` - AI integration with the provisioned OpenRouter key and OpenAI SDK
-- `"deployment"` - Deploy frontend applications via MCP tool
-- `"payments"` - Stripe Checkout, Billing Portal, webhook projections, and fulfillment patterns
+```mermaid
+flowchart TD
+    Stock["Warehouse Stock Monitor"] --> Check{"AvailableStock <= ReorderLevel?"}
+    Check -- Yes --> Deficit["Deficit = ReorderLevel - AvailableStock"]
+    Deficit --> Alert["POST /api/procurement/reorder-alert-email"]
+    Alert --> Mode{"SMTP Configuration"}
+    Mode -- Live SMTP --> SMTP["Deliver via SMTP Server (Port 587/465)"]
+    Mode -- Sandbox Mock --> Sandbox["Deliver via Resilient Mock Sandbox Wrapper"]
+    SMTP --> Audit["Write Event to Immutable Audit Log"]
+    Sandbox --> Audit
+```
 
-These docs are mostly for the TypeScript SDK. For other languages, you can also use the `fetch-sdk-docs` MCP tool to get specific documentation.
+---
 
-### Use the InsForge `fetch-sdk-docs` MCP tool to get specific SDK documentation
+## 5. REST & WebSocket API Endpoints
 
-You can fetch SDK documentation using the `fetch-sdk-docs` MCP tool with a specific feature type and language.
+| Method | Endpoint | Description | Key Parameters |
+|---|---|---|---|
+| `GET` | `/api/health` | Service health, model status & DB config | None |
+| `POST` | `/api/procurement/reorder-alert-email` | Dispatches low-stock email alerts | `recipients`, `itemsSummary`, `smtpConfig` |
+| `POST` | `/api/email/test-connection` | Validates SMTP connection and sends test email | `host`, `port`, `username`, `password`, `testRecipient` |
+| `GET` | `/api/mongodb/status` | MongoDB cluster connection state & stats | None |
+| `POST` | `/api/mongodb/test` | Tests MongoDB Atlas ping latency | None |
+| `POST` | `/api/mongodb/migrate` | Migrates local state payload into MongoDB | `payload: { projects, quotes, leads, inventory }` |
+| `GET` | `/api/mongodb/export` | Full snapshot export of all collections | None |
+| `GET` | `/api/mongodb/projects` | Fetches projects array from MongoDB | None |
+| `POST` | `/api/mongodb/projects` | Bulk-saves projects array to MongoDB | `projects: [...]` |
+| `POST` | `/api/mongodb/project` | Upserts single project in MongoDB | `project: { id, ... }` |
+| `WS` | `/live` | Duplex real-time audio voice assistant | 16kHz PCM upstream / 24kHz PCM downstream |
 
-Available feature types:
-- `db` - Database operations
-- `storage` - File storage operations
-- `functions` - Serverless functions invocation
-- `auth` - User authentication
-- `ai` - AI integration with the provisioned OpenRouter key and OpenAI SDK
-- `realtime` - Real-time pub/sub (database + client events) via WebSockets
-- `payments` - Stripe Checkout and Billing Portal with webhook-based fulfillment
+---
 
-Available languages:
-- `typescript` - JavaScript/TypeScript SDK
-- `swift` - Swift SDK (for iOS, macOS, tvOS, and watchOS)
-- `kotlin` - Kotlin SDK (for Android and JVM applications)
-- `rest-api` - REST API
+## 6. Directory Layout & Module Responsibilities
 
-Payments currently has TypeScript SDK docs only. Use the Payments API reference for non-TypeScript clients.
+```
+AlphaERP-V1/
+├── api/index.ts                         # Vercel Serverless Function adapter
+├── server/
+│   ├── app.ts                           # Express application & REST routes
+│   ├── api-entry.ts                     # Bundling entrypoint for Vercel
+│   └── mongodb.ts                       # MongoDB Atlas driver & sync operations
+├── server.ts                            # Standalone Node.js server with WebSockets
+├── vercel.json                          # Vercel routing rules & security headers
+├── database/
+│   ├── schema.sql                       # PostgreSQL 14+ DDL Schema
+│   ├── insforge_schema.sql              # InsForge BaaS PostgreSQL schema
+│   └── seed_data.sql                    # Production HVAC seed data
+├── src/
+│   ├── App.tsx                          # Root shell & role state
+│   ├── main.tsx                         # DOM mounting point
+│   ├── index.css                        # Tailwind CSS global styling
+│   ├── types/index.ts                   # TypeScript interfaces & enums
+│   ├── services/
+│   │   ├── storageService.ts            # Reactive storage & audit logger
+│   │   ├── googleSheets.ts              # Google Identity Services 9-tab sync
+│   │   └── whatsappEmailService.ts      # SMTP alert & WhatsApp formatters
+│   └── components/
+│       ├── DashboardView.tsx            # Executive KPI & P&L widgets
+│       ├── CRMLeadsView.tsx             # Leads & site survey scheduler
+│       ├── QuotesView.tsx               # HVAC quotation builder & pricing
+│       ├── ProjectsBOQView.tsx          # BOQ shortage reconciliation
+│       ├── ProcurementPRPOView.tsx      # PR/PO lifecycle & approvals
+│       ├── InventoryWarehouseView.tsx   # Warehouse inventory & bin locations
+│       ├── PredictiveInventoryReorderPanel.tsx # Safety-stock alerts & email dispatch
+│       ├── WorkOrdersView.tsx           # Field commissioning tickets
+│       ├── FinancePaymentsView.tsx      # Milestone invoices & receipts
+│       ├── FinanceView.tsx              # GAAP double-entry ledger
+│       ├── HRView.tsx                   # 12-module HRMS suite
+│       ├── SalesPerformanceView.tsx     # Quota tracking & leaderboard
+│       ├── EmailSettingsAdminSection.tsx# SMTP credentials & Sandbox mode
+│       ├── LiveAudioAssistantModal.tsx  # Gemini Live voice assistant
+│       ├── MongoSyncModal.tsx           # MongoDB Atlas cloud sync
+│       └── UserManagementView.tsx       # RBAC role management
+```
 
-## When to Use SDK vs MCP Tools
+---
 
-### Always SDK for Application Logic:
+## 7. Verification & Testing
 
-- Authentication (register, login, logout, profiles)
-- Database CRUD (select, insert, update, delete)
-- Storage operations (upload, download files)
-- AI integration via the provisioned OpenRouter key with the OpenAI SDK or OpenRouter HTTP API
-- Serverless function invocation
-- Payments checkout and customer portal session creation
+Before submitting changes, ensure you execute:
 
-### Use MCP Tools for Infrastructure:
+```bash
+# 1. Type-checking and static analysis
+npm run lint
 
-- Project scaffolding (`download-template`) - Download starter templates with InsForge integration
-- Backend setup and metadata (`get-backend-metadata`)
-- Database schema management (`run-raw-sql`, `get-table-schema`)
-- Storage bucket creation (`create-bucket`, `list-buckets`, `delete-bucket`)
-- Serverless function deployment (`create-function`, `update-function`, `delete-function`)
-- Frontend deployment (`create-deployment`) - Deploy frontend apps to InsForge hosting
-
-## Important Notes
-
-- For auth: use `auth-sdk` for custom UI, or framework-specific components for pre-built UI
-- SDK returns `{data, error}` structure for all operations
-- Database inserts require array format: `[{...}]`
-- Serverless functions have one endpoint and do not support nested route paths
-- Storage: Upload files to buckets, store URLs in database
-- AI integrations should call OpenRouter directly with `baseURL: "https://openrouter.ai/api/v1"` and a server-side `OPENROUTER_API_KEY`
-- **EXTRA IMPORTANT**: Use Tailwind CSS 3.4 (do not upgrade to v4). Lock these dependencies in `package.json`
-
-<!-- INSFORGE:START -->
-## InsForge backend
-
-This project uses [InsForge](https://insforge.dev): an all-in-one, open-source Postgres-based backend (BaaS) that gives this app a database, authentication, file storage, edge functions, realtime, an AI model gateway, and payments through one platform.
-
-- **Project:** **hvac-biz** (API base `https://as2hwz72.us-east.insforge.app`)
-- **Skills:** these InsForge skills are installed for supported coding agents. Reach for them before implementing any InsForge feature instead of guessing the API:
-  - `insforge`: app code with the `@insforge/sdk` client (database CRUD, auth, storage, edge functions, realtime, AI, email, and Stripe payments).
-  - `insforge-cli`: backend and infrastructure via the `insforge` CLI (projects, SQL, migrations, RLS policies, storage buckets, functions, secrets, payment setup, schedules, deploys).
-  - `insforge-debug`: diagnosing failures (SDK/HTTP errors, RLS denials, auth and OAuth issues) and running security or performance audits.
-  - `insforge-integrations`: wiring external auth providers (Clerk, Auth0, WorkOS, Better Auth, etc.) for JWT-based RLS, or the OKX x402 payment facilitator.
-  - `find-skills`: discovering additional skills on demand.
-- **Credentials:** app code reads keys from `.env.local`; the CLI reads `.insforge/project.json`. Never hardcode or commit keys.
-
-Key patterns:
-
-- Database inserts take an array: `insert([{ ... }])`.
-- Reference users with `auth.users(id)`; use `auth.uid()` in RLS policies.
-- For storage uploads, persist both the returned `url` and `key`.
-<!-- INSFORGE:END -->
+# 2. Build verification for all targets (Vite SPA + Serverless + Standalone Server)
+npm run build
+```

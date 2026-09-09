@@ -1,17 +1,29 @@
-# AlphaERP - Enterprise HVAC Systems, Engineering & Resource Planning Suite
+# AlphaERP — Enterprise HVAC Systems, Engineering & Resource Planning Suite
 ### Full-Lifecycle Techno-Commercial CRM, BOQ Engineering, Multi-Tier Procurement, Automated Email Indents, GAAP Financials & HRMS Platform
 
-**Live Production Deployment**: [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
-**Version**: 3.5.0-Production  
-**Framework**: React 19 + TypeScript + Vite 6 + Tailwind CSS v4 + Express & Vercel Serverless
+[![Production Status](https://img.shields.io/badge/Production-Live-success?style=for-the-badge&logo=vercel)](https://hvacbiz.vercel.app)
+[![Version](https://img.shields.io/badge/Version-3.5.0--Production-blue?style=for-the-badge)](https://hvacbiz.vercel.app)
+[![Framework](https://img.shields.io/badge/React_19-Vite_6-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-v4.1-38B2AC?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
+[![Database](https://img.shields.io/badge/MongoDB_Atlas-Cloud_Sync-47A248?style=for-the-badge&logo=mongodb)](https://www.mongodb.com/atlas)
+[![AI Engine](https://img.shields.io/badge/Gemini_Live-Voice_AI-8E75B2?style=for-the-badge&logo=google)](https://ai.google.dev/)
+
+---
+
+## 🌐 Live Production Deployment
+
+- **Live Production URL**: [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)
+- **API Health Diagnostics**: [https://hvacbiz.vercel.app/api/health](https://hvacbiz.vercel.app/api/health)
+- **Primary Runtime**: Vercel Serverless Edge Network & Node.js 20+ Hybrid Container Backend
 
 ---
 
 ## 1. Executive Summary & Enterprise Overview
 
-**AlphaERP** is a full-lifecycle enterprise resource planning platform engineered specifically for commercial HVAC contractors, MEP (Mechanical, Electrical, Plumbing) engineering consultancies, and turnkey HVAC system integrators.
+**AlphaERP** is an enterprise-grade ERP, CRM, and Supply Chain automation platform engineered specifically for commercial Heating, Ventilation, and Air Conditioning (**HVAC**) contractors, Mechanical, Electrical & Plumbing (**MEP**) engineering consultancies, and turnkey HVAC system integrators.
 
-Commercial HVAC projects require specialized workflows:
+Commercial HVAC projects operate under stringent engineering constraints, high-value procurement cycles, multi-tier regulatory compliance, and multi-stage milestone billings:
 1. **High-Tonnage Custom Sizing**: Thermodynamic equipment selection (Tonnage of Refrigeration - TR, CFM air flow, Static Pressure ESP, Chilled Water flow rates, ambient temperature derating).
 2. **Multi-Category Bill of Quantities (BOQ)**: Complex quotations spanning heavy machinery (VRV/VRF outdoor units, modular chillers, precision AHUs), sheet metal ductwork (GI 24/22/20G), thermal/acoustic insulation (Nitrile/Glasswool), hard-drawn copper piping, motorized butterfly/modulating valves, refrigerants (R-410A/R-32), and certified field labor.
 3. **Real-Time Inventory Allocation & Predictive Procurement**: Equipment must be reserved or procured just-in-time from specialized OEMs. When stock falls below safety levels, the system automatically dispatches email indents to procurement officers.
@@ -21,213 +33,270 @@ Commercial HVAC projects require specialized workflows:
 
 ---
 
-## 2. Complete System Architecture & Technology Stack
+## 2. System Architecture & Topology
 
+AlphaERP operates on a multi-tiered architecture designed for zero-latency user interaction, resilient offline-first state, cloud synchronization, and serverless compute scale.
+
+```mermaid
+flowchart TB
+    subgraph ClientLayer["🖥️ Presentation & Client Layer (React 19 + TypeScript + Vite 6 + Tailwind CSS)"]
+        UI["SPA Application Shell (App.tsx)"]
+        State["Reactive Pub/Sub Storage & IndexedDB (storageService.ts)"]
+        Audio["Duplex PCM Audio Worklet & AudioContext"]
+        UI --> State
+        UI --> Audio
+    end
+
+    subgraph EdgeRouting["🌐 Ingress & Edge Routing Layer"]
+        VercelEdge["Vercel Edge Network / Nginx Reverse Proxy"]
+        SSL["TLS/SSL Termination & HTTP Security Headers"]
+        VercelEdge --> SSL
+    end
+
+    subgraph BackendLayer["⚙️ Application & Serverless Backend Layer (Node.js / Express)"]
+        APIEntry["Vercel Serverless Adapter (api/index.js)"]
+        NodeServer["Dedicated Server & WebSocket Hub (dist/server.cjs)"]
+        HealthAPI["Health & Diagnostics API (/api/health)"]
+        ProcureAPI["Predictive Email Dispatcher (/api/procurement/reorder-alert-email)"]
+        EmailTestAPI["SMTP Connection Tester (/api/email/test-connection)"]
+        MongoAPI["MongoDB Sync & Migration Engine (/api/mongodb/*)"]
+        GeminiWS["Gemini Live Duplex WebSocket (/live)"]
+        
+        APIEntry --> HealthAPI
+        APIEntry --> ProcureAPI
+        APIEntry --> EmailTestAPI
+        APIEntry --> MongoAPI
+        NodeServer --> GeminiWS
+    end
+
+    subgraph ExternalServices["☁️ External Persistence & Integration Cloud"]
+        MongoAtlas[("MongoDB Atlas Cloud DB (alphaerp)")]
+        GoogleSheets["Google Sheets Enterprise 2-Way Sync (GIS OAuth 2.0)"]
+        SMTPRelay["SMTP Transporter (Production SMTP / Mailtrap Sandbox)"]
+        GeminiAI["Google Gemini Live AI Engine (16kHz Upstream / 24kHz Downstream)"]
+    end
+
+    ClientLayer <-->|HTTPS REST| EdgeRouting
+    ClientLayer <-->|WSS Duplex Audio| NodeServer
+    EdgeRouting --> BackendLayer
+    ProcureAPI --> SMTPRelay
+    EmailTestAPI --> SMTPRelay
+    MongoAPI <--> MongoAtlas
+    State <-->|GIS OAuth 2.0| GoogleSheets
+    GeminiWS <--> GeminiAI
 ```
-+---------------------------------------------------------------------------------------------------+
-|                                      CLIENT INTERFACE LAYER                                       |
-|  +---------------------------------------------------------------------------------------------+  |
-|  |                 React 19 SPA + TypeScript + Tailwind CSS (Slate High-Contrast Theme)        |  |
-|  |                                                                                             |  |
-|  |  +---------------------+ +---------------------+ +---------------------+ +----------------+  |  |
-|  |  | Executive Dashboard | | CRM & Lead Intake   | | Techno-Commercial   | | Projects & BOQ |  |  |
-|  |  | (P&L, Margins, KPIs)| | (Surveys & Sizing)  | | (Margin Estimator)  | | (Shortage Calc)|  |  |
-|  |  +---------------------+ +---------------------+ +---------------------+ +----------------+  |  |
-|  |  +---------------------+ +---------------------+ +---------------------+ +----------------+  |  |
-|  |  | Procurement Hub    | | Warehouse Inventory | | Field Work Orders   | | GAAP Financial |  |  |
-|  |  | (PR -> PO Pipeline) | | (Bin Stock & Alloc) | | (Commissioning/Sign)| | (Vouchers/Ledg)|  |  |
-|  |  +---------------------+ +---------------------+ +---------------------+ +----------------+  |  |
-|  |  +---------------------+ +---------------------+ +---------------------+ +----------------+  |  |
-|  |  | HRMS Suite (12 Mod) | | Predictive Reorder  | | Email / SMTP Config | | MongoDB Sync   |  |  |
-|  |  | (Payroll, Leaves)   | | (Auto Email Indent) | | (Sandbox / Live Rel)| | (Cloud Backup) |  |  |
-|  |  +---------------------+ +---------------------+ +---------------------+ +----------------+  |  |
-|  +---------------------------------------------------------------------------------------------+  |
-+---------------------------------------------------------------------------------------------------+
-                                                   │
-                                                   ▼
-+---------------------------------------------------------------------------------------------------+
-|                                   SERVICES & LOGIC ENGINE LAYER                                   |
-|  +-----------------------------+ +----------------------------+ +------------------------------+  |
-|  |       StorageService        | |    GoogleSheetsService     | |     WhatsAppEmailService     |  |
-|  |  - Reactive Pub/Sub State   | |  - GIS OAuth 2.0 Auth      | |  - WhatsApp Click-to-Chat    |  |
-|  |  - Transactional Mutations  | |  - 9-Tab Data Marshaller   | |  - Automated SMTP Transporter|  |
-|  |  - Automated Conversions    | |  - Live GDrive Sync        | |  - Dummy Sandbox Testing     |  |
-|  |  - Immutable Audit Logging  | |  - CSV Export Engine       | |  - Critical Reorder Indents  |  |
-|  +-----------------------------+ +----------------------------+ +------------------------------+  |
-+---------------------------------------------------------------------------------------------------+
-                                                   │
-                                                   ▼
-+---------------------------------------------------------------------------------------------------+
-|                                    PERSISTENCE & RUNTIME LAYER                                    |
-|  +--------------------------------------------+ +----------------------------------------------+  |
-|  |       Vercel Serverless / Cloud Run        | |             Cloud Databases                  |  |
-|  |  - Vercel Serverless Adapter (api/index.js)| |  - MongoDB Atlas Cloud DB (alphaerp)         |  |
-|  |  - Standalone Node Server (dist/server.cjs)| |  - Google Sheets API v4 Sync                 |  |
-|  |  - Gemini Live Duplex WebSocket (/live)   | |  - PostgreSQL 14+ Relational Schemas         |  |
-|  +--------------------------------------------+ +----------------------------------------------+  |
-+---------------------------------------------------------------------------------------------------+
+
+---
+
+## 3. End-to-End Business Process Flows
+
+### 3.1 Complete HVAC Techno-Commercial Lifecycle Flow
+
+```mermaid
+flowchart TD
+    A["1. CRM Lead Intake & Site Survey"] --> B["2. Thermodynamic Heat Load & TR Sizing"]
+    B --> C["3. Techno-Commercial Quote & Margin Estimator"]
+    C --> D{"Client Approval / Negotiation"}
+    D -- Negotiate --> C
+    D -- Won & Awarded --> E["4. Auto-Generate Project Workspace & BOQ"]
+    E --> F["5. Real-Time BOQ Stock Reconciliation"]
+    F --> G{"Inventory Available?"}
+    G -- Stock Shortage --> H["6. Auto-Raise Purchase Requisition (PR)"]
+    G -- In Stock --> I["7. Allocate Warehouse Stock to Project"]
+    H --> J["8. Procurement Review & Vendor PO Release"]
+    J --> K["9. Warehouse Goods Receipt Note (GRN) Inwarding"]
+    K --> I
+    I --> L["10. Material Dispatch to Project Site"]
+    L --> M["11. Field Erection, Piping & Duct Installation"]
+    M --> N["12. Testing, Commissioning & Signoff Work Order"]
+    N --> O["13. GAAP Milestone Invoicing & GST Tax Ledger"]
+    O --> P["14. Warranty, Asset Vault & AMC Handover"]
+```
+
+### 3.2 Predictive Inventory Safety-Stock & Automated Email Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Inv as Inventory Engine
+    participant Panel as Predictive Reorder Panel
+    participant API as Procurement Alert API
+    participant SMTP as SMTP / Sandbox Relay
+    participant Inbox as Procurement Officer Inbox
+
+    Inv->>Panel: Check Available Stock vs Reorder Level (Safety Threshold)
+    Note over Inv,Panel: Deficit = ReorderLevel - AvailableStock
+    Panel->>Panel: Identify Critical Shortages & Auto-Generate Indents
+    Panel->>API: POST /api/procurement/reorder-alert-email (Payload with SKU List)
+    alt Live SMTP Configured
+        API->>SMTP: Authenticate via Port 587/465 (Nodemailer)
+        SMTP->>Inbox: Deliver Itemized HTML Reorder Alert
+        API-->>Panel: Return Status: 200 OK (mode: 'smtp')
+    else Mock / Sandbox Mode
+        API->>SMTP: Capture in Mailtrap / Simulated Sandbox Transporter
+        API-->>Panel: Return Status: 200 OK (mode: 'mock_wrapper')
+    end
+    Panel->>Panel: Display Confirmation Toast & Update Audit Log
 ```
 
 ---
 
-## 3. Key Operational Modules
+## 4. Key Operational Modules
 
-### 3.1 Techno-Commercial CRM & Quotation Estimator
-- Lead qualification with cooling tonnage (TR), static pressure, and CFM requirements.
-- Automated HVAC bill of quantities with margin analysis, freight/labor allowances, and 18% statutory GST.
-- Single-click quote award automatically initializes an active project with synchronized BOQ line items.
-
-### 3.2 Predictive Inventory & Automated Email Indents
-- Real-time comparison of `availableStock` against configured `reorderThreshold`.
-- **Predictive Inventory Reorder Panel**: Highlights critical shortages and calculates suggested replenishment indents.
-- **Automated Email Dispatch**: Sends itemized procurement notifications via SMTP.
-- **Admin Configuration Interface**: Allows switching between Mailtrap/Ethereal Dummy Sandbox testing and live production SMTP relays (Google Workspace, SendGrid, Amazon SES) with connection testing.
-
-### 3.3 Procurement Pipeline & GRN Inwarding
-- Purchase Requisition (PR) generation directly from project BOQ deficit items.
-- Multi-tier approval workflow with financial sign-off before vendor PO release.
-- Warehouse Goods Receipt Note (GRN) inwarding automatically replenishes stock and resolves active project BOQ shortages.
-
-### 3.4 MongoDB Atlas Cloud Database Synchronization
-- Seamless cloud synchronization of projects, quotes, leads, and inventory items.
-- Connection health diagnostics and full database export/import migrations via `/api/mongodb/*`.
-
-### 3.5 Gemini Live Real-Time Duplex Voice Assistant
-- Interactive voice assistant running over duplex WebSocket (`ws://<host>/live`).
-- Provides real-time technical answers on HVAC thermodynamics, refrigerant pressures, and BOQ items.
+| # | Module Name | Key Functional Capabilities | Primary File Location |
+|---|---|---|---|
+| **1** | **Executive Dashboard** | Real-time P&L, contract burn rate, gross margin analysis, project progress radar, live company activity feed. | [`src/components/DashboardView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/DashboardView.tsx) |
+| **2** | **CRM & Lead Pipeline** | HVAC lead qualification, cooling tonnage (TR) sizing, client metadata, site survey scheduling, pipeline stage kanban. | [`src/components/CRMLeadsView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/CRMLeadsView.tsx) |
+| **3** | **Techno-Commercial Quotes** | Multi-category BOQ pricing engine, margin percentage calculators, statutory 18% GST computations, PDF generation. | [`src/components/QuotesView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/QuotesView.tsx) |
+| **4** | **Projects & BOQ Reconciliation** | Gantt milestones, active site tracking, live stock cross-check, auto-shortage calculation, single-click PR trigger. | [`src/components/ProjectsBOQView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/ProjectsBOQView.tsx) |
+| **5** | **Procurement PR & PO Hub** | Purchase requisition approvals, vendor PO dispatch via WhatsApp/Email, multi-stage financial signoff workflow. | [`src/components/ProcurementPRPOView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/ProcurementPRPOView.tsx) |
+| **6** | **Warehouse Inventory & GRN** | Bin locations, stock allocation, Goods Receipt Note (GRN) inwarding, unit cost averaging, stock valuation. | [`src/components/InventoryWarehouseView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/InventoryWarehouseView.tsx) |
+| **7** | **Predictive Reorder Indents** | Safety stock monitoring, deficit analysis, automated itemized procurement email dispatch with SMTP admin panel. | [`src/components/PredictiveInventoryReorderPanel.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/PredictiveInventoryReorderPanel.tsx) |
+| **8** | **Field Work Orders & Testing** | Mobile-ready commissioning checklists, digital client signature capture, technician dispatch, site photo vault. | [`src/components/WorkOrdersView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/WorkOrdersView.tsx) |
+| **9** | **Milestone Invoicing & Receipts** | Phased milestone billing (Advance, Delivery, Erection, Handover), GST tax invoices, payment receipt vouchers. | [`src/components/FinancePaymentsView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/FinancePaymentsView.tsx) |
+| **10** | **GAAP Double-Entry Ledger** | Journal entries, general ledger, trial balance, automated accounts receivable (AR) and accounts payable (AP). | [`src/components/FinanceView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/FinanceView.tsx) |
+| **11** | **HRMS Suite (12 Modules)** | Attendance, payroll payslips, asset tracking, doc vault, KRA requisitions, applicant tracking, travel claims, F&F settlement. | [`src/components/HRView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/HRView.tsx) |
+| **12** | **Sales Quota & Leaderboard** | Target vs achievement tracking, quarterly quota analysis, representative win-rate leaderboards, incentive tiers. | [`src/components/SalesPerformanceView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/SalesPerformanceView.tsx) |
+| **13** | **Gemini Live AI Voice Assistant** | Duplex real-time voice streaming (`ws://<host>/live`), HVAC thermodynamics calculations, technical equipment lookup. | [`src/components/LiveAudioAssistantModal.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/LiveAudioAssistantModal.tsx) |
+| **14** | **MongoDB Atlas Cloud Sync** | Dual-direction cloud database synchronization, backup snapshot exports, connection health ping monitor. | [`src/components/MongoSyncModal.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/MongoSyncModal.tsx) |
 
 ---
 
-## 4. Mathematical Sizing & HVAC Contracting Formulations
+## 5. Mathematical Formulations & HVAC Calculations
 
-### 4.1 Quotation & Financial Calculations
-$$\text{Subtotal} = \sum_{i=1}^n \text{Line Price}_i$$
-$$\text{Taxable Revenue} = \text{Subtotal} - \text{Discount}$$
-$$\text{GST Amount} = \text{Taxable Revenue} \times 0.18 \quad (18\% \text{ Commercial HVAC GST})$$
-$$\text{Grand Total (Quoted)} = \text{Taxable Revenue} + \text{GST Amount}$$
-$$\text{Gross Margin (₹)} = \text{Taxable Revenue} - \text{Total Raw Cost}$$
-$$\text{Gross Margin (\%)} = \left( \frac{\text{Gross Margin (₹)}}{\text{Taxable Revenue}} \right) \times 100$$
+### 5.1 Techno-Commercial Quotation Sizing
+$$\text{Taxable Revenue} = \left( \sum_{i=1}^{n} \text{Quantity}_i \times \text{Unit Rate}_i \right) - \text{Commercial Discount}$$
+$$\text{Statutory GST (18\%)} = \text{Taxable Revenue} \times 0.18$$
+$$\text{Grand Total Quoted} = \text{Taxable Revenue} + \text{Statutory GST}$$
+$$\text{Gross Margin (\%)} = \left( \frac{\text{Taxable Revenue} - \text{Total Raw Material Cost}}{\text{Taxable Revenue}} \right) \times 100$$
 
-### 4.2 Automated BOQ Stock Shortage Evaluation
-When a project is awarded:
-$$\text{Available Stock} = \text{Current Physical Stock} - \text{Allocated Stock}$$
-$$\text{Shortage Qty} = \max(0, \text{Required Qty} - \text{Available Stock})$$
+### 5.2 BOQ Deficit & Safety-Stock Reorder Evaluation
+$$\text{Available Stock} = \text{Current Physical Warehouse Stock} - \text{Allocated Stock}$$
+$$\text{Shortage Quantity} = \max\Big(0, \, \text{BOQ Quantity Required} - \text{Available Stock}\Big)$$
+$$\text{Suggested Reorder Indent} = \max\Big(0, \, \text{Reorder Level Threshold} - \text{Available Stock}\Big)$$
 
 ---
 
-## 5. Role-Based Access Control (RBAC) Matrix
+## 6. Role-Based Access Control (RBAC) Matrix
 
-| User Role | Leads CRM | Quotes Builder | Projects & BOQ | Procurement PR/PO | Warehouse Stock | Field Work Orders | Finance & Ledger | HRMS & Payroll | Audit Trail |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Executive / MD** | Full Access | Full Access | Full Access | Full Access & Approve | Full Access | Full Access | Full Access | Full Access | Full Access |
-| **Sales Manager** | Full Access | Full Access | View Only | View Only | View Stock | View Only | View AR | View Team | View Only |
-| **HVAC Estimator** | View Leads | Full Access | View BOQ | Create PR | View Stock | View Only | View Margins | Self Service | View Only |
-| **Procurement Head**| View Only | View Costs | View BOQ | Full Access & PO | Manage Stock | View Only | View AP | Self Service | View Only |
-| **Warehouse Keeper**| No Access | No Access | View BOQ | Inward POs | Full Access | No Access | No Access | Self Service | View Logs |
-| **Finance Officer** | View Won | View Approved| View Values | View PO Totals | View Valuation | View Completed | Full Access | Payroll Admin | Full Access |
-| **Lead Technician** | No Access | No Access | View Site | No Access | View Dispatched| Full Access | No Access | Self Service | Log Signoff |
+| Persona / Role | Leads CRM | Quotes | Projects & BOQ | Procurement | Warehouse | Field Tickets | Finance & Invoicing | HRMS | Admin & Settings |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Executive / MD** | ✅ Full | ✅ Full | ✅ Full | ✅ Full & Sign | ✅ Full | ✅ Full | ✅ Full | ✅ Full | ✅ Full |
+| **Sales Manager** | ✅ Full | ✅ Full | 👁️ View | 👁️ View | 👁️ Stock | 👁️ View | 👁️ Receivables | 👁️ Team | ❌ |
+| **HVAC Estimator** | 👁️ Leads | ✅ Full | 👁️ BOQ | ✍️ Raise PR | 👁️ Stock | 👁️ View | 👁️ Margins | 👤 Self | ❌ |
+| **Procurement Head**| 👁️ View | 👁️ Costs | 👁️ BOQ | ✅ Full & PO | ✅ Manage | 👁️ View | 👁️ Payables | 👤 Self | ❌ |
+| **Warehouse Keeper**| ❌ | ❌ | 👁️ BOQ | 📦 GRN Inward | ✅ Full | ❌ | ❌ | 👤 Self | ❌ |
+| **Finance Controller**| 👁️ Won | 👁️ Approved | 👁️ Value | 👁️ POs | 👁️ Value | 👁️ Work Orders | ✅ Full | ✅ Payroll Admin | ❌ |
+| **Lead Engineer** | ❌ | ❌ | 👁️ Site | ❌ | 👁️ Dispatched | ✅ Full & Sign | ❌ | 👤 Self | ❌ |
 
 ---
 
-## 6. Default System Personas (Instant Login)
+## 7. Default System Personas (Instant Login)
 
 The system supports instant authentication via **OTP** with master passcodes `123456` or `999999`:
 
-- **Executive / MD**: `vikram.m@airdynamic.com`
-- **Sales Manager**: `rajesh.s@airdynamic.com`
-- **HVAC Estimator**: `ananya.d@airdynamic.com`
-- **Procurement Manager**: `karan.m@airdynamic.com`
-- **Warehouse Storekeeper**: `suresh.k@airdynamic.com`
-- **Finance Controller**: `pooja.i@airdynamic.com`
-- **Lead Commissioning Engineer**: `amit.v@airdynamic.com`
+- **Executive / MD**: `vikram.m@airdynamic.com` (Vikram Malhotra — Full Corporate Governance)
+- **Sales Manager**: `rajesh.s@airdynamic.com` (Rajesh Sharma — CRM & Quota Leaderboard)
+- **HVAC Estimator**: `ananya.d@airdynamic.com` (Ananya Deshmukh — Thermodynamics & BOQ Sizing)
+- **Procurement Manager**: `karan.m@airdynamic.com` (Karan Mehta — PR Review & Vendor PO Release)
+- **Warehouse Storekeeper**: `suresh.k@airdynamic.com` (Suresh Kumar — Stock Inwarding & GRN)
+- **Finance Controller**: `pooja.i@airdynamic.com` (Pooja Iyer — Milestone GST Invoices & Ledger)
+- **Lead Commissioning Engineer**: `amit.v@airdynamic.com` (Amit Verma — Field Tickets & Checklists)
 
 ---
 
-## 7. Project Directory Structure
+## 8. Project Directory Structure
 
 ```
-alpha-erp/
-|-- api/
-|   |-- index.ts                         # Vercel Serverless Function entry point
-|-- server/
-|   |-- app.ts                           # Express application & REST API routes
-|   |-- api-entry.ts                     # Bundling entry for Vercel Serverless
-|   |-- mongodb.ts                       # MongoDB Atlas connection manager
-|-- server.ts                            # Dedicated Node entrypoint & WebSocket server
-|-- vercel.json                          # Vercel deployment configuration
-|-- database/
-|   |-- schema.sql                       # Complete PostgreSQL 14+ DDL Schema
-|   |-- seed_data.sql                    # Production-grade HVAC Demo Seed Data
-|-- package.json                         # NPM Dependencies & Build Scripts
-|-- vite.config.ts                       # Vite Bundler Configuration
-|-- src/
-    |-- App.tsx                          # Main Application Shell & Navigation
-    |-- main.tsx                         # React 19 Mounting Entry Point
-    |-- index.css                        # Tailwind CSS Global Imports
-    |-- types/
-    |   |-- index.ts                     # TypeScript Type Definitions & Enums
-    |-- services/
-    |   |-- storageService.ts            # Reactive Pub/Sub State & Transaction Engine
-    |   |-- googleSheets.ts              # Google Identity Services & 9-Tab Sync
-    |   |-- whatsappEmailService.ts      # WhatsApp & Automated SMTP Alerts Dispatcher
-    |-- components/
-        |-- DashboardView.tsx            # Executive Management KPIs & Margins
-        |-- ActivityFeed.tsx             # Real-time Reactive User Activity Feed
-        |-- CRMLeadsView.tsx             # CRM Pipeline & Site Survey Scheduler
-        |-- QuotesView.tsx               # Techno-Commercial Quote Register & Pricing
-        |-- ProjectsBOQView.tsx          # Project Execution & BOQ Shortage Check
-        |-- ProcurementPRPOView.tsx      # PR Approvals & PO Vendor Dispatch
-        |-- InventoryWarehouseView.tsx   # Warehouse SKU Inventory & Bin Locations
-        |-- PredictiveInventoryReorderPanel.tsx # Low Stock Reorder & Email Indents
-        |-- WorkOrdersView.tsx           # Field Engineering, Startup & Signoff
-        |-- FinancePaymentsView.tsx      # Milestone Invoicing Ledger & Receipts
-        |-- FinanceView.tsx              # GAAP Double-Entry Accounting & Vouchers
-        |-- HRView.tsx                   # Human Resources Management & 12 Sub-Modules
-        |-- EmailSettingsAdminSection.tsx# SMTP Credentials & Dummy Sandbox Settings
-        |-- LiveAudioAssistantModal.tsx  # Gemini Live Real-Time Duplex Voice Assistant
-        |-- MongoSyncModal.tsx           # MongoDB Atlas Bidirectional Cloud Sync
-        |-- UserManagementView.tsx       # RBAC User Roles & Authentication
-        |-- AuditLogView.tsx             # Immutable Compliance & Event Log
+AlphaERP-V1/
+├── api/
+│   └── index.ts                         # Vercel Serverless Function entry adapter
+├── server/
+│   ├── app.ts                           # Express application & REST API routes
+│   ├── api-entry.ts                     # Bundling entry for Vercel Serverless Function
+│   └── mongodb.ts                       # MongoDB Atlas connection manager & sync engine
+├── server.ts                            # Standalone Node.js server with WebSocket (/live)
+├── vercel.json                          # Vercel routing, rewrite rules, security headers
+├── database/
+│   ├── schema.sql                       # PostgreSQL 14+ DDL relational schema
+│   ├── insforge_schema.sql              # InsForge BaaS PostgreSQL schema
+│   ├── seed_data.sql                    # Production-grade HVAC master demo seed data
+│   └── AlphaERP_Full_Backup_*.json      # Full JSON database backup snapshot
+├── package.json                         # Dependencies, scripts, and build pipeline
+├── vite.config.ts                       # Vite bundler configuration with React & Tailwind
+├── src/
+│   ├── App.tsx                          # Root application shell, navigation & auth state
+│   ├── main.tsx                         # React 19 mounting entry point
+│   ├── index.css                        # Tailwind CSS global styling tokens & themes
+│   ├── types/
+│   │   └── index.ts                     # Global TypeScript interfaces & data models
+│   ├── services/
+│   │   ├── storageService.ts            # Reactive Pub/Sub state, local storage & audit log
+│   │   ├── googleSheets.ts              # Google Identity Services (GIS) 9-tab sync
+│   │   ├── whatsappEmailService.ts      # Automated SMTP alerts & WhatsApp generator
+│   │   └── exportService.ts             # CSV & PDF generation engines
+│   └── components/
+│       ├── Header.tsx                   # Top bar, role selector, persona quick-switch
+│       ├── Sidebar.tsx                  # Collapsible multi-module navigation sidebar
+│       ├── DashboardView.tsx            # Executive KPI summary & revenue charts
+│       ├── CRMLeadsView.tsx             # Lead management, sizing & survey tracker
+│       ├── QuotesView.tsx               # HVAC quotation builder & pricing engine
+│       ├── ProjectsBOQView.tsx          # Project execution & BOQ shortage cross-check
+│       ├── ProcurementPRPOView.tsx      # PR approval workflow & PO vendor dispatch
+│       ├── InventoryWarehouseView.tsx   # Warehouse inventory & stock tracker
+│       ├── PredictiveInventoryReorderPanel.tsx # Predictive stock alerts & email dispatch
+│       ├── WorkOrdersView.tsx           # Field engineering tickets & commissioning
+│       ├── FinancePaymentsView.tsx      # Milestone billing & GST invoice ledger
+│       ├── FinanceView.tsx              # GAAP double-entry ledger & vouchers
+│       ├── HRView.tsx                   # 12-Module HRMS & Payroll Suite
+│       ├── SalesPerformanceView.tsx     # Quota tracking & performance charts
+│       ├── EmailSettingsAdminSection.tsx# SMTP credentials & Dummy Sandbox settings
+│       ├── LiveAudioAssistantModal.tsx  # Gemini Live real-time voice assistant
+│       ├── MongoSyncModal.tsx           # MongoDB Atlas bidirectional cloud sync
+│       ├── UserManagementView.tsx       # RBAC user administration
+│       └── AuditLogView.tsx             # Immutable event ledger & compliance logs
 ```
 
 ---
 
-## 8. Deployment & Build Instructions
+## 9. Build, Deployment & Local Setup
 
-### 8.1 Production Build
-```bash
-npm run build
-```
-This builds:
-1. `dist/`: Optimized Vite React SPA.
-2. `dist/server.cjs`: Self-contained CommonJS server bundle for Node/Docker/Cloud Run.
-3. `api/index.js`: Self-contained serverless bundle for Vercel.
+### 9.1 Local Development Setup
 
-### 8.2 Live Vercel Deployment
 ```bash
-# Automated Vercel deployment with Personal Access Token
-npx vercel deploy --prod --token "$VERCEL_TOKEN" --yes
+# 1. Install dependencies
+npm install
+
+# 2. Start full-stack development server (Express API + Vite Dev Server + WebSockets)
+npm run dev
+
+# 3. Access locally in browser
+# http://localhost:3000
 ```
 
-### 8.3 Containerized / Ubuntu Deployment
-Refer to `DEPLOYMENT_MANUAL.md` and `IMPLEMENTATION_GUIDE.md` for comprehensive Docker, Cloud Run, and Ubuntu Nginx instructions.
-
----
-
-## 9. Verification & Quality Assurance
+### 9.2 Production Build
 
 ```bash
-# Linting & static analysis
-npm run lint
-
-# Application build verification
+# Single command builds frontend SPA, serverless adapter, and standalone server bundle
 npm run build
 ```
 
+The build command produces:
+- `dist/`: Client-side optimized React 19 SPA assets.
+- `dist/server.cjs`: Standalone Node.js server bundle for Docker/Cloud Run/Ubuntu.
+- `api/index.js`: Serverless bundle for Vercel Serverless Functions.
+
+### 9.3 Deploy to Vercel (Production)
+
+```bash
+npx vercel deploy --prod --yes
+```
+
 ---
 
-## 10. Compliance & Standards
-- **ASHRAE Standard 90.1 / 62.1**: HVAC Energy Efficiency & Indoor Air Quality.
-- **ISHRAE**: Indian Society of Heating, Refrigerating and Air Conditioning Engineers guidelines.
-- **GAAP / Ind AS**: Double-entry financial accounting and revenue recognition standards.
-- **GST / TDS**: Indian Statutory Indirect & Direct Tax compliance ready.
+## 10. Industry Compliance & Standards
+
+- **ASHRAE 90.1 / 62.1**: Energy efficiency standards and indoor ventilation air quality guidelines.
+- **ISHRAE**: Indian Society of Heating, Refrigerating and Air Conditioning Engineers standards.
+- **GAAP / Ind AS 115**: Revenue recognition from contracts with customers and double-entry accounting.
+- **GST / TDS**: Indian statutory tax calculation for goods (18%) and services with HSN/SAC codes.

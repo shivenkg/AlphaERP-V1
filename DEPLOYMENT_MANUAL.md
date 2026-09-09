@@ -1,15 +1,61 @@
 # AlphaERP: Complete Enterprise Deployment Manual
 ### Production Deployment for Vercel Serverless, Google Cloud Run, Docker Containers, Ubuntu Linux, Systemd, PM2 & Nginx
 
+**Document Version:** 3.5.0-Production  
+**Applet URL:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
+**Ingress Host & Port:** `0.0.0.0:3000` (Dedicated Server) | Vercel Serverless Edge
+
 ---
 
-## 1. System Requirements & Architecture
+## 1. System Requirements & Architecture Topology
 
-AlphaERP is architected as an enterprise-grade, full-stack HVAC operations platform:
+AlphaERP is engineered as an enterprise-grade, full-stack HVAC operations platform:
 - **Frontend / Client**: React 19 + TypeScript + Vite 6 + Tailwind CSS v4 + Lucide Icons + Motion
 - **Backend / API**: Node.js 20+ / Express with TypeScript bundling via esbuild
 - **Persistence Options**: MongoDB Atlas (Cloud NoSQL), PostgreSQL 14+ (Relational), or browser IndexedDB cache
 - **Ingress Port**: Hardcoded to **Port 3000** (Host: `0.0.0.0`) for container compatibility and reverse proxies.
+
+```mermaid
+flowchart TD
+    subgraph TrafficSource["🌍 Incoming Client Traffic"]
+        WebUsers["HTTPS Web Browser Traffic (Port 443)"]
+        WSUsers["WSS Duplex Audio Stream (/live)"]
+    end
+
+    subgraph IngressGateway["🛡️ Ingress Gateway & Edge Network"]
+        VercelCDN["Vercel Edge Global CDN"]
+        NginxProxy["Nginx Reverse Proxy / Load Balancer"]
+        Certbot["Let's Encrypt Automated SSL Renewal"]
+        NginxProxy <--> Certbot
+    end
+
+    subgraph ExecutionLayer["⚙️ Runtime & Execution Options"]
+        VercelFunc["Vercel Serverless Execution (api/index.js)"]
+        DockerContainer["Docker Container (dist/server.cjs)"]
+        PM2Service["Ubuntu PM2 Systemd Daemon (Port 3000)"]
+    end
+
+    subgraph PersistentBackend["☁️ Persistent Storage & AI Services"]
+        MongoCluster[("MongoDB Atlas Cloud Database")]
+        GoogleSheets["Google Sheets 9-Tab Real-time Engine"]
+        SMTPHost["SMTP Mailer (Production / Mailtrap Sandbox)"]
+        GeminiVoice["Gemini Live Duplex WebSocket Engine"]
+    end
+
+    WebUsers --> VercelCDN --> VercelFunc
+    WebUsers --> NginxProxy
+    WSUsers --> NginxProxy
+    NginxProxy --> DockerContainer
+    NginxProxy --> PM2Service
+    VercelFunc <--> MongoCluster
+    VercelFunc --> SMTPHost
+    DockerContainer <--> MongoCluster
+    DockerContainer --> SMTPHost
+    DockerContainer <--> GeminiVoice
+    PM2Service <--> MongoCluster
+    PM2Service --> SMTPHost
+    PM2Service <--> GeminiVoice
+```
 
 ---
 
@@ -18,18 +64,26 @@ AlphaERP is architected as an enterprise-grade, full-stack HVAC operations platf
 Declare all required variables in your runtime environment (or `.env` file):
 
 ```env
-# Application Runtime Configuration
+# ==============================================================================
+# APPLICATION RUNTIME CONFIGURATION
+# ==============================================================================
 NODE_ENV=production
 PORT=3000
 HOST=0.0.0.0
 
-# Cloud Database Configuration (MongoDB Atlas)
+# ==============================================================================
+# CLOUD DATABASE PERSISTENCE (MONGODB ATLAS)
+# ==============================================================================
 MONGODB_URI=mongodb+srv://shivenk_db_user:<password>@cluster0.5gbrhfg.mongodb.net/alphaerp?retryWrites=true&w=majority
 
-# AI Intelligence (Gemini Live & Vision APIs)
+# ==============================================================================
+# AI & VOICE INTELLIGENCE (GEMINI LIVE & THERMODYNAMIC REASONING)
+# ==============================================================================
 GEMINI_API_KEY=AIzaSy...YourGeminiApiKeyHere
 
-# Automated Email & SMTP Dispatch (Dummy Sandbox or Production SMTP)
+# ==============================================================================
+# AUTOMATED PROCUREMENT EMAIL & SMTP ALERTS (SANDBOX OR LIVE SMTP)
+# ==============================================================================
 SMTP_HOST=smtp.mailtrap.io
 SMTP_PORT=587
 SMTP_USER=your_smtp_username
@@ -37,33 +91,32 @@ SMTP_PASS=your_smtp_password
 SMTP_FROM="AlphaERP Procurement" <procurement@alphaerp.com>
 PROCUREMENT_ALERT_EMAIL=procurement@yourcompany.com
 
-# Vercel Production Deployment Credentials (Optional)
+# ==============================================================================
+# VERCEL PRODUCTION DEPLOYMENT CREDENTIALS (OPTIONAL)
+# ==============================================================================
 VERCEL_TOKEN=your_vercel_access_token
 VERCEL_ORG_ID=your_org_id
 VERCEL_PROJECT_ID=your_project_id
-
-# Optional PostgreSQL / Cloud SQL Relational Storage
-DATABASE_URL=postgresql://alpha_user:YourStrongPassword123!@localhost:5432/alpha_erp_db
 ```
 
 ---
 
 ## 3. Deployment Option 1: Vercel Serverless & Edge Network (Zero Ops)
 
-AlphaERP is fully configured with `vercel.json` and a dedicated serverless entrypoint in `api/index.js`.
+AlphaERP is pre-configured with `vercel.json` and a serverless entrypoint in `api/index.js`.
 
 ### 3.1 Automated Production Build
-Running `npm run build` generates:
+Running `npm run build` compiles:
 1. `dist/`: High-performance static React assets served via Vercel Edge CDN.
 2. `api/index.js`: Self-contained serverless bundle wrapping the Express API.
 3. `dist/server.cjs`: Standalone Node.js server bundle for container runtimes.
 
 ### 3.2 Deploy via Vercel CLI
 ```bash
-# 1. Install or run Vercel CLI
+# 1. Standard production deploy
 npx vercel deploy --prod --yes
 
-# 2. Or supply token directly
+# 2. Or deploy using automated token
 npx vercel deploy --prod --token "$VERCEL_TOKEN" --yes
 ```
 
@@ -75,7 +128,8 @@ npx vercel deploy --prod --token "$VERCEL_TOKEN" --yes
 
 ## 4. Deployment Option 2: Google Cloud Run & Docker Containers
 
-### 4.1 Dockerfile
+### 4.1 Production Multi-Stage Dockerfile
+
 ```dockerfile
 # Stage 1: Build & Bundle
 FROM node:20-alpine AS builder
@@ -108,14 +162,14 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 CMD ["node", "dist/server.cjs"]
 ```
 
-### 4.2 Build and Deploy to Cloud Run
+### 4.2 Build and Deploy to Google Cloud Run
 ```bash
 # 1. Submit build to Google Artifact Registry
-gcloud builds submit --tag gcr.io/your-gcp-project-id/alpha-erp:latest
+gcloud builds submit --tag gcr.io/YOUR_GCP_PROJECT_ID/alpha-erp:latest
 
 # 2. Deploy to Cloud Run
 gcloud run deploy alpha-erp \
-  --image gcr.io/your-gcp-project-id/alpha-erp:latest \
+  --image gcr.io/YOUR_GCP_PROJECT_ID/alpha-erp:latest \
   --platform managed \
   --region asia-east1 \
   --allow-unauthenticated \
@@ -131,7 +185,7 @@ gcloud run deploy alpha-erp \
 
 ## 5. Deployment Option 3: Ubuntu 24.04 / 22.04 LTS (Bare-Metal / VM)
 
-### 5.1 System Setup & Node.js 20
+### 5.1 System Setup & Node.js 20 LTS
 ```bash
 sudo apt-get update -y && sudo apt-get upgrade -y
 sudo apt-get install -y curl wget git build-essential nginx certbot python3-certbot-nginx
@@ -154,13 +208,14 @@ pm2 startup systemd
 pm2 save
 ```
 
-### 5.3 Nginx Reverse Proxy & SSL
+### 5.3 Nginx Reverse Proxy & SSL Configuration
 Create `/etc/nginx/sites-available/alpha-erp`:
 ```nginx
 server {
     listen 80;
     server_name erp.yourdomain.com;
 
+    client_max_body_size 50M;
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml;
 
@@ -189,18 +244,25 @@ sudo certbot --nginx -d erp.yourdomain.com --non-interactive --agree-tos -m admi
 ## 6. Health Check & Deployment Verification
 
 ```bash
-curl -I https://hvacbiz.vercel.app/api/health
-```
+# 1. Health & Environment Status Check
+curl -s https://hvacbiz.vercel.app/api/health | jq .
 
-Expected Output:
-```http
-HTTP/2 200 
-content-type: application/json; charset=utf-8
+# 2. Test Procurement Alert Email API
+curl -X POST https://hvacbiz.vercel.app/api/procurement/reorder-alert-email \
+  -H "Content-Type: application/json" \
+  -d '{
+    "subject": "Deployment Smoke Test",
+    "recipients": ["admin@yourcompany.com"],
+    "smtpConfig": { "mode": "mock" }
+  }'
+
+# 3. MongoDB Cluster Connection Test
+curl -s https://hvacbiz.vercel.app/api/mongodb/status | jq .
 ```
 
 ---
 
-## 7. Zero-Downtime Updates
+## 7. Zero-Downtime Updates & Rollbacks
 
 ```bash
 cd /opt/alpha-erp
