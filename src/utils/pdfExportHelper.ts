@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas-pro';
 
 /**
- * High-fidelity Client-Side PDF Exporter and Document Downloader for AlphaERP (Atmos Aircon).
+ * High-fidelity Client-Side PDF Exporter and Document Downloader for AlphaERP (HVAC Biz).
  * Uses jsPDF and html2canvas with smart pagination, retina scaling, and direct vector fallbacks.
  * Delivers exact visual replicas of on-screen documents into clean, printable PDFs with zero data overlap.
  */
@@ -230,7 +230,7 @@ export async function downloadElementAsPDF(
         pdf.setPage(i);
         pdf.setFontSize(7.5);
         pdf.setTextColor(148, 163, 184); // slate-400
-        const footerLabel = options.footerText || `AlphaERP Official Document • Atmos Aircon • Page ${i} of ${totalPages} • Generated ${new Date().toLocaleDateString()}`;
+        const footerLabel = options.footerText || `AlphaERP Official Document • HVAC Biz • Page ${i} of ${totalPages} • Generated ${new Date().toLocaleDateString()}`;
         pdf.text(footerLabel, pageWidthMm / 2, pageHeightMm - 4, { align: 'center' });
       }
     }
@@ -595,7 +595,7 @@ function generateDirectVectorPDF(
       pdf.setFontSize(7);
       pdf.setTextColor(148, 163, 184);
       pdf.text(
-        `AlphaERP Enterprise • Atmos Aircon Engineering • Page ${i} of ${totalPages} • Confidential & Legally Binding`,
+        `AlphaERP Enterprise • HVAC Biz Engineering • Page ${i} of ${totalPages} • Confidential & Legally Binding`,
         pageWidth / 2,
         pageHeight - 5,
         { align: 'center' }
@@ -619,7 +619,7 @@ export function triggerDirectPrint(
   documentTitle?: string
 ) {
   let targetElement: HTMLElement | null = null;
-  let printTitle = 'AlphaERP Document • Atmos Aircon';
+  let printTitle = 'AlphaERP Document • HVAC Biz';
 
   if (targetOrTitle instanceof HTMLElement) {
     targetElement = targetOrTitle;

@@ -503,8 +503,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <JSAlphaSoftLogo size="xs" variant="icon" isDarkTheme={true} />
                 <div className="min-w-0 truncate">
                   <div className="text-xs font-black text-white tracking-tight flex items-center gap-1">
-                    <span className="text-[#0080FF]">Atmos</span>
-                    <span>Aircon</span>
+                    <span className="text-[#0080FF]">HVAC</span>
+                    <span>Biz</span>
                   </div>
                   <div className="text-[9px] font-semibold text-slate-400 flex items-center gap-1.5">
                     <span>AlphaERP Hub</span>
@@ -894,7 +894,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1.5 font-bold text-blue-200">
                 <Flame className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-[11px]">AlphaERP • Atmos Aircon</span>
+                <span className="text-[11px]">AlphaERP • HVAC Biz</span>
               </div>
               <span className="px-1.5 py-0.2 text-[8px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded font-mono font-bold">
                 v2.4 Live

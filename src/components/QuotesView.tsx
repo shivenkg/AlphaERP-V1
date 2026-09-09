@@ -472,7 +472,7 @@ export const QuotesView: React.FC<QuotesViewProps> = ({
         <div ref={quotesLedgerPrintRef} className="bg-white text-slate-900 p-8 w-[1000px] space-y-6 font-sans">
           <div className="flex items-center justify-between border-b pb-4 border-slate-200">
             <div>
-              <div className="text-lg font-black text-slate-900">ATMOS AIRCON PRIVATE LIMITED</div>
+              <div className="text-lg font-black text-slate-900">HVAC BIZ PRIVATE LIMITED</div>
               <div className="text-xs text-slate-500 font-mono">HVAC Techno-Commercial Quotations & Project Costing Register</div>
             </div>
             <div className="text-right text-xs text-slate-500">

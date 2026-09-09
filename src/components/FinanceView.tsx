@@ -1294,7 +1294,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({
               <div ref={voucherPrintRef} className="p-4 border border-slate-200 rounded-xl space-y-4 text-xs font-sans bg-white">
                 <div className="flex justify-between items-start border-b border-slate-100 pb-3">
                   <div>
-                    <h4 className="font-bold text-base text-slate-900">Atmos Aircon Pvt Ltd</h4>
+                    <h4 className="font-bold text-base text-slate-900">HVAC Biz Pvt Ltd</h4>
                     <p className="text-slate-500">AlphaERP Commercial Contracting Division</p>
                   </div>
                   <div className="text-right">

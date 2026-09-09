@@ -65,7 +65,7 @@ export const FontSizeControl: React.FC = () => {
     {
       mode: 'auto',
       label: 'Auto (Responsive)',
-      desc: 'Dynamically adapts to viewport resolution',
+      desc: 'Auto-adjusts layout fluidly with standard font size',
       scaleText: `Auto (${Math.round(computedScale * 100)}%)`
     },
     {

@@ -412,8 +412,8 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight flex items-center whitespace-nowrap">
-                  <span className="text-[#0066E0]">Atmos</span>
-                  <span className="ml-1 text-slate-800 dark:text-slate-100">Aircon</span>
+                  <span className="text-[#0066E0]">HVAC</span>
+                  <span className="ml-1 text-slate-800 dark:text-slate-100">Biz</span>
                   <span className="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 tracking-wide font-mono">
                     AlphaERP
                   </span>

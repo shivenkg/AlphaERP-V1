@@ -22,14 +22,9 @@ const getBreakpoint = (width: number): ViewportBreakpoint => {
   return '3xl';
 };
 
-const calculateAutoFontScale = (width: number): number => {
-  if (width < 480) return 0.875; // 14px on ultra-compact mobile
-  if (width < 640) return 0.90;  // 14.4px on standard mobile
-  if (width < 768) return 0.9375;// 15px on phablets / small tablets
-  if (width < 1024) return 0.96875; // 15.5px on portrait tablets
-  if (width < 2560) return 1.0;   // 16px on standard laptops & desktop monitors (1080p, 1440p)
-  // High-DPI 4K displays
-  return 1.06;
+const calculateAutoFontScale = (_width: number): number => {
+  // Standard 100% font scale: application auto-adjusts layout without resizing fonts or screen view size
+  return 1.0;
 };
 
 const FontSizeContext = createContext<FontSizeContextType | undefined>(undefined);

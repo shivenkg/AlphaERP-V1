@@ -120,7 +120,7 @@ wss.on("connection", async (clientWs: WebSocket, request: http.IncomingMessage) 
           voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } },
         },
         systemInstruction:
-          "You are the AlphaERP Voice Assistant for Atmos Aircon, a leading commercial and industrial HVAC engineering enterprise. You provide instantaneous, concise, clear, and professional voice guidance on HVAC system calculations (cooling load in tons, CFM, static pressure), project stage conversions, quotation estimations, purchase requisitions, inventory parts cross-referencing, and equipment specs. Speak naturally, efficiently, and with technical precision.",
+          "You are the AlphaERP Voice Assistant for HVAC Biz, a leading commercial and industrial HVAC engineering enterprise. You provide instantaneous, concise, clear, and professional voice guidance on HVAC system calculations (cooling load in tons, CFM, static pressure), project stage conversions, quotation estimations, purchase requisitions, inventory parts cross-referencing, and equipment specs. Speak naturally, efficiently, and with technical precision.",
       },
       callbacks: {
         onmessage: (message: LiveServerMessage) => {

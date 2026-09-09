@@ -344,8 +344,8 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
                 <JSAlphaSoftLogo size="md" variant="icon" isDarkTheme={true} />
                 <div>
                   <h2 className="text-xl font-black tracking-tight flex items-center gap-2">
-                    <span className="text-[#0066E0]">Atmos</span>
-                    <span className="text-white">Aircon</span>
+                    <span className="text-[#0066E0]">HVAC</span>
+                    <span className="text-white">Biz</span>
                     <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30">
                       AlphaERP
                     </span>

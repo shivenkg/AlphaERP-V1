@@ -200,7 +200,7 @@ export const ClientQuotationDocumentModal: React.FC<ClientQuotationDocumentModal
         orientation,
         scale: 2,
         marginMm: 8,
-        footerText: `AlphaERP Official Client Quotation • Atmos Aircon Pvt Ltd • Ref: ${currentQuote.quoteNumber} • Generated on ${new Date().toLocaleDateString('en-IN')}`
+        footerText: `AlphaERP Official Client Quotation • HVAC Biz Pvt Ltd • Ref: ${currentQuote.quoteNumber} • Generated on ${new Date().toLocaleDateString('en-IN')}`
       });
     } finally {
       setIsExportingPDF(false);
@@ -603,7 +603,7 @@ export const ClientQuotationDocumentModal: React.FC<ClientQuotationDocumentModal
                     </div>
                     <div>
                       <div className="font-extrabold text-lg tracking-tight text-white flex items-center gap-2">
-                        <span>ATMOS AIRCON PRIVATE LIMITED</span>
+                        <span>HVAC BIZ PRIVATE LIMITED</span>
                         <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/30 border border-blue-400/40 text-blue-200 font-bold uppercase">
                           ISO 9001:2015 Certified
                         </span>
@@ -803,7 +803,7 @@ export const ClientQuotationDocumentModal: React.FC<ClientQuotationDocumentModal
                     <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px] space-y-1">
                       <div className="font-bold text-slate-800 uppercase text-[10px]">Bank Remittance Coordinates (RTGS / NEFT):</div>
                       <div className="text-slate-600">Bank: <span className="font-semibold text-slate-800">HDFC Bank Limited</span> • Branch: Vashi Commercial Banking Branch</div>
-                      <div className="text-slate-600">A/C Name: <span className="font-semibold text-slate-800">ATMOS AIRCON PRIVATE LIMITED</span></div>
+                      <div className="text-slate-600">A/C Name: <span className="font-semibold text-slate-800">HVAC BIZ PRIVATE LIMITED</span></div>
                       <div className="text-slate-600">A/C No: <span className="font-mono font-bold text-slate-900">50200088991234</span> • IFSC: <span className="font-mono font-bold text-slate-900">HDFC0001024</span></div>
                     </div>
                   )}
@@ -923,7 +923,7 @@ export const ClientQuotationDocumentModal: React.FC<ClientQuotationDocumentModal
 
                   <div className="space-y-12 text-right">
                     <div className="text-xs font-bold text-blue-900">
-                      For ATMOS AIRCON PRIVATE LIMITED:
+                      For HVAC BIZ PRIVATE LIMITED:
                     </div>
                     <div className="border-t border-dashed border-slate-400 pt-1 text-[11px] text-slate-500">
                       <div className="font-semibold text-slate-700">

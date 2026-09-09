@@ -43,7 +43,7 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
   const address = headerConfig.customAddress || settings?.hqAddress || 'Tech Park Tower B, 4th Floor, MIDC Andheri East, Mumbai 400093';
   const phone = headerConfig.customContactPhone || settings?.supportPhone || '+91 98200 11223';
   const email = headerConfig.customContactEmail || settings?.supportEmail || 'contact@alphaerp.com';
-  const website = headerConfig.customWebsite || 'www.atmosaircon.com';
+  const website = headerConfig.customWebsite || 'www.hvacbiz.com';
   const gstin = settings?.gstin || '27AABCA1299K1Z4';
   const pan = settings?.pan || 'AABCA1299K';
   const cin = settings?.cin || 'U29190MH2018PLC312984';
@@ -56,8 +56,8 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
         <AtmosAirconLogo size="md" variant="icon" />
         <div>
           <div className="text-base sm:text-lg font-black tracking-tight text-slate-900 flex items-center gap-1 uppercase">
-            <span style={{ color: accentColor }}>Atmos</span>
-            <span>Aircon</span>
+            <span style={{ color: accentColor }}>HVAC</span>
+            <span>Biz</span>
           </div>
           {headerConfig.divisionName && (
             <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">

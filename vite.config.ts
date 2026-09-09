@@ -14,29 +14,19 @@ export default defineConfig(() => {
     build: {
       target: 'es2022',
       sourcemap: false,
-      chunkSizeWarningLimit: 1200,
+      chunkSizeWarningLimit: 1500,
       cssCodeSplit: true,
       minify: 'esbuild',
       rollupOptions: {
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom')) {
-                return 'vendor-react';
-              }
               if (id.includes('recharts') || id.includes('d3')) {
                 return 'vendor-charts';
               }
               if (id.includes('jspdf') || id.includes('html2canvas')) {
                 return 'vendor-pdf';
               }
-              if (id.includes('lucide-react')) {
-                return 'vendor-icons';
-              }
-              if (id.includes('motion')) {
-                return 'vendor-motion';
-              }
-              return 'vendor-misc';
             }
           },
         },

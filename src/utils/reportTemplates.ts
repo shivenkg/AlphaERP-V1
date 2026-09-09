@@ -204,7 +204,7 @@ export const DEFAULT_REPORT_TEMPLATES: Record<ReportType, ReportTemplateConfig> 
         'Exclusions: Structural civil work, core cutting exceeding 100mm, and main electrical breaker panels unless itemized.'
       ],
       customNotesHeading: 'Bank Details for Advance Remittance:',
-      customNotes: 'A/c Name: Atmos Aircon Pvt Ltd • Bank: HDFC Bank • A/c: 50200049281729 • IFSC: HDFC0000240',
+      customNotes: 'A/c Name: HVAC Biz Pvt Ltd • Bank: HDFC Bank • A/c: 50200049281729 • IFSC: HDFC0000240',
       showBankDetails: true,
       bankDetailsHeading: 'Direct Bank Remittance Instructions (RTGS / NEFT):',
       customBankInstructions: 'Please wire advance payment quoting Quotation Reference # to enable immediate material ordering.',
@@ -217,7 +217,7 @@ export const DEFAULT_REPORT_TEMPLATES: Record<ReportType, ReportTemplateConfig> 
       secondarySignatorySubtitle: 'Authorized Client Signatory & Seal',
       showDigitalSeal: true,
       digitalSealText: 'AlphaERP Commercial Sign-off',
-      confidentialityNotice: 'Commercial proposal proprietary to Atmos Aircon Pvt Ltd. Subject to standard contract terms.',
+      confidentialityNotice: 'Commercial proposal proprietary to HVAC Biz Pvt Ltd. Subject to standard contract terms.',
       showPageNumbers: true,
       pageNumberFormat: 'page_x_of_y'
     },

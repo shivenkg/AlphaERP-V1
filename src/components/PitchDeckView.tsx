@@ -113,11 +113,11 @@ export const PitchDeckView: React.FC<PitchDeckViewProps> = ({
     {
       id: 'slide-cover',
       category: 'Overview',
-      title: 'AlphaERP & Atmos Aircon',
+      title: 'AlphaERP & HVAC Biz',
       subtitle: 'The Intelligent Operating System for Turnkey HVAC & MEP Engineering Contractors',
       badge: 'INVESTOR PITCH DECK • SERIES A',
       speakerNotes:
-        'Welcome everyone. Today we are presenting AlphaERP by Atmos Aircon—the industry-specific operating system designed to solve the multi-billion dollar margin leakage and execution crisis facing HVAC and MEP engineering contractors.',
+        'Welcome everyone. Today we are presenting AlphaERP by HVAC Biz—the industry-specific operating system designed to solve the multi-billion dollar margin leakage and execution crisis facing HVAC and MEP engineering contractors.',
       renderContent: () => (
         <div className="flex flex-col items-center justify-center text-center h-full px-6 py-8 space-y-8 animate-in fade-in duration-300">
           <div className="flex items-center gap-3 p-3 bg-blue-50/80 dark:bg-blue-950/40 rounded-2xl border border-blue-200 dark:border-blue-800 shadow-sm">
@@ -126,7 +126,7 @@ export const PitchDeckView: React.FC<PitchDeckViewProps> = ({
             </div>
             <div className="text-left">
               <div className="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white">
-                ATMOS AIRCON PRIVATE LIMITED
+                HVAC BIZ PRIVATE LIMITED
               </div>
               <div className="text-[11px] text-blue-700 dark:text-blue-300 font-mono">
                 Class-1 Licensed HVAC Turnkey Contractor & Enterprise Software
@@ -1318,7 +1318,7 @@ export const PitchDeckView: React.FC<PitchDeckViewProps> = ({
           </div>
 
           <div className="p-3 bg-blue-50 dark:bg-slate-800 rounded-xl border border-blue-200 dark:border-blue-900 text-xs text-blue-900 dark:text-blue-200 font-medium">
-            Core Moat: Real-world operational battle-testing by Atmos Aircon ensures every workflow, unit rate, and approval logic aligns with practical site reality.
+            Core Moat: Real-world operational battle-testing by HVAC Biz ensures every workflow, unit rate, and approval logic aligns with practical site reality.
           </div>
         </div>
       )
@@ -1364,9 +1364,9 @@ export const PitchDeckView: React.FC<PitchDeckViewProps> = ({
           <div className="p-6 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="space-y-1 text-center sm:text-left">
               <div className="text-xs font-bold uppercase tracking-wider text-blue-300">Contact & Investor Relations</div>
-              <div className="text-xl font-bold">ATMOS AIRCON PRIVATE LIMITED</div>
+              <div className="text-xl font-bold">HVAC BIZ PRIVATE LIMITED</div>
               <div className="text-xs text-blue-200">Plot No. 42, Sector 18, Vashi Commercial Hub, Navi Mumbai, MH - 400705</div>
-              <div className="text-xs text-blue-300/80 font-mono pt-1">Email: corporate@atmosaircon.in • Phone: +91 22 2789 4400</div>
+              <div className="text-xs text-blue-300/80 font-mono pt-1">Email: contact@hvacbiz.com • Phone: +91 22 2789 4400</div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 shrink-0">
@@ -1481,7 +1481,7 @@ export const PitchDeckView: React.FC<PitchDeckViewProps> = ({
 
     pdf.setFontSize(8);
     pdf.setTextColor(148, 163, 184);
-    pdf.text('Atmos Aircon Private Limited • AlphaERP Intelligent Operating System for Turnkey MEP • Confidential', 14, 203);
+    pdf.text('HVAC Biz Private Limited • AlphaERP Intelligent Operating System for Turnkey MEP • Confidential', 14, 203);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(71, 85, 105);
     pdf.text(`Slide ${slideIndex + 1} of ${totalSlides}`, 283, 203, { align: 'right' });
@@ -2058,7 +2058,7 @@ export const PitchDeckView: React.FC<PitchDeckViewProps> = ({
             {/* Slide Footer */}
             <div className="pt-4 mt-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 font-medium">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-800">Atmos Aircon Private Limited</span>
+                <span className="font-bold text-slate-800">HVAC Biz Private Limited</span>
                 <span>•</span>
                 <span>AlphaERP Intelligent Operating System for Turnkey MEP</span>
                 <span>•</span>
@@ -2187,7 +2187,7 @@ export const PitchDeckView: React.FC<PitchDeckViewProps> = ({
             {/* Slide Footer */}
             <div className="pt-4 mt-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 font-medium">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-800">Atmos Aircon Private Limited</span>
+                <span className="font-bold text-slate-800">HVAC Biz Private Limited</span>
                 <span>•</span>
                 <span>AlphaERP Intelligent Operating System for Turnkey MEP</span>
                 <span>•</span>

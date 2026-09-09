@@ -188,8 +188,8 @@ export const AtmosAirconLogo: React.FC<AtmosAirconLogoProps> = ({
       <div className="flex flex-col justify-center leading-none">
         <div className="flex items-baseline gap-1">
           <span className={`font-black tracking-tight ${isDarkTheme ? 'text-white' : 'text-slate-900'} ${dimensions.text}`}>
-            <span className="text-[#0066E0]">Atmos</span>
-            <span className="ml-1 text-slate-800 dark:text-slate-100">Aircon</span>
+            <span className="text-[#0066E0]">HVAC</span>
+            <span className="ml-1 text-slate-800 dark:text-slate-100">Biz</span>
           </span>
           <span className="text-[10px] font-bold px-1.5 py-0.2 bg-gradient-to-r from-orange-500/15 to-blue-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/25 rounded tracking-wider uppercase font-mono">
             AlphaERP
@@ -203,7 +203,9 @@ export const AtmosAirconLogo: React.FC<AtmosAirconLogoProps> = ({
   );
 };
 
-// Backwards-compatible alias for existing imports
+// Backwards-compatible aliases for existing imports
+export const HVACBizLogo = AtmosAirconLogo;
+export type HVACBizLogoProps = AtmosAirconLogoProps;
 export const JSAlphaSoftLogo = AtmosAirconLogo;
 export type JSAlphaSoftLogoProps = AtmosAirconLogoProps;
 

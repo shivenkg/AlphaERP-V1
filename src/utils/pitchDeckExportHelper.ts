@@ -135,7 +135,7 @@ export async function exportPitchDeckToPDF(
  */
 export function triggerPitchDeckPrint(
   printableHtml: string,
-  documentTitle: string = 'AlphaERP Investor Pitch Deck • Atmos Aircon'
+  documentTitle: string = 'AlphaERP Investor Pitch Deck • HVAC Biz'
 ): void {
   const originalTitle = document.title;
   document.title = documentTitle;

@@ -134,7 +134,7 @@ export function generateViewSummaryText(activeTab: string): string {
 
   const lines: string[] = [
     `═══════════════════════════════════════════════════════════════════`,
-    ` ATMOS AIRCON • ALPHAERP SUMMARY REPORT`,
+    ` HVAC BIZ • ALPHAERP SUMMARY REPORT`,
     ` Module: ${info.title} [${info.category}]`,
     ` Exported on: ${dateStr}`,
     `═══════════════════════════════════════════════════════════════════\n`
@@ -312,7 +312,7 @@ export function generateViewSummaryText(activeTab: string): string {
   }
 
   lines.push(`\n───────────────────────────────────────────────────────────────────`);
-  lines.push(`Generated securely by AlphaERP • Atmos Aircon Enterprise Suite`);
+  lines.push(`Generated securely by AlphaERP • HVAC Biz Enterprise Suite`);
   return lines.join('\n');
 }
 
@@ -376,7 +376,7 @@ export async function downloadViewPDFSummary(activeTab: string): Promise<boolean
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(12);
       pdf.setTextColor(255, 255, 255);
-      pdf.text('ATMOS AIRCON • HVAC ENGINEERING ALPHAERP', margin + 5, currentY + 8);
+      pdf.text('HVAC BIZ • HVAC ENGINEERING ALPHAERP', margin + 5, currentY + 8);
 
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(7.5);
@@ -419,7 +419,7 @@ export async function downloadViewPDFSummary(activeTab: string): Promise<boolean
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(8);
       pdf.setTextColor(255, 255, 255);
-      pdf.text(`ATMOS AIRCON • ${sanitizePdfText(info.title).toUpperCase()} (CONTINUED)`, margin + 4, currentY + 5.5);
+      pdf.text(`HVAC BIZ • ${sanitizePdfText(info.title).toUpperCase()} (CONTINUED)`, margin + 4, currentY + 5.5);
 
       currentY += 14;
     }
@@ -867,7 +867,7 @@ export async function downloadViewPDFSummary(activeTab: string): Promise<boolean
     pdf.setFontSize(7);
     pdf.setTextColor(148, 163, 184); // Slate 400
     pdf.text(
-      `AlphaERP • Atmos Aircon • Page ${i} of ${totalPages} • Generated on ${dateStr} • Confidential Record`,
+      `AlphaERP • HVAC Biz • Page ${i} of ${totalPages} • Generated on ${dateStr} • Confidential Record`,
       pageWidth / 2,
       pageHeight - 6,
       { align: 'center' }

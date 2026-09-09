@@ -403,7 +403,7 @@ export const QuotePrintPreviewModal: React.FC<QuotePrintPreviewModalProps> = ({
                     </div>
                     <div>
                       <div className="font-extrabold text-lg tracking-tight text-white">
-                        ATMOS AIRCON PRIVATE LIMITED
+                        HVAC BIZ PRIVATE LIMITED
                       </div>
                       <div className="text-[10px] text-indigo-200 font-mono">
                         HVAC Turnkey Contracting & Engineering Solutions
@@ -619,7 +619,7 @@ export const QuotePrintPreviewModal: React.FC<QuotePrintPreviewModalProps> = ({
                   </div>
 
                   <div className="space-y-12 text-right">
-                    <div className="text-xs font-bold text-indigo-900">For ATMOS AIRCON PRIVATE LIMITED:</div>
+                    <div className="text-xs font-bold text-indigo-900">For HVAC BIZ PRIVATE LIMITED:</div>
                     <div className="border-t border-dashed border-slate-400 pt-1 text-[11px] text-slate-500">
                       Authorized Signatory (HVAC Projects Division)
                     </div>

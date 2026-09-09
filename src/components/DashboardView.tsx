@@ -354,7 +354,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         pdf.setFontSize(8);
         pdf.setTextColor(isDarkMode ? 148 : 71, isDarkMode ? 163 : 85, isDarkMode ? 184 : 105);
         pdf.text(
-          'AlphaERP™ Enterprise Suite • Atmos Aircon HVAC Operations',
+          'AlphaERP™ Enterprise Suite • HVAC Biz Operations',
           leftMargin,
           8
         );
