@@ -21,7 +21,8 @@ import {
   ExternalLink,
   Flame,
   UserCheck,
-  Download
+  Download,
+  Paperclip
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Lead, LeadStatus, LeadSource, SalesRep, Quote, UserProfile } from '../types';
@@ -520,6 +521,14 @@ export const CRMLeadsView: React.FC<CRMLeadsViewProps> = ({
                             </div>
                           )}
 
+                          {/* InsForge Attachments Indicator */}
+                          {lead.attachments && lead.attachments.length > 0 && (
+                            <div className="flex items-center gap-1.5 text-[10px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200 font-medium">
+                              <Paperclip className="w-3 h-3 text-blue-600" />
+                              <span>{lead.attachments.length} attachment{lead.attachments.length > 1 ? 's' : ''}</span>
+                            </div>
+                          )}
+
                           {/* Action Buttons: WhatsApp, Email, Next Stage Advance, Quote, Award */}
                           <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-1 text-xs" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center gap-0.5">
@@ -624,7 +633,15 @@ export const CRMLeadsView: React.FC<CRMLeadsViewProps> = ({
                     >
                       <td className="py-3.5 px-4 font-mono font-bold text-blue-600">{lead.leadNumber}</td>
                       <td className="py-3.5 px-4">
-                        <div className="font-bold text-slate-900">{lead.companyName}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-slate-900">{lead.companyName}</span>
+                          {lead.attachments && lead.attachments.length > 0 && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[9px] font-bold" title={`${lead.attachments.length} attachment(s)`}>
+                              <Paperclip className="w-2.5 h-2.5 text-blue-600" />
+                              {lead.attachments.length}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[11px] text-slate-500">
                           {lead.clientName} • {lead.city}
                         </div>

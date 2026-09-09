@@ -14,9 +14,10 @@ import {
   DollarSign,
   ArrowRight
 } from 'lucide-react';
-import { Lead, Quote, LeadStatus } from '../types';
+import { Lead, Quote, LeadStatus, FileAttachment } from '../types';
 import { storageService } from '../services/storageService';
 import { CommunicationService } from '../services/whatsappEmailService';
+import { InsForgeFileUpload } from './InsForgeFileUpload';
 
 interface LeadDetailModalProps {
   lead: Lead | null;
@@ -40,8 +41,20 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
   );
   const [newFollowUpType, setNewFollowUpType] = useState<string>('Site Survey & Technical Review');
   const [newFollowUpNote, setNewFollowUpNote] = useState<string>('Confirm duct routing with site MEP consultant');
+  const [attachments, setAttachments] = useState<FileAttachment[]>(lead?.attachments || []);
+
+  React.useEffect(() => {
+    if (lead) {
+      setAttachments(lead.attachments || []);
+    }
+  }, [lead?.id, lead?.attachments]);
 
   if (!isOpen || !lead) return null;
+
+  const handleAttachmentsChange = (newAttachments: FileAttachment[]) => {
+    setAttachments(newAttachments);
+    storageService.updateLead(lead.id, { attachments: newAttachments });
+  };
 
   const linkedQuotes = quotes.filter((q) => lead.quoteIds?.includes(q.id) || q.leadId === lead.id);
 
@@ -270,6 +283,17 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             <div className="text-slate-700 font-medium">Email: <strong className="text-slate-900 font-semibold">{lead.email || 'N/A'}</strong></div>
             <div className="text-slate-700 font-medium">Site Address: <strong className="text-slate-900 font-semibold">{lead.siteAddress}</strong></div>
             {lead.notes && <div className="text-slate-500 text-[11px] pt-1 font-normal">Notes: {lead.notes}</div>}
+          </div>
+
+          {/* InsForge Storage Attachments */}
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            <InsForgeFileUpload
+              attachments={attachments}
+              onAttachmentsChange={handleAttachmentsChange}
+              bucket="attachments"
+              recordTitle={`Lead #${lead.leadNumber} - ${lead.companyName}`}
+              description="Upload HVAC drawings, site survey photos, heat load calculations, or equipment specifications directly to InsForge Storage."
+            />
           </div>
 
           {/* Linked Quotes Section */}

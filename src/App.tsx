@@ -8,6 +8,7 @@ import {
 } from './types';
 import { storageService } from './services/storageService';
 import { googleSheetsService } from './services/googleSheets';
+import { insforge } from './lib/insforge';
 
 import { Header } from './components/Header';
 import { BreadcrumbNav } from './components/BreadcrumbNav';
@@ -377,6 +378,25 @@ export function App() {
       } catch {}
     };
     syncDensity();
+
+    // Initial check for InsForge live session or OAuth return
+    insforge.auth.getCurrentUser().then(({ data: userData }) => {
+      if (userData?.user) {
+        const u = userData.user;
+        const profile = {
+          id: u.id,
+          name: u.profile?.name || u.email.split('@')[0],
+          email: u.email,
+          role: (u.profile as any)?.role || 'executive',
+          title: (u.profile as any)?.title || 'Managing Director',
+          department: (u.profile as any)?.department || 'Executive Management',
+          avatar: u.profile?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+          status: 'active' as const,
+          createdAt: u.createdAt
+        };
+        storageService.setCurrentUser(profile);
+      }
+    }).catch((e) => console.warn('InsForge auth session init note:', e));
 
     const unsubscribe = storageService.subscribe(() => {
       setData(storageService.getAllData());

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Plus, Users, Building, Phone, Mail, MapPin, DollarSign, Calendar, Sparkles } from 'lucide-react';
-import { Lead, LeadSource, SalesRep } from '../types';
+import { Lead, LeadSource, SalesRep, FileAttachment } from '../types';
 import { storageService } from '../services/storageService';
+import { InsForgeFileUpload } from './InsForgeFileUpload';
 
 interface NewLeadModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export const NewLeadModal: React.FC<NewLeadModalProps> = ({ isOpen, onClose, sal
   const [priority, setPriority] = useState<'High' | 'Medium' | 'Low'>('High');
   const [assignedTo, setAssignedTo] = useState(salesReps[0]?.id || 'rep-1');
   const [notes, setNotes] = useState('Client requested immediate site survey for office floor fitout.');
+  const [attachments, setAttachments] = useState<FileAttachment[]>([]);
 
   if (!isOpen) return null;
 
@@ -49,7 +51,8 @@ export const NewLeadModal: React.FC<NewLeadModalProps> = ({ isOpen, onClose, sal
       assignedTo,
       assignedToName: rep?.name || 'Assigned Rep',
       status: 'New',
-      notes
+      notes,
+      attachments
     });
 
     onClose();
@@ -237,6 +240,17 @@ export const NewLeadModal: React.FC<NewLeadModalProps> = ({ isOpen, onClose, sal
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="w-full bg-slate-50 text-slate-900 p-2.5 rounded-xl border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 font-medium"
+            />
+          </div>
+
+          {/* InsForge Storage Attachments */}
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            <InsForgeFileUpload
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
+              bucket="attachments"
+              recordTitle={companyName ? `Lead: ${companyName}` : 'New HVAC Lead'}
+              description="Attach HVAC drawings, tender BOQ, architectural floor plans, or site survey pictures."
             />
           </div>
 

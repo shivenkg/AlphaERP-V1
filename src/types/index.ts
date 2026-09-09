@@ -58,6 +58,17 @@ export interface CommunicationLog {
   status: 'Sent' | 'Delivered' | 'Read' | 'Logged';
 }
 
+export interface FileAttachment {
+  id: string;
+  name: string;
+  url: string;
+  key: string;
+  size: number;
+  mimeType: string;
+  uploadedAt: string;
+  uploadedBy?: string;
+}
+
 export interface Lead {
   id: string;
   leadNumber: string;
@@ -84,6 +95,7 @@ export interface Lead {
   followUps: FollowUpReminder[];
   communications: CommunicationLog[];
   quoteIds: string[];
+  attachments?: FileAttachment[];
   projectId?: string;
   createdAt: string;
   updatedAt: string;

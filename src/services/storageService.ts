@@ -150,6 +150,9 @@ import {
   DEFAULT_MAIN_SECTION_WIDGETS
 } from '../types/dashboardLayout';
 
+import { insforge } from '../lib/insforge';
+import { insforgeDbService } from './insforgeDbService';
+
 const STORAGE_KEYS = {
   AUTH_SESSION: 'alpha_erp_auth_session',
   USER: 'hvac_erp_user',
@@ -526,6 +529,59 @@ class StorageService {
   // USER & RBAC MANAGEMENT
   public getCurrentUser(): UserProfile {
     return this.user;
+  }
+
+  public setCurrentUser(user: UserProfile) {
+    this.user = user;
+    this.isAuthenticated = true;
+    save(STORAGE_KEYS.USER, this.user);
+    save(STORAGE_KEYS.AUTH_SESSION, true);
+
+    const idx = this.users.findIndex((u) => u.id === user.id || u.email === user.email);
+    if (idx !== -1) {
+      this.users[idx] = { ...this.users[idx], ...user };
+    } else {
+      this.users = [user, ...this.users];
+    }
+    save(STORAGE_KEYS.USERS, this.users);
+
+    this.logAudit('LOGIN', 'AUTH', user.id, `User ${user.name} authenticated via InsForge Auth (${user.role.toUpperCase()})`);
+    this.notify();
+
+    // Trigger asynchronous background cloud data pull for this authenticated user
+    this.syncFromInsForge();
+  }
+
+  public async syncFromInsForge(): Promise<void> {
+    try {
+      const [leads, inventory, projects, quotes] = await Promise.all([
+        insforgeDbService.getLeads(),
+        insforgeDbService.getInventory(),
+        insforgeDbService.getProjects(),
+        insforgeDbService.getQuotes()
+      ]);
+
+      if (leads && leads.length > 0) {
+        this.leads = leads;
+        save(STORAGE_KEYS.LEADS, this.leads);
+      }
+      if (inventory && inventory.length > 0) {
+        this.inventory = inventory;
+        save(STORAGE_KEYS.INVENTORY, this.inventory);
+      }
+      if (projects && projects.length > 0) {
+        this.projects = projects;
+        save(STORAGE_KEYS.PROJECTS, this.projects);
+      }
+      if (quotes && quotes.length > 0) {
+        this.quotes = quotes;
+        save(STORAGE_KEYS.QUOTES, this.quotes);
+      }
+
+      this.notify();
+    } catch (err) {
+      console.warn('InsForge background data sync note:', err);
+    }
   }
 
   public getUsers(): UserProfile[] {
@@ -2155,8 +2211,13 @@ class StorageService {
     };
   }
 
-  public loginDemoUser(userIdOrRole: string): UserProfile {
-    let targetUser = this.users.find((u) => u.id === userIdOrRole || u.role === userIdOrRole);
+  public loginDemoUser(userIdOrRoleOrEmail: string): UserProfile {
+    let targetUser = this.users.find(
+      (u) =>
+        u.id === userIdOrRoleOrEmail ||
+        u.role === userIdOrRoleOrEmail ||
+        u.email.toLowerCase() === userIdOrRoleOrEmail.toLowerCase()
+    );
     if (!targetUser) {
       targetUser = this.users[0] || INITIAL_CURRENT_USER;
     }
@@ -2169,12 +2230,16 @@ class StorageService {
     this.logAudit('UPDATE', 'USER', targetUser.id, `Signed in as [${targetUser.role.toUpperCase()}] ${targetUser.name}`);
     this.addNotification('Signed In', `Active session: ${targetUser.name} (${targetUser.role.toUpperCase()})`, 'info');
     this.notify();
+    this.syncFromInsForge();
     return targetUser;
   }
 
   public logout(): void {
     this.isAuthenticated = false;
     save(STORAGE_KEYS.AUTH_SESSION, false);
+    try {
+      insforge.auth.signOut();
+    } catch {}
     this.logAudit('UPDATE', 'USER', this.user.id, `User ${this.user.name} logged out`);
     this.notify();
   }

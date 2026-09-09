@@ -2,27 +2,26 @@ import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck,
   Mail,
-  KeyRound,
+  Lock,
   ArrowRight,
   UserPlus,
   LogIn,
   Sparkles,
   CheckCircle2,
   AlertCircle,
-  Clock,
   Building2,
   Phone,
   User,
   RefreshCw,
-  Copy,
-  Check,
-  Layers,
-  ChevronRight
+  ChevronRight,
+  Globe,
+  KeyRound
 } from 'lucide-react';
 import { UserRole, UserProfile } from '../types';
 import { storageService } from '../services/storageService';
 import { ROLE_DEFINITIONS } from '../utils/rbac';
 import { JSAlphaSoftLogo } from './JSAlphaSoftLogo';
+import { insforge } from '../lib/insforge';
 
 interface AuthModalOrPageProps {
   onSuccess?: (user: UserProfile) => void;
@@ -35,26 +34,23 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
   isModal = false,
   onClose
 }) => {
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const [step, setStep] = useState<'email' | 'otp'>('email');
+  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
 
   // Sign In Form State
   const [loginEmail, setLoginEmail] = useState('shiven.k@gmail.com');
-  const [enteredOtp, setEnteredOtp] = useState('');
+  const [loginPassword, setLoginPassword] = useState('AlphaERP@2026');
 
   // Sign Up Form State
   const [signupName, setSignupName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
   const [signupPhone, setSignupPhone] = useState('+91 98');
   const [signupRole, setSignupRole] = useState<UserRole>('estimator');
   const [signupTitle, setSignupTitle] = useState('');
   const [signupDepartment, setSignupDepartment] = useState('');
 
-  // OTP Simulation State
-  const [activeDispatchedOtp, setActiveDispatchedOtp] = useState<string | null>(null);
-  const [otpCountdown, setOtpCountdown] = useState<number>(300); // 5 mins in seconds
-  const [timerActive, setTimerActive] = useState<boolean>(false);
-  const [copiedOtp, setCopiedOtp] = useState(false);
+  // Forgot Password State
+  const [forgotEmail, setForgotEmail] = useState('');
 
   // Status & Feedback
   const [isLoading, setIsLoading] = useState(false);
@@ -125,97 +121,189 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
     }
   }, [signupRole, authMode]);
 
-  // Countdown timer
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (timerActive && otpCountdown > 0) {
-      interval = setInterval(() => {
-        setOtpCountdown((prev) => prev - 1);
-      }, 1000);
-    } else if (otpCountdown === 0) {
-      setTimerActive(false);
-    }
-    return () => clearInterval(interval);
-  }, [timerActive, otpCountdown]);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  };
-
-  // Handler: Request OTP
-  const handleRequestOtp = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  // Handler: InsForge Email & Password Sign In
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const targetEmail = authMode === 'signin' ? loginEmail.trim() : signupEmail.trim();
+    const email = loginEmail.trim();
+    const password = loginPassword.trim();
 
-    if (!targetEmail || !targetEmail.includes('@')) {
-      setErrorMessage('Please enter a valid work or personal email address.');
-      return;
-    }
-
-    if (authMode === 'signup' && !signupName.trim()) {
-      setErrorMessage('Please enter your full name.');
+    if (!email || !password) {
+      setErrorMessage('Please provide both email and password.');
       return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      try {
-        const res = storageService.requestEmailOtp(
-          targetEmail,
-          authMode === 'signin' ? 'login' : 'signup',
-          authMode === 'signup'
-            ? {
-                name: signupName.trim(),
-                phone: signupPhone.trim(),
-                role: signupRole,
-                title: signupTitle.trim() || ROLE_DEFINITIONS[signupRole].name,
-                department: signupDepartment.trim() || ROLE_DEFINITIONS[signupRole].department
-              }
-            : undefined
-        );
+    try {
+      const { data, error } = await insforge.auth.signInWithPassword({
+        email,
+        password
+      });
 
-        setActiveDispatchedOtp(res.otp);
-        setStep('otp');
-        setOtpCountdown(300);
-        setTimerActive(true);
-        setSuccessMessage(`6-digit verification code sent to ${targetEmail}`);
+      if (error) {
+        // Fallback to local demo profile if demo user
+        const demo = demoAccounts.find(d => d.email.toLowerCase() === email.toLowerCase());
+        if (demo) {
+          const user = storageService.loginDemoUser(demo.email);
+          setIsLoading(false);
+          if (onSuccess) onSuccess(user);
+          return;
+        }
         setIsLoading(false);
-      } catch (err: any) {
-        setIsLoading(false);
-        setErrorMessage(err.message || 'Failed to dispatch verification code.');
+        setErrorMessage(error.message || 'Invalid login credentials.');
+        return;
       }
-    }, 450);
+
+      if (data?.user) {
+        const userProfile: UserProfile = {
+          id: data.user.id,
+          name: data.user.profile?.name || data.user.email.split('@')[0],
+          email: data.user.email,
+          role: (data.user.profile as any)?.role || 'executive',
+          title: (data.user.profile as any)?.title || 'Team Member',
+          department: (data.user.profile as any)?.department || 'HVAC Operations',
+          avatar: data.user.profile?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+          status: 'active',
+          createdAt: data.user.createdAt
+        };
+
+        storageService.setCurrentUser(userProfile);
+        setIsLoading(false);
+        setSuccessMessage('Successfully signed in!');
+        if (onSuccess) onSuccess(userProfile);
+      }
+    } catch (err: any) {
+      setIsLoading(false);
+      setErrorMessage(err.message || 'Sign in failed. Please check network.');
+    }
   };
 
-  // Handler: Verify OTP
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  // Handler: InsForge Email & Password Sign Up
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setSuccessMessage(null);
 
-    const targetEmail = authMode === 'signin' ? loginEmail.trim() : signupEmail.trim();
-    if (!enteredOtp.trim()) {
-      setErrorMessage('Please enter the 6-digit verification code.');
+    const name = signupName.trim();
+    const email = signupEmail.trim();
+    const password = signupPassword.trim();
+
+    if (!name || !email || !password) {
+      setErrorMessage('Please fill in all required fields.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMessage('Password must be at least 6 characters.');
       return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      try {
-        const res = storageService.verifyEmailOtp(targetEmail, enteredOtp.trim());
+    try {
+      const { data, error } = await insforge.auth.signUp({
+        email,
+        password,
+        name,
+        redirectTo: window.location.origin
+      });
+
+      if (error) {
         setIsLoading(false);
-        if (res.user && onSuccess) {
-          onSuccess(res.user);
-        }
-      } catch (err: any) {
-        setIsLoading(false);
-        setErrorMessage(err.message || 'Invalid verification code.');
+        setErrorMessage(error.message || 'Registration failed.');
+        return;
       }
-    }, 400);
+
+      if (data?.user) {
+        // Save profile data into InsForge user profile
+        await insforge.auth.setProfile({
+          name,
+          role: signupRole,
+          title: signupTitle.trim() || ROLE_DEFINITIONS[signupRole].name,
+          department: signupDepartment.trim() || ROLE_DEFINITIONS[signupRole].department,
+          phone: signupPhone.trim(),
+          avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`
+        });
+
+        const userProfile: UserProfile = {
+          id: data.user.id,
+          name,
+          email,
+          phone: signupPhone.trim(),
+          role: signupRole,
+          title: signupTitle.trim() || ROLE_DEFINITIONS[signupRole].name,
+          department: signupDepartment.trim() || ROLE_DEFINITIONS[signupRole].department,
+          avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`,
+          status: 'active',
+          createdAt: data.user.createdAt
+        };
+
+        storageService.setCurrentUser(userProfile);
+        setIsLoading(false);
+
+        if (data.requireEmailVerification) {
+          setSuccessMessage('Verification email sent! You can also sign in right away.');
+        } else {
+          setSuccessMessage('Account created successfully!');
+        }
+
+        if (onSuccess) onSuccess(userProfile);
+      }
+    } catch (err: any) {
+      setIsLoading(false);
+      setErrorMessage(err.message || 'Registration failed.');
+    }
+  };
+
+  // Handler: Google OAuth
+  const handleGoogleOAuth = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const { error } = await insforge.auth.signInWithOAuth('google', {
+        redirectTo: window.location.origin
+      });
+
+      if (error) {
+        setIsLoading(false);
+        setErrorMessage(error.message || 'Google Sign-In failed to initialize.');
+      }
+    } catch (err: any) {
+      setIsLoading(false);
+      setErrorMessage(err.message || 'Google OAuth is unavailable or not enabled.');
+    }
+  };
+
+  // Handler: Forgot / Reset Password
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    const email = forgotEmail.trim();
+    if (!email || !email.includes('@')) {
+      setErrorMessage('Please enter a valid email address.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await insforge.auth.sendResetPasswordEmail({
+        email,
+        redirectTo: `${window.location.origin}/#reset-password`
+      });
+
+      setIsLoading(false);
+      if (error) {
+        setErrorMessage(error.message || 'Could not send reset password email.');
+      } else {
+        setSuccessMessage('Password reset instructions have been sent to your email.');
+      }
+    } catch (err: any) {
+      setIsLoading(false);
+      setErrorMessage(err.message || 'Failed to send password reset email.');
+    }
   };
 
   // Handler: One-Click Demo Login
@@ -227,63 +315,24 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
       if (onSuccess) {
         onSuccess(loggedUser);
       }
-    }, 300);
+    }, 250);
   };
-
-  // Auto fill OTP from email notification banner
-  const handleAutoFillOtp = (otp: string) => {
-    setEnteredOtp(otp);
-    setCopiedOtp(true);
-    setTimeout(() => setCopiedOtp(false), 2000);
-  };
-
-  const activeEmail = authMode === 'signin' ? loginEmail : signupEmail;
 
   return (
     <div className="w-full max-w-5xl mx-auto py-4 px-3 sm:px-6">
-      {/* Top Simulated Email Inbox Delivery Notification Banner */}
-      {activeDispatchedOtp && step === 'otp' && (
-        <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-xl border border-blue-500/30 animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/40 text-blue-300 flex items-center justify-center shrink-0">
-                <Mail className="w-5 h-5 animate-bounce" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-400">
-                    📧 Simulated Corporate Email Gateway
-                  </span>
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-mono font-bold">
-                    Delivered
-                  </span>
-                </div>
-                <div className="text-sm font-semibold text-slate-100 mt-0.5">
-                  Subject: <span className="font-mono text-blue-200">AlphaERP Security Verification Code</span>
-                </div>
-                <div className="text-xs text-slate-300 mt-0.5">
-                  Recipient: <span className="font-medium text-white">{activeEmail}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 self-end sm:self-center bg-slate-800/80 p-1.5 rounded-xl border border-slate-700">
-              <span className="text-xs text-slate-400 font-medium px-2">OTP:</span>
-              <span className="text-base font-black tracking-widest font-mono text-emerald-400 bg-slate-900 px-3 py-1 rounded-lg border border-emerald-500/30">
-                {activeDispatchedOtp}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleAutoFillOtp(activeDispatchedOtp)}
-                className="flex items-center gap-1 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer"
-              >
-                {copiedOtp ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedOtp ? 'Applied!' : 'Auto-Fill OTP'}</span>
-              </button>
-            </div>
-          </div>
+      {/* InsForge Backend Status Header */}
+      <div className="mb-4 p-3 rounded-2xl bg-slate-900 text-white flex items-center justify-between border border-slate-800 shadow-md">
+        <div className="flex items-center gap-2.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-xs font-semibold text-slate-300">
+            Backend: <strong className="text-white">InsForge PostgreSQL</strong> (<span className="text-emerald-400 font-mono text-[11px]">as2hwz72.us-east</span>)
+          </span>
         </div>
-      )}
+        <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
+          <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+          <span>RLS & JWT Auth Protected</span>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left / Main Authentication Box */}
@@ -302,7 +351,7 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
                     </span>
                   </h2>
                   <p className="text-xs text-slate-400 font-medium">
-                    HVAC Projects • BOQ Inventory • PR/PO • Customization Suite
+                    Enterprise HVAC Suite • Powered by InsForge
                   </p>
                 </div>
               </div>
@@ -310,7 +359,7 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
               {isModal && onClose && (
                 <button
                   onClick={onClose}
-                  className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors"
+                  className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
                 >
                   ✕
                 </button>
@@ -323,36 +372,34 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
                 type="button"
                 onClick={() => {
                   setAuthMode('signin');
-                  setStep('email');
                   setErrorMessage(null);
                   setSuccessMessage(null);
                 }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-xl transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                   authMode === 'signin'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
                     : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
                 }`}
               >
                 <LogIn className="w-3.5 h-3.5" />
-                <span>Sign In with Email OTP</span>
+                <span>Sign In</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => {
                   setAuthMode('signup');
-                  setStep('email');
                   setErrorMessage(null);
                   setSuccessMessage(null);
                 }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-xl transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                   authMode === 'signup'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
                     : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
                 }`}
               >
                 <UserPlus className="w-3.5 h-3.5" />
-                <span>New User Registration</span>
+                <span>Sign Up</span>
               </button>
             </div>
           </div>
@@ -374,135 +421,92 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
               </div>
             )}
 
-            {/* STEP 1: EMAIL & DETAILS INPUT */}
-            {step === 'email' && (
-              <form onSubmit={handleRequestOtp} className="space-y-4">
-                {authMode === 'signin' ? (
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                      Corporate Work Email
+            {/* Google OAuth Quick Button */}
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={handleGoogleOAuth}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold shadow-xs hover:border-slate-400 transition-all cursor-pointer disabled:opacity-50"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+                <span>Continue with Google OAuth</span>
+              </button>
+
+              <div className="relative my-5">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-3 text-slate-400 font-semibold tracking-wider">
+                    Or with email credentials
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* SIGN IN FORM */}
+            {authMode === 'signin' && (
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Work Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      required
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      placeholder="e.g. shiven.k@gmail.com"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Account Password
                     </label>
-                    <div className="relative">
-                      <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="email"
-                        required
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
-                        placeholder="e.g. shiven.k@gmail.com"
-                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      />
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-blue-500" />
-                      We will deliver a 6-digit single-use OTP code to this address.
-                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setAuthMode('forgot')}
+                      className="text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
+                    >
+                      Forgot Password?
+                    </button>
                   </div>
-                ) : (
-                  /* SIGN UP FIELDS */
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Full Name *
-                      </label>
-                      <div className="relative">
-                        <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                        <input
-                          type="text"
-                          required
-                          value={signupName}
-                          onChange={(e) => setSignupName(e.target.value)}
-                          placeholder="e.g. Alok Verma"
-                          className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                          Work Email *
-                        </label>
-                        <div className="relative">
-                          <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                          <input
-                            type="email"
-                            required
-                            value={signupEmail}
-                            onChange={(e) => setSignupEmail(e.target.value)}
-                            placeholder="alok.v@alphaerp.com"
-                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                          Mobile Phone
-                        </label>
-                        <div className="relative">
-                          <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                          <input
-                            type="tel"
-                            value={signupPhone}
-                            onChange={(e) => setSignupPhone(e.target.value)}
-                            placeholder="+91 98200 00000"
-                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Assigned Enterprise Role *
-                      </label>
-                      <select
-                        value={signupRole}
-                        onChange={(e) => setSignupRole(e.target.value as UserRole)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="executive">Executive / Managing Director (Super Admin)</option>
-                        <option value="sales_manager">Sales Head / Business Manager</option>
-                        <option value="estimator">Chief MEP & HVAC Estimator</option>
-                        <option value="procurement">Purchase & Procurement Head</option>
-                        <option value="warehouse">Warehouse & Stock Controller</option>
-                        <option value="finance">Financial Controller & Accounts</option>
-                        <option value="technician">Field Commissioning Engineer</option>
-                      </select>
-                      <p className="text-[11px] text-slate-500 mt-1">
-                        {ROLE_DEFINITIONS[signupRole]?.description}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                          Designation Title
-                        </label>
-                        <input
-                          type="text"
-                          value={signupTitle}
-                          onChange={(e) => setSignupTitle(e.target.value)}
-                          placeholder="e.g. Senior Project Manager"
-                          className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                          Department
-                        </label>
-                        <input
-                          type="text"
-                          value={signupDepartment}
-                          onChange={(e) => setSignupDepartment(e.target.value)}
-                          placeholder="e.g. Field Operations"
-                          className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
-                        />
-                      </div>
-                    </div>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="password"
+                      required
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition-all"
+                    />
                   </div>
-                )}
+                </div>
 
                 <button
                   type="submit"
@@ -513,7 +517,7 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
                     <RefreshCw className="w-4 h-4 animate-spin" />
                   ) : (
                     <>
-                      <span>{authMode === 'signin' ? 'Send Verification OTP' : 'Register & Send OTP'}</span>
+                      <span>Sign In with InsForge Auth</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -521,81 +525,166 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
               </form>
             )}
 
-            {/* STEP 2: 6-DIGIT OTP VERIFICATION */}
-            {step === 'otp' && (
-              <form onSubmit={handleVerifyOtp} className="space-y-5">
-                <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100 flex items-center justify-between">
-                  <div>
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-blue-700">
-                      Verification Code Sent To:
-                    </div>
-                    <div className="text-sm font-bold text-slate-900 mt-0.5">{activeEmail}</div>
+            {/* SIGN UP FORM */}
+            {authMode === 'signup' && (
+              <form onSubmit={handleSignUp} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Full Name *
+                  </label>
+                  <div className="relative">
+                    <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      required
+                      value={signupName}
+                      onChange={(e) => setSignupName(e.target.value)}
+                      placeholder="e.g. Alok Verma"
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                    />
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep('email');
-                      setErrorMessage(null);
-                    }}
-                    className="text-xs font-bold text-blue-600 hover:underline cursor-pointer"
-                  >
-                    Change Email
-                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Work Email *
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="email"
+                        required
+                        value={signupEmail}
+                        onChange={(e) => setSignupEmail(e.target.value)}
+                        placeholder="alok.v@alphaerp.com"
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Password (6+ chars) *
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        required
+                        minLength={6}
+                        value={signupPassword}
+                        onChange={(e) => setSignupPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Enterprise Role *
+                    </label>
+                    <select
+                      value={signupRole}
+                      onChange={(e) => setSignupRole(e.target.value as UserRole)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="executive">Executive / Super Admin</option>
+                      <option value="sales_manager">Sales Head / Business Manager</option>
+                      <option value="estimator">Chief MEP & HVAC Estimator</option>
+                      <option value="procurement">Purchase & Procurement Head</option>
+                      <option value="warehouse">Warehouse & Stock Controller</option>
+                      <option value="finance">Financial Controller & Accounts</option>
+                      <option value="technician">Field Commissioning Engineer</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Mobile Phone
+                    </label>
+                    <div className="relative">
+                      <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="tel"
+                        value={signupPhone}
+                        onChange={(e) => setSignupPhone(e.target.value)}
+                        placeholder="+91 98200 00000"
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full mt-4 flex items-center justify-center gap-2 py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/25 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <span>Create InsForge Account</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+
+            {/* FORGOT PASSWORD FORM */}
+            {authMode === 'forgot' && (
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100 text-xs text-blue-900">
+                  <div className="font-bold mb-1 flex items-center gap-1.5">
+                    <KeyRound className="w-4 h-4 text-blue-600" />
+                    <span>Password Reset Request</span>
+                  </div>
+                  <p>
+                    Enter your email below and we will send a password reset link to your inbox.
+                  </p>
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      Enter 6-Digit Email OTP
-                    </label>
-                    <div className="flex items-center gap-1 text-xs text-slate-500 font-mono">
-                      <Clock className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Expires in {formatTime(otpCountdown)}</span>
-                    </div>
-                  </div>
-
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Registered Email
+                  </label>
                   <div className="relative">
-                    <KeyRound className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
-                      type="text"
-                      maxLength={6}
-                      autoFocus
+                      type="email"
                       required
-                      value={enteredOtp}
-                      onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, ''))}
-                      placeholder="• • • • • •"
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-xl font-mono tracking-widest text-center font-black text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="e.g. shiven.k@gmail.com"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition-all"
                     />
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-1.5 text-center">
-                    Universal demo codes <span className="font-mono font-bold text-slate-700">123456</span> or{' '}
-                    <span className="font-mono font-bold text-slate-700">999999</span> can also be used for testing.
-                  </p>
                 </div>
 
                 <div className="flex items-center justify-between gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => handleRequestOtp()}
-                    disabled={timerActive && otpCountdown > 240}
-                    className="text-xs font-semibold text-slate-600 hover:text-blue-600 disabled:opacity-40 transition-colors"
+                    onClick={() => {
+                      setAuthMode('signin');
+                      setErrorMessage(null);
+                      setSuccessMessage(null);
+                    }}
+                    className="text-xs font-bold text-slate-600 hover:text-blue-600 cursor-pointer"
                   >
-                    Resend Code {timerActive && otpCountdown > 240 ? `(${formatTime(300 - otpCountdown)})` : ''}
+                    ← Back to Sign In
                   </button>
 
                   <button
                     type="submit"
-                    disabled={isLoading || enteredOtp.length < 6}
-                    className="flex-1 max-w-[220px] flex items-center justify-center gap-2 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50"
+                    disabled={isLoading}
+                    className="py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 transition-all cursor-pointer disabled:opacity-50"
                   >
-                    {isLoading ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <ShieldCheck className="w-4 h-4" />
-                        <span>Verify & Enter</span>
-                      </>
-                    )}
+                    {isLoading ? 'Sending...' : 'Send Reset Link'}
                   </button>
                 </div>
               </form>
@@ -619,7 +708,7 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
             </div>
 
             <p className="text-xs text-slate-500 mt-2 mb-4 leading-relaxed">
-              Click any verified enterprise profile below to bypass or pre-fill OTP login:
+              Click any verified enterprise profile below to switch roles or test instantly:
             </p>
 
             <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
