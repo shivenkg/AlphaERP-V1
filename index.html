@@ -5,20 +5,38 @@
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AlphaERP - Atmos Aircon Enterprise HVAC Suite</title>
-    <meta name="description" content="AlphaERP by Atmos Aircon - Full-lifecycle HVAC CRM, Quote-to-Project conversion, BOQ inventory cross-check, PR & PO approval pipeline, Work Orders, Final Handover Billing, and Google Sheets synchronization." />
+    <meta name="description" content="AlphaERP by Atmos Aircon - Full-lifecycle HVAC CRM, Quote-to-Project conversion, BOQ inventory cross-check, PR & PO approval pipeline, Work Orders, Final Handover Billing, MongoDB linked database persistence, and Google Sheets synchronization." />
     <meta property="og:title" content="AlphaERP - Atmos Aircon Enterprise HVAC Suite" />
-    <meta property="og:description" content="AlphaERP by Atmos Aircon - Full-lifecycle HVAC CRM, Quote-to-Project conversion, BOQ inventory cross-check, PR & PO approval pipeline, Work Orders, Final Handover Billing, and Google Sheets synchronization." />
+    <meta property="og:description" content="AlphaERP by Atmos Aircon - Full-lifecycle HVAC CRM, Quote-to-Project conversion, BOQ inventory cross-check, PR & PO approval pipeline, Work Orders, Final Handover Billing, MongoDB linked database persistence, and Google Sheets synchronization." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <script>
-      // Gracefully prevent benign HMR WebSocket disconnects from throwing unhandled rejections
-      window.addEventListener('unhandledrejection', function(event) {
-        var reason = event && (event.reason || event.detail);
-        var msg = (reason && (reason.message || reason)) ? String(reason.message || reason) : '';
-        if (msg.includes('WebSocket') || msg.includes('websocket') || msg.includes('ws:') || msg.includes('wss:')) {
-          event.preventDefault();
+      (function() {
+        // Prevent benign HMR WebSocket disconnects / tab suspensions from logging unhandled rejections
+        function isViteWsError(target) {
+          if (!target) return false;
+          var msg = (target && (target.message || target.reason || target)) ? String(target.message || target.reason || target) : '';
+          var lower = msg.toLowerCase();
+          return lower.includes('websocket closed') ||
+                 lower.includes('failed to connect to websocket') ||
+                 lower.includes('without opened') ||
+                 lower.includes('vite-hmr');
         }
-      });
+
+        window.addEventListener('unhandledrejection', function(event) {
+          if (isViteWsError(event.reason) || isViteWsError(event.detail)) {
+            event.preventDefault();
+            if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+          }
+        }, true);
+
+        window.addEventListener('error', function(event) {
+          if (isViteWsError(event.message) || isViteWsError(event.error)) {
+            event.preventDefault();
+            if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+          }
+        }, true);
+      })();
     </script>
   </head>
   <body>

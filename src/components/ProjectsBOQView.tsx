@@ -48,6 +48,7 @@ import { ProjectActivityFeed } from './ProjectActivityFeed';
 import { useToastNotification } from '../context/ToastNotificationContext';
 import { MultiSelectFilterDropdown, MultiSelectOption } from './common';
 import { exportTableToCSV } from '../utils/tableExportHelper';
+import { ProjectsDatabaseSyncBar } from './ProjectsDatabaseSyncBar';
 
 export type ProjectVisibilityFilter = 'active' | 'completed' | 'all';
 
@@ -469,6 +470,12 @@ export const ProjectsBOQView: React.FC<ProjectsBOQViewProps> = ({
 
   return (
     <div className="space-y-5 pb-12">
+      {/* MongoDB Atlas Persistence & Google Sheet Dual Sync Bar */}
+      <ProjectsDatabaseSyncBar
+        projects={projects}
+        onOpenSheetsModal={onOpenSheetsModal}
+      />
+
       {/* Header Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
         <div>

@@ -44,6 +44,7 @@ import { NumberSeriesAdminSection } from './NumberSeriesAdminSection';
 import { ReportTemplateManager } from './ReportTemplateManager';
 import { RoleModulePermissionsManager } from './RoleModulePermissionsManager';
 import { GoogleSheetsAdminSection } from './GoogleSheetsAdminSection';
+import { MongoDbAdminSection } from './MongoDbAdminSection';
 import {
   FileSpreadsheet,
   ExternalLink,
@@ -85,7 +86,7 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
   } = useFontSize();
   const [settings, setSettings] = useState<SystemSettings>(storageService.getSystemSettings());
   const [activeSubTab, setActiveSubTab] = useState<
-    'branding' | 'report_templates' | 'commercial' | 'procurement' | 'number_series' | 'banking' | 'modules' | 'roles' | 'role_modules' | 'google_sheets' | 'backup'
+    'branding' | 'report_templates' | 'commercial' | 'procurement' | 'number_series' | 'banking' | 'modules' | 'roles' | 'role_modules' | 'google_sheets' | 'backup' | 'mongodb'
   >('branding');
 
   // Form states for inclusion/exclusion additions
@@ -528,6 +529,18 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
         >
           <Download className="w-4 h-4" />
           <span>11. Backup & Restore</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('mongodb')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+            activeSubTab === 'mongodb'
+              ? 'bg-emerald-800 text-white shadow-xs ring-1 ring-emerald-500'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Database className="w-4 h-4 text-emerald-400" />
+          <span>12. MongoDB Linked Database</span>
         </button>
       </div>
 
@@ -1499,8 +1512,44 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
               </div>
             )}
 
+            {/* MONGODB CLOUD LINKED DATABASE VAULT SECTION */}
+            <div className="rounded-2xl border border-emerald-800/40 bg-linear-to-br from-emerald-950 via-slate-900 to-slate-950 p-6 text-white space-y-4 shadow-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start sm:items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-400 flex items-center justify-center shrink-0 shadow-inner">
+                    <Database className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="text-sm font-black text-white">
+                        MongoDB Linked Database Vault
+                      </h4>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Native Schema Collections
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 mt-1">
+                      Migrated from Firebase to native MongoDB collections. Direct cloud persistence with instant migration and restoration controls.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setActiveSubTab('mongodb')}
+                    className="px-4 py-2.5 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-2 cursor-pointer shadow-md"
+                  >
+                    <span>Open MongoDB Migration Engine</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* GOOGLE SHEETS ENTERPRISE CLOUD BACKUP & RESTORE SECTION */}
-            <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50/70 via-teal-50/40 to-slate-50 p-6 space-y-5">
+            <div className="rounded-2xl border border-emerald-200 bg-linear-to-br from-emerald-50/70 via-teal-50/40 to-slate-50 p-6 space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
@@ -1922,6 +1971,11 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
             </div>
           )}
         </div>
+      )}
+
+      {/* TAB 12: MONGODB LINKED DATABASE */}
+      {activeSubTab === 'mongodb' && (
+        <MongoDbAdminSection />
       )}
     </div>
   );

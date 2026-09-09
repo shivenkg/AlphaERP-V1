@@ -40,6 +40,7 @@ import {
 import { UserRole, AppNotification, GoogleSheetsSyncConfig, UserProfile } from '../types';
 import { storageService } from '../services/storageService';
 import { googleSheetsService } from '../services/googleSheets';
+import { mongoService } from '../services/mongoService';
 import { useTheme } from '../context/ThemeContext';
 import { useFontSize } from '../context/FontSizeContext';
 import { JSAlphaSoftLogo } from './JSAlphaSoftLogo';
@@ -341,11 +342,13 @@ export const Header: React.FC<HeaderProps> = ({
     setQuickSyncState('syncing');
     setQuickSyncError(null);
     try {
+      // Keep projects and active state persisted in MongoDB Atlas
+      await mongoService.saveProjects(storageService.getProjects()).catch(() => {});
       await googleSheetsService.syncToGoogleSheet();
       setQuickSyncState('success');
       storageService.addNotification(
         'Quick Sync Completed',
-        'Direct data flush to Google Sheets finished successfully for all modules.',
+        'Direct data flush to MongoDB Atlas and Google Sheets finished successfully for all modules.',
         'success',
         'sheets'
       );

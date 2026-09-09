@@ -1719,10 +1719,46 @@ class StorageService {
     return this.projects;
   }
 
-  public updateProject(id: string, updates: Partial<Project>) {
-    this.projects = this.projects.map((p) => (p.id === id ? { ...p, ...updates } : p));
+  public setProjects(projects: Project[]) {
+    this.projects = projects;
     save(STORAGE_KEYS.PROJECTS, this.projects);
     this.notify();
+    this.persistProjectsToMongo(this.projects);
+  }
+
+  public updateProject(id: string, updates: Partial<Project>) {
+    let targetProject: Project | undefined;
+    this.projects = this.projects.map((p) => {
+      if (p.id === id) {
+        targetProject = { ...p, ...updates };
+        return targetProject;
+      }
+      return p;
+    });
+    save(STORAGE_KEYS.PROJECTS, this.projects);
+    this.notify();
+
+    // Asynchronously keep this project in MongoDB
+    if (targetProject) {
+      this.persistProjectToMongo(targetProject);
+    }
+  }
+
+  private persistProjectToMongo(project: Project) {
+    fetch('/api/mongodb/project', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project })
+    }).catch(() => {});
+  }
+
+  public persistProjectsToMongo(projects?: Project[]) {
+    const list = projects || this.projects;
+    fetch('/api/mongodb/projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projects: list })
+    }).catch(() => {});
   }
 
   public updateProjectDelay(

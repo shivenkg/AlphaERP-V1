@@ -1714,4 +1714,51 @@ export interface WhatsAppTriggerConfig {
   triggerHistory?: DailyKpiSnapshot[];
 }
 
+// 14. MongoDB Linked Database & Migration
+export interface MongoDbStatus {
+  configured: boolean;
+  connected: boolean;
+  mode: 'mongodb_cluster' | 'emulated_local';
+  databaseName: string;
+  maskedUri?: string;
+  pingMs?: number;
+  collectionsCount: number;
+  collections: Record<string, number>;
+  lastMigratedAt?: string;
+  message?: string;
+  error?: string;
+  ipWhitelistRequired?: boolean;
+  egressIp?: string;
+}
+
+export interface MongoCollectionReport {
+  collection: string;
+  count: number;
+  status: 'migrated' | 'skipped';
+}
+
+export interface MongoMigrationResult {
+  success: boolean;
+  error?: string;
+  totalMasterRecords: number;
+  totalTransactionRecords: number;
+  collectionCounts: Record<string, number>;
+  collectionsReport: MongoCollectionReport[];
+  migratedAt: string;
+  durationMs: number;
+  databaseName: string;
+  target: string;
+}
+
+export interface MongoRestoreResult {
+  success: boolean;
+  error?: string;
+  totalMasterRecords: number;
+  totalTransactionRecords: number;
+  collectionsRestored: Record<string, number>;
+  restoredAt: string;
+  source: string;
+}
+
+
 

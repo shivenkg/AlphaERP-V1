@@ -1,59 +1,13 @@
-import express from "express";
 import http from "http";
 import path from "path";
-import compression from "compression";
+import express from "express";
 import { createServer as createViteServer } from "vite";
 import { WebSocketServer, WebSocket } from "ws";
 import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
-import dotenv from "dotenv";
+import { app } from "./server/app";
 
-dotenv.config();
-
-const app = express();
 const server = http.createServer(app);
 const PORT = 3000;
-
-// Security: Disable X-Powered-By header to prevent fingerprinting
-app.disable("x-powered-by");
-
-// Performance: Enable GZIP/Deflate response compression
-app.use(
-  compression({
-    level: 6,
-    threshold: 1024, // only compress responses larger than 1KB
-    filter: (req, res) => {
-      if (req.headers["x-no-compression"]) {
-        return false;
-      }
-      return compression.filter(req, res);
-    },
-  })
-);
-
-// Security: Apply Enterprise HTTP Security Headers
-app.use((req, res, next) => {
-  // Prevent MIME-sniffing
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  // Cross-Site Scripting protection for older browsers
-  res.setHeader("X-XSS-Protection", "1; mode=block");
-  // Limit referrer data leakage
-  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  next();
-});
-
-// Security: Enforce strict payload size limits to protect against memory exhaustion DoS
-app.use(express.json({ limit: "2mb" }));
-app.use(express.urlencoded({ extended: true, limit: "2mb" }));
-
-// API health endpoint
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "ok",
-    model: "gemini-3.1-flash-live-preview",
-    apiKeyConfigured: !!process.env.GEMINI_API_KEY,
-    timestamp: new Date().toISOString(),
-  });
-});
 
 // WebSocket Server for Gemini Live API
 const wss = new WebSocketServer({ noServer: true });
@@ -87,9 +41,10 @@ server.on("upgrade", (request, socket, head) => {
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit("connection", ws, request);
     });
-  } else {
-    socket.destroy();
+    return;
   }
+  // In development, Vite HMR handles websocket upgrade requests (e.g. protocol: vite-hmr).
+  // Do NOT destroy the socket here so Vite HMR can establish its connection without error.
 });
 
 // Periodically ping clients to clear stale/zombie sockets
@@ -258,7 +213,7 @@ async function setupApp() {
     const vite = await createViteServer({
       server: {
         middlewareMode: true,
-        hmr: false,
+        hmr: { server },
       },
       appType: "spa",
     });
