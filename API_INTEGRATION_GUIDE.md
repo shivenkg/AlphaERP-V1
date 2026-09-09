@@ -1,214 +1,102 @@
 # AlphaERP: Complete Step-by-Step API Integration Guide
-### Enterprise HVAC Techno-Commercial, BOQ Verification, WhatsApp Automated Digest, Google Sheets & Gemini AI APIs
+### Enterprise HVAC Techno-Commercial, BOQ Verification, WhatsApp Automated Digest, Email/SMTP Alerts, MongoDB Cloud Sync & Gemini Live APIs
 
 ---
 
 ## 1. Architecture Overview
 
-AlphaERP provides a robust, enterprise-grade API architecture supporting real-time data sync, automated messaging triggers, AI reasoning, and ERP microservices.
+AlphaERP provides a robust, enterprise-grade API architecture supporting real-time data sync, automated messaging triggers, SMTP notification dispatching, MongoDB Atlas persistence, and Gemini AI reasoning.
 
 ```
 +---------------------------------------------------------------------------------------------------+
 |                                  ALPHA ERP API GATEWAY & MICROSERVICES                            |
 +---------------------------------------------------------------------------------------------------+
-        |                                   |                                   |
-        v                                   v                                   v
+        │                                   │                                   │
+        ▼                                   ▼                                   ▼
 +------------------+             +----------------------+             +--------------------+
-|  Core REST APIs  |             | WhatsApp Cloud / WA  |             | Google Sheets Sync |
+|  Core REST APIs  |             | WhatsApp & SMTP Mail |             | Google Sheets Sync |
 | - Projects & BOQ |             | - wa.me URL Dispatch |             | - 2-Way Sync Engine|
-| - CRM & Leads    |             | - Daily KPI Webhooks |             | - OAuth2 / API Key |
-| - PR / PO Supply |             | - Status Callbacks   |             | - Tab Range Mapper |
+| - CRM & Leads    |             | - Low-Stock PR Alerts|             | - OAuth2 / API Key |
+| - PR / PO Supply |             | - Test Connection API|             | - Tab Range Mapper |
 | - Payments/GAAP  |             +----------------------+             +--------------------+
-+------------------+                        |                                   |
-        |                                   v                                   v
-        +-----------------------> +----------------------+ <--------------------+
-                                  |  Gemini AI Assistant |
-                                  | - Margin Prediction  |
-                                  | - BOQ Risk Analyzer  |
-                                  | - Executive Summaries|
-                                  +----------------------+
++------------------+                        │                                   │
+        │                                   │                                   │
+        ▼                                   ▼                                   ▼
++------------------+             +----------------------+             +--------------------+
+|  MongoDB Atlas   |             | Gemini AI Assistant  |             | Gemini Live API    |
+| - Full Migration |             | - Margin Prediction  |             | - Duplex WebSocket |
+| - Status Check   |             | - BOQ Risk Analyzer  |             | - Realtime PCM     |
+| - Project Sync   |             | - Executive Summaries|             | - Voice Assistant  |
++------------------+             +----------------------+             +--------------------+
 ```
 
 ---
 
 ## 2. Authentication & Headers
 
-All AlphaERP API requests require authorization headers.
+Standard API requests accept JSON payloads and custom tenancy headers:
 
-### Standard Request Headers
 ```http
 Authorization: Bearer <API_ACCESS_TOKEN>
 Content-Type: application/json
 X-Alpha-Tenant-ID: default-corp
-X-Alpha-Client-Version: 3.4.0
+X-Alpha-Client-Version: 3.5.0
 ```
 
 ---
 
 ## 3. Core REST Endpoints
 
-### 3.1 Projects & BOQ Engineering Engine
+### 3.1 System Health & Diagnostics
 
-#### `GET /api/projects`
-Retrieves all active and completed HVAC engineering projects.
-
-**Response `200 OK`:**
-```json
-{
-  "success": true,
-  "count": 4,
-  "data": [
-    {
-      "id": "proj-001",
-      "projectNumber": "PRJ-2026-001",
-      "projectName": "One BKC Tower - 120 HP VRF",
-      "clientName": "Lodha Commercial Real Estate",
-      "contractValue": 4850000,
-      "status": "Installation",
-      "progressPct": 75,
-      "isDelayed": true,
-      "delayDays": 14,
-      "delayCategory": "Client Site Clearance",
-      "delayReason": "Client civil work delayed by 14 days",
-      "delayMitigationPlan": "Expedite ducting teams in double shifts",
-      "boqItemsCount": 8,
-      "totalShortageItemsCount": 1
-    }
-  ]
-}
-```
-
-#### `POST /api/projects/:id/verify-boq`
-Cross-checks the project's Bill of Quantities against current warehouse stock and returns items with deficits or breached `reorderLevel`.
-
-**Request:**
-```bash
-curl -X POST https://your-erp-domain.com/api/projects/proj-001/verify-boq \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json"
-```
+#### `GET /api/health`
+Returns backend service health, AI model capability, and database connectivity.
 
 **Response `200 OK`:**
 ```json
 {
-  "success": true,
-  "projectId": "proj-001",
-  "verifiedAt": "2026-09-04T10:30:00Z",
-  "shortagesCount": 1,
-  "reorderAlertsCount": 2,
-  "reorderBreaches": [
-    {
-      "sku": "CU-PIPE-01",
-      "name": "Hard Drawn Copper Pipe 1/2 inch",
-      "availableStock": 4,
-      "reorderLevel": 10,
-      "requiredQty": 12,
-      "unit": "Lengths",
-      "deficit": 6,
-      "warehouseLocation": "Bay A-04",
-      "suggestedAction": "GENERATE_PR"
-    }
-  ]
+  "status": "ok",
+  "model": "gemini-3.1-flash-live-preview",
+  "apiKeyConfigured": true,
+  "mongoConfigured": true,
+  "timestamp": "2026-09-09T10:00:00.000Z"
 }
 ```
 
 ---
 
-### 3.2 Automated WhatsApp Daily KPI Trigger API
+### 3.2 Automated Procurement & Email Alert APIs
 
-AlphaERP features an automated digest trigger that calculates previous day business KPIs:
-- Total new leads generated by the sales team
-- Total collection of bills generated & collection efficiency
-- Pending receivables aging buckets (0–30, 31–60, 61–90, >90 days)
-- Total disbursements & payments done
-- Net business revenue & gross margin
-- Delayed projects with root-cause reasons & mitigation plans
-
-#### `POST /api/kpi/whatsapp-trigger`
-Triggers the WhatsApp message generation for all active executive recipients.
+#### `POST /api/procurement/reorder-alert-email`
+Sends an automated, itemized email alert to the procurement team whenever inventory falls below safety thresholds. Supports both dummy sandbox mode (Mailtrap/Ethereal) and live SMTP relays.
 
 **Request Payload:**
 ```json
 {
-  "date": "2026-09-03",
-  "forceRecalculate": true,
-  "recipients": [
-    { "name": "Managing Director", "phone": "+919820012345" },
-    { "name": "Chief Financial Officer", "phone": "+919811122233" }
+  "recipients": ["procurement@atmosaircon.com", "inventory@atmosaircon.com"],
+  "subject": "URGENT: HVAC Critical Material Reorder Alert",
+  "items": [
+    {
+      "name": "Hard Drawn Copper Pipe 1/2 inch",
+      "sku": "COP-PIPE-12-HD",
+      "category": "Piping & Valves",
+      "currentStock": 4,
+      "reorderLevel": 12,
+      "deficit": 8,
+      "unit": "Lengths",
+      "warehouseLocation": "Bay B-02"
+    }
   ],
-  "options": {
-    "includeDelayedProjectReasons": true,
-    "includeAgingBreakdown": true
+  "notes": "Generated by AlphaERP Predictive Inventory Engine",
+  "smtpConfig": {
+    "host": "smtp.mailtrap.io",
+    "port": 587,
+    "user": "sandbox_user",
+    "pass": "sandbox_pass",
+    "fromEmail": "procurement@alphaerp.com",
+    "fromName": "AlphaERP Procurement System",
+    "isDummy": false
   }
-}
-```
-
-**Generated WhatsApp Digest Payload Example:**
-```
-📊 *ALPHA HVAC ENTERPRISE — PREVIOUS DAY BUSINESS KEY KPIS DIGEST*
-📅 *Snapshot Date:* 03 Sep 2026 | *Triggered:* 08:30 IST
-
-1️⃣ *NEW LEADS GENERATED (Sales Pipeline)*
-• Total New Leads: *3 Leads*
-• Pipeline Deal Value: *₹46.50 Lakhs*
-• Top Leads: Godrej Heights VRF (₹28.5L), Prestige Tech Park AHU (₹12L)
-
-2️⃣ *BILL COLLECTIONS RECEIVED*
-• Total Collection Received: *₹4,85,000*
-• Collection Efficiency: *78.5%*
-
-3️⃣ *PENDING RECEIVABLES AGING BUCKETS*
-• Total Outstanding: *₹18,50,000*
-  ├ 0–30 Days (Current): ₹8,20,000
-  ├ 31–60 Days (Follow-up): ₹5,10,000
-  ├ 61–90 Days (Critical): ₹3,20,000
-  └ >90 Days (Overdue Alert): ₹2,00,000
-
-4️⃣ *TOTAL PAYMENTS DONE (Outflows)*
-• Total Disbursed: *₹3,40,000* (3 Vendor PO Settlements)
-
-5️⃣ *NET BUSINESS REVENUE GENERATED*
-• Won Contracts Revenue: *₹38.00 Lakhs*
-• Gross Margin Projected: *24.8%*
-
-6️⃣ *DELAYED PROJECTS & ROOT CAUSES*
-⚠️ *1 Project Currently Delayed:*
-• *PRJ-2026-001 (One BKC Tower - 120 HP VRF)*: 14 Days Delayed
-  └ *Reason:* Client civil work delayed by 14 days
-  └ *Mitigation:* Expedite ducting teams in double shifts
-
-_Generated automatically by AlphaERP Intelligent Business Engine_
-```
-
----
-
-### 3.3 Google Sheets Bi-Directional Integration API
-
-#### `POST /api/google-sheets/sync`
-Synchronizes leads, quotes, inventory, and projects with designated Google Spreadsheet tabs.
-
-**Request:**
-```json
-{
-  "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
-  "direction": "BIDIRECTIONAL",
-  "syncModules": ["leads", "quotes", "inventory", "projects"]
-}
-```
-
----
-
-### 3.4 Gemini AI Intelligence API
-
-#### `POST /api/ai/analyze-project-risk`
-Evaluates project schedule risks, BOQ shortages, and margin slippage using Gemini 2.5.
-
-**Request:**
-```json
-{
-  "projectId": "proj-001",
-  "includeBoqShortages": true,
-  "includeMarketPriceFluctuations": true
 }
 ```
 
@@ -216,33 +104,144 @@ Evaluates project schedule risks, BOQ shortages, and margin slippage using Gemin
 ```json
 {
   "success": true,
-  "riskScore": "MEDIUM",
-  "summary": "Project is 14 days behind schedule due to civil handover delays. Copper pipe inventory is at reorder threshold.",
-  "recommendedActions": [
-    "Issue immediate PO for 12 lengths of 1/2\" copper pipe.",
-    "Submit official time-extension claim to Client PMO.",
-    "Schedule night-shift testing for VRF indoor units."
-  ]
+  "messageId": "<c28d49a-78b1-42e1-a08b-1234567890ab@alphaerp.com>",
+  "accepted": ["procurement@atmosaircon.com"],
+  "rejected": [],
+  "mode": "production_smtp",
+  "itemsCount": 1
+}
+```
+
+#### `POST /api/email/test-connection`
+Verifies SMTP host credentials and triggers a test email dispatch.
+
+**Request Payload:**
+```json
+{
+  "recipientEmail": "admin@atmosaircon.com",
+  "smtpConfig": {
+    "host": "smtp.mailtrap.io",
+    "port": 587,
+    "user": "user_id",
+    "pass": "secret_key",
+    "fromEmail": "no-reply@alphaerp.com",
+    "fromName": "AlphaERP Alerts",
+    "secure": false
+  }
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "SMTP Connection verified and test email delivered successfully!",
+  "messageId": "<test-12345@alphaerp.com>",
+  "verifiedHost": "smtp.mailtrap.io:587"
 }
 ```
 
 ---
 
-## 4. Webhook Dispatchers
+### 3.3 MongoDB Atlas Cloud Synchronization APIs
 
-AlphaERP can dispatch outbound webhooks to your external microservices or Zapier/Make.com integrations upon key events:
+#### `GET /api/mongodb/status`
+Checks MongoDB Atlas cluster connectivity, ping latency, and collection statistics.
 
-| Event Trigger | Event Name | Payload Summary |
-|---|---|---|
-| Stock falls below reorder level | `inventory.reorder_breached` | Item SKU, available stock, reorder level, warehouse location |
-| Project marked as delayed | `project.schedule_delayed` | Project number, overdue days, root cause reason, mitigation plan |
-| Daily KPI snapshot calculated | `kpi.digest_generated` | Full formatted text, financial metrics, recipient array |
-| Purchase Requisition generated | `procurement.pr_created` | PR number, requested items, total estimated budget |
+**Response `200 OK`:**
+```json
+{
+  "configured": true,
+  "connected": true,
+  "databaseName": "alphaerp",
+  "collectionsCount": 8,
+  "collections": {
+    "projects": 14,
+    "quotes": 26,
+    "leads": 42,
+    "inventory": 180,
+    "purchase_orders": 35
+  }
+}
+```
+
+#### `POST /api/mongodb/migrate-full`
+Transfers the complete local state payload into linked MongoDB collections.
+
+**Request Payload:**
+```json
+{
+  "projects": [ /* array of project objects */ ],
+  "quotes": [ /* array of quote objects */ ],
+  "leads": [ /* array of lead objects */ ],
+  "inventory": [ /* array of inventory objects */ ]
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "migratedAt": "2026-09-09T10:00:00.000Z",
+  "counts": {
+    "projects": 14,
+    "quotes": 26,
+    "leads": 42,
+    "inventory": 180
+  }
+}
+```
+
+#### `GET /api/mongodb/projects` & `POST /api/mongodb/projects`
+Bi-directionally read and bulk-upsert HVAC project execution records in MongoDB.
 
 ---
 
-## 5. Security & Rate Limiting
+### 3.4 Gemini Live Audio Assistant API (Duplex WebSocket)
 
-- **Rate Limits**: 120 requests/minute per IP address for standard REST endpoints; 20 requests/minute for AI reasoning and WhatsApp trigger endpoints.
-- **Payload Encryption**: All outgoing payloads are signed with an `X-Alpha-Signature` HMAC-SHA256 header using your configured webhook secret.
-- **CORS Configuration**: Restrict allowed origins in `.env` to your production frontend domain.
+AlphaERP includes an ultra-low latency real-time voice assistant powered by Gemini Live:
+
+- **Endpoint**: `ws://<host>/live` (or `wss://<host>/live` on HTTPS)
+- **Protocol**: Duplex WebSocket with PCM 16kHz audio upstream and 24kHz audio downstream.
+- **Payload Format**:
+  - Client sends: `{"audio": "<base64 PCM 16kHz chunk>"}` or `{"text": "<user prompt>"}`
+  - Server streams: `{"audio": "<base64 PCM 24kHz chunk>"}` and `{"text": "<transcription>", "sender": "model"}`
+
+---
+
+### 3.5 Automated WhatsApp Daily KPI Trigger API
+
+#### `POST /api/kpi/whatsapp-trigger`
+Calculates previous-day business metrics and generates formatted WhatsApp text digests:
+
+```
+📊 *ALPHA HVAC ENTERPRISE — PREVIOUS DAY BUSINESS KEY KPIS DIGEST*
+📅 *Snapshot Date:* 09 Sep 2026
+
+1️⃣ *NEW LEADS GENERATED (Sales Pipeline)*
+• Total New Leads: *3 Leads* (Pipeline: ₹46.50 Lakhs)
+
+2️⃣ *BILL COLLECTIONS RECEIVED*
+• Total Collection Received: *₹4,85,000* (Efficiency: 78.5%)
+
+3️⃣ *PENDING RECEIVABLES AGING*
+• 0–30 Days: ₹8,20,000 | 31–60 Days: ₹5,10,000 | >90 Days: ₹2,00,000
+
+4️⃣ *DELAYED PROJECTS & ROOT CAUSES*
+⚠️ *PRJ-2026-001 (One BKC Tower)*: 14 Days Delayed (Client civil clearance)
+```
+
+---
+
+### 3.6 Google Sheets Bi-Directional Integration API
+
+#### `POST /api/google-sheets/sync`
+Synchronizes leads, quotes, inventory, and projects across 9 tabs with designated Google Spreadsheets using Google Identity Services (GIS) OAuth 2.0.
+
+---
+
+## 4. Security & Rate Limiting
+
+- **Rate Limits**: 120 req/min for general REST routes; 20 req/min for email alerts and AI endpoints.
+- **WebSocket Protection**: Maximum 5 concurrent WebSocket connections per IP address with automated heartbeat ping/pong cleanup.
+- **Payload Size**: Maximum 25MB JSON payload limit for database migrations and backup ingestion.

@@ -1,15 +1,15 @@
 # AlphaERP: Complete Enterprise Deployment Manual
-### Production Deployment for Google Cloud Run, Docker Containers, Ubuntu Linux, Systemd, PM2 & Nginx
+### Production Deployment for Vercel Serverless, Google Cloud Run, Docker Containers, Ubuntu Linux, Systemd, PM2 & Nginx
 
 ---
 
 ## 1. System Requirements & Architecture
 
-AlphaERP is architected as a high-performance, full-stack enterprise web application:
-- **Frontend / Client**: React 19 + TypeScript + Vite + Tailwind CSS + Lucide Icons + Motion
-- **Backend / API**: Node.js 20+ / Express with TypeScript type stripping & Vite SPA fallback middleware
-- **Database**: PostgreSQL 14+ (or Cloud SQL / Firestore persistent storage)
-- **Ingress Port**: Hardcoded to **Port 3000** (Host: `0.0.0.0`) for container compatibility and Nginx reverse proxy.
+AlphaERP is architected as an enterprise-grade, full-stack HVAC operations platform:
+- **Frontend / Client**: React 19 + TypeScript + Vite 6 + Tailwind CSS v4 + Lucide Icons + Motion
+- **Backend / API**: Node.js 20+ / Express with TypeScript bundling via esbuild
+- **Persistence Options**: MongoDB Atlas (Cloud NoSQL), PostgreSQL 14+ (Relational), or browser IndexedDB cache
+- **Ingress Port**: Hardcoded to **Port 3000** (Host: `0.0.0.0`) for container compatibility and reverse proxies.
 
 ---
 
@@ -23,48 +23,68 @@ NODE_ENV=production
 PORT=3000
 HOST=0.0.0.0
 
-# Database Configuration (PostgreSQL / Cloud SQL)
-DATABASE_URL=postgresql://alpha_user:YourStrongPassword123!@localhost:5432/alpha_erp_db
-PGHOST=localhost
-PGPORT=5432
-PGDATABASE=alpha_erp_db
-PGUSER=alpha_user
-PGPASSWORD=YourStrongPassword123!
+# Cloud Database Configuration (MongoDB Atlas)
+MONGODB_URI=mongodb+srv://shivenk_db_user:<password>@cluster0.5gbrhfg.mongodb.net/alphaerp?retryWrites=true&w=majority
 
-# AI Intelligence (Gemini API)
+# AI Intelligence (Gemini Live & Vision APIs)
 GEMINI_API_KEY=AIzaSy...YourGeminiApiKeyHere
 
-# WhatsApp Cloud API / Webhook Integration
-WHATSAPP_PHONE_NUMBER_ID=109283746592837
-WHATSAPP_ACCESS_TOKEN=EAAB...YourMetaAccessToken
-WHATSAPP_WEBHOOK_VERIFY_TOKEN=AlphaERP_Verify_Token_2026
+# Automated Email & SMTP Dispatch (Dummy Sandbox or Production SMTP)
+SMTP_HOST=smtp.mailtrap.io
+SMTP_PORT=587
+SMTP_USER=your_smtp_username
+SMTP_PASS=your_smtp_password
+SMTP_FROM="AlphaERP Procurement" <procurement@alphaerp.com>
+PROCUREMENT_ALERT_EMAIL=procurement@yourcompany.com
 
-# Google Sheets API Integration
-GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=GOCSPX-your-client-secret
-GOOGLE_SHEETS_SPREADSHEET_ID=1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms
+# Vercel Production Deployment Credentials (Optional)
+VERCEL_TOKEN=your_vercel_access_token
+VERCEL_ORG_ID=your_org_id
+VERCEL_PROJECT_ID=your_project_id
+
+# Optional PostgreSQL / Cloud SQL Relational Storage
+DATABASE_URL=postgresql://alpha_user:YourStrongPassword123!@localhost:5432/alpha_erp_db
 ```
 
 ---
 
-## 3. Deployment Method A: Google Cloud Run / Containerized Docker
+## 3. Deployment Option 1: Vercel Serverless & Edge Network (Zero Ops)
 
-### 3.1 Dockerfile
-Create a production-grade `Dockerfile` in the project root:
+AlphaERP is fully configured with `vercel.json` and a dedicated serverless entrypoint in `api/index.js`.
 
+### 3.1 Automated Production Build
+Running `npm run build` generates:
+1. `dist/`: High-performance static React assets served via Vercel Edge CDN.
+2. `api/index.js`: Self-contained serverless bundle wrapping the Express API.
+3. `dist/server.cjs`: Standalone Node.js server bundle for container runtimes.
+
+### 3.2 Deploy via Vercel CLI
+```bash
+# 1. Install or run Vercel CLI
+npx vercel deploy --prod --yes
+
+# 2. Or supply token directly
+npx vercel deploy --prod --token "$VERCEL_TOKEN" --yes
+```
+
+### 3.3 Live Production Verification
+- Production Domain: `https://hvacbiz.vercel.app`
+- Health Endpoint: `https://hvacbiz.vercel.app/api/health`
+
+---
+
+## 4. Deployment Option 2: Google Cloud Run & Docker Containers
+
+### 4.1 Dockerfile
 ```dockerfile
 # Stage 1: Build & Bundle
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy dependency manifests
-COPY package.json bun.lock* package-lock.json* ./
+COPY package.json package-lock.json* bun.lock* ./
 RUN npm ci
 
-# Copy source files
 COPY . .
-
-# Build Vite frontend and bundle Express server
 RUN npm run build
 
 # Stage 2: Minimal Production Image
@@ -74,34 +94,28 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Copy built artifacts from builder
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/server.ts ./server.ts
+COPY --from=builder /app/dist/server.cjs ./dist/server.cjs
 
 EXPOSE 3000
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
 
-# Start bundled production server
 CMD ["node", "dist/server.cjs"]
 ```
 
-### 3.2 Build and Deploy to Google Cloud Run
+### 4.2 Build and Deploy to Cloud Run
 ```bash
-# 1. Set Google Cloud Project
-gcloud config set project your-gcp-project-id
+# 1. Submit build to Google Artifact Registry
+gcloud builds submit --tag gcr.io/your-gcp-project-id/alpha-erp:latest
 
-# 2. Build container with Google Cloud Build
-gcloud builds submit --tag gcr.io/your-gcp-project-id/alpha-erp:v3.4
-
-# 3. Deploy to Cloud Run (Port 3000, 1GB RAM, Auto-scaling 1-10 instances)
+# 2. Deploy to Cloud Run
 gcloud run deploy alpha-erp \
-  --image gcr.io/your-gcp-project-id/alpha-erp:v3.4 \
+  --image gcr.io/your-gcp-project-id/alpha-erp:latest \
   --platform managed \
   --region asia-east1 \
   --allow-unauthenticated \
@@ -115,68 +129,40 @@ gcloud run deploy alpha-erp \
 
 ---
 
-## 4. Deployment Method B: Ubuntu 24.04 / 22.04 LTS (Bare-Metal / VM)
+## 5. Deployment Option 3: Ubuntu 24.04 / 22.04 LTS (Bare-Metal / VM)
 
-### Step 4.1: Automated Setup
-Run the included Python 3 deployment engine:
-```bash
-sudo python3 setup_ubuntu.py --port 3000 --domain erp.yourdomain.com
-```
-
-### Step 4.2: Manual Setup
-
-#### 1. System Dependencies & Node.js 20
+### 5.1 System Setup & Node.js 20
 ```bash
 sudo apt-get update -y && sudo apt-get upgrade -y
-sudo apt-get install -y curl wget git build-essential nginx certbot python3-certbot-nginx postgresql postgresql-contrib
+sudo apt-get install -y curl wget git build-essential nginx certbot python3-certbot-nginx
 
 # Install Node.js 20 LTS
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
-#### 2. PostgreSQL Provisioning & Schema Ingestion
-```bash
-# Create database and user
-sudo -u postgres psql -c "CREATE USER alpha_user WITH ENCRYPTED PASSWORD 'YourStrongPassword123!';"
-sudo -u postgres psql -c "CREATE DATABASE alpha_erp_db OWNER alpha_user;"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE alpha_erp_db TO alpha_user;"
-
-# Ingest schema and initial data
-psql -h localhost -U alpha_user -d alpha_erp_db -f /opt/alpha-erp/database/init.sql
-```
-
-#### 3. Build Application
+### 5.2 Build & Run with PM2
 ```bash
 cd /opt/alpha-erp
 npm ci
 npm run build
-```
 
-#### 4. PM2 Process Manager Service
-```bash
-# Install PM2 globally
+# Install PM2 and launch
 sudo npm install -g pm2
-
-# Start server with PM2
 pm2 start dist/server.cjs --name "alpha-erp" --env production
-
-# Setup startup hook
 pm2 startup systemd
 pm2 save
 ```
 
-#### 5. Nginx Reverse Proxy Configuration
+### 5.3 Nginx Reverse Proxy & SSL
 Create `/etc/nginx/sites-available/alpha-erp`:
-
 ```nginx
 server {
     listen 80;
     server_name erp.yourdomain.com;
 
-    # Gzip Compression
     gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+    gzip_types text/plain text/css application/json application/javascript text/xml;
 
     location / {
         proxy_pass http://127.0.0.1:3000;
@@ -187,30 +173,23 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-        proxy_read_timeout 90;
     }
 }
 ```
 
-Enable site and obtain SSL/TLS certificate:
+Enable and activate Let's Encrypt SSL:
 ```bash
-sudo ln -s /etc/nginx/sites-available/alpha-erp /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-
-# Issue Let's Encrypt SSL
+sudo ln -sf /etc/nginx/sites-available/alpha-erp /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
 sudo certbot --nginx -d erp.yourdomain.com --non-interactive --agree-tos -m admin@yourdomain.com
 ```
 
 ---
 
-## 5. Health Check & Deployment Verification
-
-Verify your live deployment with the automated health endpoint:
+## 6. Health Check & Deployment Verification
 
 ```bash
-curl -I https://erp.yourdomain.com/api/health
+curl -I https://hvacbiz.vercel.app/api/health
 ```
 
 Expected Output:
@@ -221,9 +200,8 @@ content-type: application/json; charset=utf-8
 
 ---
 
-## 6. Zero-Downtime Rolling Update Procedure
+## 7. Zero-Downtime Updates
 
-To update a live production instance:
 ```bash
 cd /opt/alpha-erp
 git pull origin main
