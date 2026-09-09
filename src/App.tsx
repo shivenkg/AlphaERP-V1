@@ -770,6 +770,7 @@ export function App() {
               <SalesPerformanceView
                 salesReps={data.salesReps}
                 onOpenSheetsModal={() => setIsSheetsModalOpen(true)}
+                onNavigate={setActiveTab}
               />
             )}
 

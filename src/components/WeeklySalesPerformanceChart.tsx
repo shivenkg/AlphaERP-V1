@@ -17,6 +17,7 @@ interface WeeklySalesPerformanceChartProps {
   leads: Lead[];
   payments: PaymentRecord[];
   salesReps: SalesRep[];
+  onNavigate?: (tab: string) => void;
   className?: string;
 }
 
@@ -27,6 +28,7 @@ export const WeeklySalesPerformanceChart: React.FC<WeeklySalesPerformanceChartPr
   leads,
   payments,
   salesReps,
+  onNavigate,
   className = ''
 }) => {
   const [metricView, setMetricView] = useState<ChartMetricView>('all');
@@ -230,45 +232,103 @@ export const WeeklySalesPerformanceChart: React.FC<WeeklySalesPerformanceChartPr
 
         {/* KPI Highlight Strip */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 my-3.5">
-          <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
-            <div className="text-[11px] font-medium text-slate-500 flex items-center gap-1">
-              <span>Weekly Sales Volume</span>
+          <div
+            onClick={() => onNavigate?.('quotes')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onNavigate?.('quotes');
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            title="Click to view Awarded Quotes & Sales"
+            className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl p-3 cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-md hover:-translate-y-0.5 transition-all group focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center justify-between">
+              <span className="group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">Weekly Sales Volume</span>
+              <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-emerald-600 transition-opacity" />
             </div>
-            <div className="text-base sm:text-lg font-bold text-slate-900 font-mono mt-0.5">
+            <div className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 font-mono mt-0.5 group-hover:text-emerald-600 transition-colors">
               ₹{totalWeeklyAwardedLakhs.toFixed(2)} L
             </div>
-            <div className="text-[10px] text-emerald-600 font-medium mt-0.5 flex items-center gap-0.5">
+            <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5 flex items-center gap-0.5">
               <ArrowUpRight className="w-3 h-3" />
               <span>Across {weeklyData.length} Weeks</span>
             </div>
           </div>
 
-          <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
-            <div className="text-[11px] font-medium text-slate-500">Target Attainment</div>
-            <div className="text-base sm:text-lg font-bold text-blue-600 font-mono mt-0.5">
+          <div
+            onClick={() => onNavigate?.('sales')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onNavigate?.('sales');
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            title="Click to view Sales Targets & Quota Dashboard"
+            className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl p-3 cursor-pointer hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md hover:-translate-y-0.5 transition-all group focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center justify-between">
+              <span className="group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">Target Attainment</span>
+              <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity" />
+            </div>
+            <div className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 font-mono mt-0.5">
               {overallAttainmentPct}%
             </div>
-            <div className="text-[10px] text-slate-500 mt-0.5">
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
               Goal: ₹{totalWeeklyTargetLakhs.toFixed(1)} L
             </div>
           </div>
 
-          <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
-            <div className="text-[11px] font-medium text-slate-500">Weekly Run-Rate</div>
-            <div className="text-base sm:text-lg font-bold text-emerald-600 font-mono mt-0.5">
+          <div
+            onClick={() => onNavigate?.('finance')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onNavigate?.('finance');
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            title="Click to view Cashflow & Invoicing"
+            className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl p-3 cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-md hover:-translate-y-0.5 transition-all group focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center justify-between">
+              <span className="group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">Weekly Run-Rate</span>
+              <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-emerald-600 transition-opacity" />
+            </div>
+            <div className="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">
               ₹{avgWeeklyRunRate} L/wk
             </div>
-            <div className="text-[10px] text-slate-500 mt-0.5">
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
               Consistent conversion
             </div>
           </div>
 
-          <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
-            <div className="text-[11px] font-medium text-slate-500">Peak Performance</div>
-            <div className="text-base sm:text-lg font-bold text-purple-600 font-mono mt-0.5">
+          <div
+            onClick={() => onNavigate?.('quotes')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onNavigate?.('quotes');
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            title="Click to view Best Week Quotes"
+            className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl p-3 cursor-pointer hover:border-purple-300 dark:hover:border-purple-600 hover:shadow-md hover:-translate-y-0.5 transition-all group focus:outline-none focus:ring-2 focus:ring-purple-500"
+          >
+            <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center justify-between">
+              <span className="group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">Peak Performance</span>
+              <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-purple-600 transition-opacity" />
+            </div>
+            <div className="text-base sm:text-lg font-bold text-purple-600 dark:text-purple-400 font-mono mt-0.5">
               ₹{bestWeek?.awardedSales ?? 0} L
             </div>
-            <div className="text-[10px] text-purple-600 font-medium mt-0.5 truncate">
+            <div className="text-[10px] text-purple-600 dark:text-purple-400 font-medium mt-0.5 truncate">
               {bestWeek?.shortWeek || 'Top Week'} Peak Won
             </div>
           </div>

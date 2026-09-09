@@ -894,6 +894,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   leads={leads}
                   payments={payments}
                   salesReps={salesReps}
+                  onNavigate={onNavigate}
                 />
               )}
             </div>

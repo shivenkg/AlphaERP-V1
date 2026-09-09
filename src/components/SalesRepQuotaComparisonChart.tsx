@@ -30,6 +30,7 @@ import { SalesRep } from '../types';
 interface SalesRepQuotaComparisonChartProps {
   salesReps: SalesRep[];
   className?: string;
+  onNavigate?: (tab: string) => void;
 }
 
 type SortOption = 'achievement_desc' | 'achievement_asc' | 'quota_desc' | 'sales_desc';
@@ -37,7 +38,8 @@ type ViewMode = 'comparison' | 'achievement_pct' | 'variance';
 
 export const SalesRepQuotaComparisonChart: React.FC<SalesRepQuotaComparisonChartProps> = ({
   salesReps,
-  className = ''
+  className = '',
+  onNavigate
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('comparison');
   const [sortBy, setSortBy] = useState<SortOption>('achievement_desc');
@@ -232,31 +234,91 @@ export const SalesRepQuotaComparisonChart: React.FC<SalesRepQuotaComparisonChart
       </div>
 
       {/* Mini Executive Highlights Ribbon */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50/80 p-3.5 rounded-xl border border-slate-200 text-xs">
-        <div>
-          <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Total Team Target</span>
-          <div className="font-bold text-slate-900 font-mono text-sm mt-0.5">₹{totalTargetLakhs.toFixed(2)} Lakhs</div>
-          <span className="text-[10px] text-slate-400">Assigned monthly baseline</span>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50/80 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+        <div
+          onClick={() => onNavigate?.('quotes')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate?.('quotes');
+            }
+          }}
+          title="Click to view Quotations Register & Monthly Target"
+          className="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-900 border border-transparent hover:border-blue-300 dark:hover:border-blue-700 cursor-pointer transition-all duration-200 hover:shadow-xs group select-none"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider">Total Team Target</span>
+            <ArrowUpRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 transition-colors" />
+          </div>
+          <div className="font-bold text-slate-900 dark:text-slate-100 font-mono text-sm mt-0.5">₹{totalTargetLakhs.toFixed(2)} Lakhs</div>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500">Assigned monthly baseline</span>
         </div>
 
-        <div>
-          <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Total Realized Revenue</span>
-          <div className="font-bold text-emerald-600 font-mono text-sm mt-0.5">₹{totalAchievedLakhs.toFixed(2)} Lakhs</div>
-          <span className="text-[10px] text-emerald-700 font-semibold">{teamAchievementPct}% Team Attainment</span>
+        <div
+          onClick={() => onNavigate?.('quotes')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate?.('quotes');
+            }
+          }}
+          title="Click to view Awarded Quotes & Realized Revenue"
+          className="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-900 border border-transparent hover:border-emerald-300 dark:hover:border-emerald-700 cursor-pointer transition-all duration-200 hover:shadow-xs group select-none"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider">Total Realized Revenue</span>
+            <ArrowUpRight className="w-3 h-3 text-emerald-400 group-hover:text-emerald-600 transition-colors" />
+          </div>
+          <div className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-sm mt-0.5">₹{totalAchievedLakhs.toFixed(2)} Lakhs</div>
+          <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold">{teamAchievementPct}% Team Attainment</span>
         </div>
 
-        <div>
-          <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Top Performer</span>
-          <div className="font-bold text-blue-700 text-sm mt-0.5 truncate">{topPerformer?.name || 'N/A'}</div>
-          <span className="text-[10px] text-blue-600 font-bold">{topPerformer?.achievementPct}% Quota Achieved</span>
+        <div
+          onClick={() => onNavigate?.('crm')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate?.('crm');
+            }
+          }}
+          title={`Click to view Top Performer CRM Deals (${topPerformer?.name})`}
+          className="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-900 border border-transparent hover:border-blue-300 dark:hover:border-blue-700 cursor-pointer transition-all duration-200 hover:shadow-xs group select-none"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider">Top Performer</span>
+            <ArrowUpRight className="w-3 h-3 text-blue-400 group-hover:text-blue-600 transition-colors" />
+          </div>
+          <div className="font-bold text-blue-700 dark:text-blue-400 text-sm mt-0.5 truncate">{topPerformer?.name || 'N/A'}</div>
+          <span className="text-[10px] text-blue-600 dark:text-blue-300 font-bold">{topPerformer?.achievementPct}% Quota Achieved</span>
         </div>
 
-        <div>
-          <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Quota Attainment Rate</span>
-          <div className="font-bold text-indigo-700 font-mono text-sm mt-0.5">
+        <div
+          onClick={() => onNavigate?.('sales')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate?.('sales');
+            }
+          }}
+          title="Click to view Sales Team Quota Distribution"
+          className="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-900 border border-transparent hover:border-indigo-300 dark:hover:border-indigo-700 cursor-pointer transition-all duration-200 hover:shadow-xs group select-none"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider">Quota Attainment Rate</span>
+            <ArrowUpRight className="w-3 h-3 text-indigo-400 group-hover:text-indigo-600 transition-colors" />
+          </div>
+          <div className="font-bold text-indigo-700 dark:text-indigo-400 font-mono text-sm mt-0.5">
             {repsMetTargetCount} of {salesReps.length} Reps
           </div>
-          <span className="text-[10px] text-slate-500">
+          <span className="text-[10px] text-slate-500 dark:text-slate-400">
             {((repsMetTargetCount / Math.max(1, salesReps.length)) * 100).toFixed(0)}% Reps &ge; 100% Target
           </span>
         </div>

@@ -28,12 +28,13 @@ import { storageService } from '../services/storageService';
 
 interface SalesTrendAnalysisProps {
   salesReps: SalesRep[];
+  onNavigate?: (tab: string) => void;
 }
 
 type HorizonOption = 3 | 6 | 12;
 type ScenarioType = 'conservative' | 'baseline' | 'aggressive' | 'custom';
 
-export const SalesTrendAnalysis: React.FC<SalesTrendAnalysisProps> = ({ salesReps }) => {
+export const SalesTrendAnalysis: React.FC<SalesTrendAnalysisProps> = ({ salesReps, onNavigate }) => {
   const [horizonMonths, setHorizonMonths] = useState<HorizonOption>(6);
   const [scenario, setScenario] = useState<ScenarioType>('baseline');
   const [customGrowthPct, setCustomGrowthPct] = useState<number>(18);
@@ -260,53 +261,123 @@ export const SalesTrendAnalysis: React.FC<SalesTrendAnalysisProps> = ({ salesRep
 
       {/* KPI Projection Highlight Badges */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="p-4 bg-gradient-to-br from-indigo-50/50 to-white dark:from-indigo-950/30 dark:to-slate-900 border border-indigo-100 dark:border-indigo-900/50 rounded-xl">
+        <div
+          onClick={() => onNavigate?.('quotes')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate?.('quotes');
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          title="Click to view Quotes & Proposals pipeline"
+          className="p-4 bg-gradient-to-br from-indigo-50/70 to-white dark:from-indigo-950/40 dark:to-slate-900 border border-indigo-200/80 dark:border-indigo-800/60 rounded-xl cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-lg hover:-translate-y-0.5 transition-all group focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
           <div className="flex items-center justify-between text-indigo-600 dark:text-indigo-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Projected Next {horizonMonths}M Rev</span>
-            <Sparkles className="w-4 h-4" />
+            <span className="text-[11px] font-bold uppercase tracking-wider group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
+              Projected Next {horizonMonths}M Rev
+            </span>
+            <div className="flex items-center gap-1">
+              <Sparkles className="w-4 h-4 text-indigo-500 group-hover:scale-110 transition-transform" />
+              <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-all text-indigo-600 dark:text-indigo-400 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </div>
           </div>
-          <div className="text-xl font-black text-slate-900 dark:text-slate-100 font-mono">
+          <div className="text-xl font-black text-slate-900 dark:text-slate-100 font-mono group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
             ₹{metricsSummary.totalProjectedRevLakhs} Lakhs
           </div>
-          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 flex items-center gap-1">
-            <ArrowUpRight className="w-3 h-3" />
-            <span>+{metricsSummary.projectedGrowthOverPrevPeriod}% vs historical base</span>
+          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 flex items-center justify-between">
+            <span className="flex items-center gap-1">
+              <ArrowUpRight className="w-3 h-3" />
+              <span>+{metricsSummary.projectedGrowthOverPrevPeriod}% vs historical base</span>
+            </span>
+            <span className="text-[10px] text-indigo-500 opacity-0 group-hover:opacity-100 font-medium transition-opacity">
+              View Quotes →
+            </span>
           </div>
         </div>
 
-        <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
-          <div className="text-slate-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider mb-1">
-            Avg Projected Run Rate
+        <div
+          onClick={() => onNavigate?.('finance')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate?.('finance');
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          title="Click to view Financial Ledgers & Cashflow Run-Rate"
+          className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-500 hover:shadow-lg hover:-translate-y-0.5 transition-all group focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+        >
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider mb-1">
+            <span className="group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors">Avg Projected Run Rate</span>
+            <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-all text-emerald-600 dark:text-emerald-400 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </div>
-          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 font-mono">
+          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 font-mono group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
             ₹{metricsSummary.avgMonthlyProjected} L / mo
           </div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-            Targeting ₹{(Number(metricsSummary.avgMonthlyProjected) * 12 / 100).toFixed(2)} Cr annual velocity
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
+            <span>Targeting ₹{(Number(metricsSummary.avgMonthlyProjected) * 12 / 100).toFixed(2)} Cr annual velocity</span>
+            <span className="text-[10px] text-emerald-500 opacity-0 group-hover:opacity-100 font-medium transition-opacity">
+              Finance →
+            </span>
           </div>
         </div>
 
-        <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
-          <div className="text-slate-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider mb-1">
-            Projected Deals Won
+        <div
+          onClick={() => onNavigate?.('crm')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate?.('crm');
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          title="Click to view CRM Deals & Pipeline"
+          className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg hover:-translate-y-0.5 transition-all group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider mb-1">
+            <span className="group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors">Projected Deals Won</span>
+            <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-all text-blue-600 dark:text-blue-400 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </div>
-          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 font-mono">
+          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 font-mono group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
             {metricsSummary.totalProjectedDeals} Contracts
           </div>
-          <div className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold mt-1">
-            ~{(metricsSummary.totalProjectedDeals / horizonMonths).toFixed(1)} major HVAC orders/mo
+          <div className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold mt-1 flex items-center justify-between">
+            <span>~{(metricsSummary.totalProjectedDeals / horizonMonths).toFixed(1)} major HVAC orders/mo</span>
+            <span className="text-[10px] text-blue-500 opacity-0 group-hover:opacity-100 font-medium transition-opacity">
+              CRM Leads →
+            </span>
           </div>
         </div>
 
-        <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
-          <div className="text-slate-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider mb-1">
-            Sales Rep Capacity
+        <div
+          onClick={() => onNavigate?.('hr')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate?.('hr');
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          title="Click to view HR & Team Capacity"
+          className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl cursor-pointer hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-lg hover:-translate-y-0.5 transition-all group focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+        >
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider mb-1">
+            <span className="group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors">Sales Rep Capacity</span>
+            <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-all text-purple-600 dark:text-purple-400 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </div>
-          <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+          <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400 font-mono group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
             ₹{(Number(metricsSummary.avgMonthlyProjected) / (salesReps.length || 1)).toFixed(1)} L / Rep
           </div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-            Optimized across {salesReps.length} sales engineers
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
+            <span>Optimized across {salesReps.length} sales engineers</span>
+            <span className="text-[10px] text-purple-500 opacity-0 group-hover:opacity-100 font-medium transition-opacity">
+              HR Team →
+            </span>
           </div>
         </div>
       </div>
