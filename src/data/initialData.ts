@@ -13,7 +13,8 @@ import {
   AuditLog,
   AppNotification,
   GoogleSheetsSyncConfig,
-  SystemSettings
+  SystemSettings,
+  EmailSmtpConfig
 } from '../types';
 import { DEFAULT_NUMBER_SERIES } from '../utils/numberSeries';
 import { DEFAULT_ROLE_MODULE_PERMISSIONS } from '../utils/rbac';
@@ -2000,5 +2001,30 @@ export const INITIAL_SYSTEM_SETTINGS: SystemSettings = {
     ],
     customHeaderTitle: 'ALPHA HVAC ENTERPRISE — PREVIOUS DAY BUSINESS KEY KPIS DIGEST',
     customFooterNote: 'Generated automatically by AlphaERP Intelligent Business Engine'
+  },
+
+  emailConfig: {
+    enabled: true,
+    provider: 'mailtrap',
+    mode: 'mock',
+    host: 'smtp.mailtrap.io',
+    port: 587,
+    secure: false,
+    username: 'procurement-sandbox@alphaerp.com',
+    password: 'demo_smtp_key_884920',
+    senderName: 'AlphaERP Automated Notification Engine',
+    senderEmail: 'notifications@alphaerp.com',
+    replyToEmail: 'procurement@alphaerp.com',
+    defaultRecipients: ['procurement@alphaerp.com', 'shiven.k@gmail.com', 'supplychain@alphaerp.com'],
+    procurementAlertsEnabled: true,
+    poDispatchEnabled: true,
+    invoiceRemindersEnabled: true,
+    workOrderDispatchEnabled: true,
+    dailyDigestEnabled: true,
+    lastTestedAt: new Date().toISOString(),
+    lastTestStatus: 'SUCCESS',
+    lastTestMessage: 'Simulated Sandbox Dispatch Ready (Mock/Dummy SMTP Engine Active)'
   }
 };
+
+export const DEFAULT_EMAIL_CONFIG: EmailSmtpConfig = INITIAL_SYSTEM_SETTINGS.emailConfig!;

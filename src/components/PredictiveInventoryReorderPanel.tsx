@@ -15,10 +15,15 @@ import {
   ChevronUp,
   Filter,
   BarChart3,
-  HelpCircle
+  HelpCircle,
+  Mail,
+  Sliders,
+  X
 } from 'lucide-react';
 import { InventoryItem } from '../types';
 import { storageService } from '../services/storageService';
+import { triggerProcurementReorderEmailNotification } from '../services/procurementNotificationService';
+import { EmailSettingsAdminSection } from './EmailSettingsAdminSection';
 
 interface PredictiveInventoryReorderPanelProps {
   inventory: InventoryItem[];
@@ -45,6 +50,28 @@ export const PredictiveInventoryReorderPanel: React.FC<PredictiveInventoryReorde
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const [filterMode, setFilterMode] = useState<'ALL' | 'ACTIONABLE' | 'CRITICAL'>('ACTIONABLE');
   const [isGeneratingBulkPR, setIsGeneratingBulkPR] = useState(false);
+  const [isSendingEmailAlert, setIsSendingEmailAlert] = useState(false);
+  const [emailAlertStatus, setEmailAlertStatus] = useState<string | null>(null);
+  const [showEmailConfigModal, setShowEmailConfigModal] = useState(false);
+
+  const handleSendReorderEmailAlert = async () => {
+    setIsSendingEmailAlert(true);
+    setEmailAlertStatus(null);
+    try {
+      const result = await triggerProcurementReorderEmailNotification({
+        items: inventory,
+        forceSend: true
+      });
+      setEmailAlertStatus(
+        `Dispatched alert to ${result.sentTo.length} manager(s) for ${result.itemCount} SKU(s) (Est: ₹${result.totalEstimatedCost.toLocaleString('en-IN')}) via ${result.mode === 'smtp' ? 'SMTP' : 'Mock Wrapper'}`
+      );
+      setTimeout(() => setEmailAlertStatus(null), 6000);
+    } catch (err: any) {
+      setEmailAlertStatus(`Error sending alert: ${err?.message || 'Unknown error'}`);
+    } finally {
+      setIsSendingEmailAlert(false);
+    }
+  };
 
   // Compute predictive values based on item categories, current allocations, and historical velocity
   const predictiveData: PredictiveItemAnalysis[] = useMemo(() => {
@@ -237,6 +264,25 @@ export const PredictiveInventoryReorderPanel: React.FC<PredictiveInventoryReorde
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleSendReorderEmailAlert}
+            disabled={isSendingEmailAlert}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all disabled:opacity-50 shrink-0"
+            title="Dispatch automated email notification to procurement managers"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            <span>{isSendingEmailAlert ? 'Alerting...' : 'Email Procurement'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowEmailConfigModal(true)}
+            className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors shrink-0"
+            title="Configure Email & SMTP Settings (Dummy Sandbox vs Live SMTP)"
+          >
+            <Sliders className="w-3.5 h-3.5" />
+          </button>
+
           {actionableItems.length > 0 && (
             <button
               onClick={handleGenerateBulkPR}
@@ -258,6 +304,21 @@ export const PredictiveInventoryReorderPanel: React.FC<PredictiveInventoryReorde
           </button>
         </div>
       </div>
+
+      {emailAlertStatus && (
+        <div className="p-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/80 rounded-xl text-xs font-medium text-blue-900 dark:text-blue-200 flex items-center justify-between gap-3 animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span>{emailAlertStatus}</span>
+          </div>
+          <button
+            onClick={() => setEmailAlertStatus(null)}
+            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-xs font-bold underline shrink-0"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {isExpanded && (
         <div className="space-y-4 animate-in fade-in duration-150">
@@ -472,6 +533,21 @@ export const PredictiveInventoryReorderPanel: React.FC<PredictiveInventoryReorde
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+      {/* POPUP MODAL FOR EMAIL SETTINGS */}
+      {showEmailConfigModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-slate-50 border border-slate-200 rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 relative">
+            <button
+              onClick={() => setShowEmailConfigModal(false)}
+              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 bg-white hover:bg-slate-100 rounded-full border border-slate-200 shadow-2xs transition-colors z-10"
+              title="Close Email Settings"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <EmailSettingsAdminSection currentUser={storageService.getCurrentUser()} />
           </div>
         </div>
       )}

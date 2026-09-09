@@ -33,7 +33,8 @@ import {
   Laptop,
   RefreshCw,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  Mail
 } from 'lucide-react';
 import { SystemSettings, UserRole, UserProfile } from '../types';
 import { FontSizeScaleMode } from '../types/fontSize';
@@ -45,6 +46,7 @@ import { ReportTemplateManager } from './ReportTemplateManager';
 import { RoleModulePermissionsManager } from './RoleModulePermissionsManager';
 import { GoogleSheetsAdminSection } from './GoogleSheetsAdminSection';
 import { MongoDbAdminSection } from './MongoDbAdminSection';
+import { EmailSettingsAdminSection } from './EmailSettingsAdminSection';
 import {
   FileSpreadsheet,
   ExternalLink,
@@ -86,7 +88,7 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
   } = useFontSize();
   const [settings, setSettings] = useState<SystemSettings>(storageService.getSystemSettings());
   const [activeSubTab, setActiveSubTab] = useState<
-    'branding' | 'report_templates' | 'commercial' | 'procurement' | 'number_series' | 'banking' | 'modules' | 'roles' | 'role_modules' | 'google_sheets' | 'backup' | 'mongodb'
+    'branding' | 'report_templates' | 'commercial' | 'procurement' | 'number_series' | 'banking' | 'modules' | 'roles' | 'role_modules' | 'google_sheets' | 'backup' | 'mongodb' | 'email_settings'
   >('branding');
 
   // Form states for inclusion/exclusion additions
@@ -541,6 +543,18 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
         >
           <Database className="w-4 h-4 text-emerald-400" />
           <span>12. MongoDB Linked Database</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('email_settings')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+            activeSubTab === 'email_settings'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Mail className="w-4 h-4 text-blue-300" />
+          <span>13. Email & SMTP</span>
         </button>
       </div>
 
@@ -1976,6 +1990,11 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
       {/* TAB 12: MONGODB LINKED DATABASE */}
       {activeSubTab === 'mongodb' && (
         <MongoDbAdminSection />
+      )}
+
+      {/* TAB 13: EMAIL & SMTP NOTIFICATIONS */}
+      {activeSubTab === 'email_settings' && (
+        <EmailSettingsAdminSection currentUser={currentUser} />
       )}
     </div>
   );

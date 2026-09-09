@@ -332,6 +332,7 @@ export interface PurchaseOrder {
   taxAmount: number;
   shippingCharges: number;
   grandTotal: number;
+  totalAmount?: number;
   paymentTerms: string;
   status: POStatus;
   approvalRemarks?: string;
@@ -468,6 +469,7 @@ export interface AuditLog {
   entityType: 'LEAD' | 'QUOTE' | 'WORK_ORDER' | 'PROJECT' | 'BOQ' | 'INVENTORY' | 'PR' | 'PO' | 'PAYMENT' | 'SALES_QUOTA' | 'GOOGLE_SHEET' | 'USER' | 'SYSTEM' | string;
   entityId: string;
   summary: string;
+  details?: string;
   metadata?: Record<string, any>;
 }
 
@@ -601,6 +603,34 @@ export interface SystemSettings {
 
   // Automated WhatsApp Daily Business KPI Trigger Configuration
   whatsAppTriggerConfig?: WhatsAppTriggerConfig;
+
+  // Automated Email & SMTP Notification Engine Configuration
+  emailConfig?: EmailSmtpConfig;
+}
+
+export type EmailProviderType = 'custom_smtp' | 'mailtrap' | 'ethereal' | 'gmail' | 'sendgrid' | 'office365' | 'mock';
+
+export interface EmailSmtpConfig {
+  enabled: boolean;
+  provider: EmailProviderType;
+  mode: 'mock' | 'smtp';
+  host: string;
+  port: number;
+  secure: boolean;
+  username: string;
+  password?: string;
+  senderName: string;
+  senderEmail: string;
+  replyToEmail?: string;
+  defaultRecipients: string[];
+  procurementAlertsEnabled: boolean;
+  poDispatchEnabled: boolean;
+  invoiceRemindersEnabled: boolean;
+  workOrderDispatchEnabled: boolean;
+  dailyDigestEnabled: boolean;
+  lastTestedAt?: string;
+  lastTestStatus?: 'SUCCESS' | 'FAILED';
+  lastTestMessage?: string;
 }
 
 export type ReportType = 'invoice' | 'po' | 'pr' | 'quotation' | 'workorder';
@@ -1232,8 +1262,10 @@ export interface PayrollMonth {
   processedDate?: string;
   totalGross: number;
   totalGrossSalary?: number;
+  totalGrossPay?: number;
   totalNet: number;
   totalNetPayable?: number;
+  totalNetPay?: number;
   totalDeductions?: number;
   totalPfEe: number;
   totalPfEr: number;
