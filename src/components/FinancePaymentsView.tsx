@@ -32,7 +32,8 @@ import { PaymentRecord, Project, InvoiceAttachment } from '../types';
 import { storageService } from '../services/storageService';
 import { ProjectCompletionBillModal } from './ProjectCompletionBillModal';
 import { InvoiceDetailModal } from './InvoiceDetailModal';
-import { downloadElementAsPDF, triggerDirectPrint } from '../utils/pdfExportHelper';
+import { downloadElementAsPDF, triggerDirectPrint, exportFinancePaymentsPDF } from '../utils/pdfExportHelper';
+import { FinancePaymentsPreviewModal } from './FinancePaymentsPreviewModal';
 import { InvoiceCameraModal } from './finance/InvoiceCameraModal';
 import { InvoiceAttachmentGalleryModal } from './finance/InvoiceAttachmentGalleryModal';
 
@@ -58,6 +59,7 @@ export const FinancePaymentsView: React.FC<FinancePaymentsViewProps> = ({
   const [selectedProjectForBillModal, setSelectedProjectForBillModal] = useState<Project | null>(null);
   const [showProjectPickerForBill, setShowProjectPickerForBill] = useState(false);
   const [isExportingReport, setIsExportingReport] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const reportPrintRef = useRef<HTMLDivElement>(null);
 
   // Camera & Attachments State
@@ -90,15 +92,36 @@ export const FinancePaymentsView: React.FC<FinancePaymentsViewProps> = ({
   const pendingPayables = totalPayables - paidPayables;
 
   const handleExportReportPDF = async () => {
-    if (!reportPrintRef.current) return;
     setIsExportingReport(true);
     try {
-      await downloadElementAsPDF(reportPrintRef.current, {
+      // First attempt direct high-precision vector jsPDF generation
+      const listToExport = filteredPayments;
+      const success = exportFinancePaymentsPDF(listToExport, activeTab, {
         filename: activeTab === 'receivables'
           ? `AlphaERP_ClientReceivables_Report_${new Date().toISOString().split('T')[0]}`
           : `AlphaERP_VendorPayables_Report_${new Date().toISOString().split('T')[0]}`,
-        documentTitle: `AlphaERP - ${activeTab === 'receivables' ? 'Client Receivables & Milestone Billing Report' : 'Vendor Payables & Disbursement Schedule Report'}`
+        filterTitle: activeTab === 'receivables' ? 'Client Milestone Receivables' : 'Vendor Procurement Payables'
       });
+
+      // Fallback to canvas DOM exporter if needed
+      if (!success && reportPrintRef.current) {
+        await downloadElementAsPDF(reportPrintRef.current, {
+          filename: activeTab === 'receivables'
+            ? `AlphaERP_ClientReceivables_Report_${new Date().toISOString().split('T')[0]}`
+            : `AlphaERP_VendorPayables_Report_${new Date().toISOString().split('T')[0]}`,
+          documentTitle: `AlphaERP - ${activeTab === 'receivables' ? 'Client Receivables & Milestone Billing Report' : 'Vendor Payables & Disbursement Schedule Report'}`
+        });
+      }
+    } catch (err) {
+      console.error('Export Report PDF error:', err);
+      if (reportPrintRef.current) {
+        await downloadElementAsPDF(reportPrintRef.current, {
+          filename: activeTab === 'receivables'
+            ? `AlphaERP_ClientReceivables_Report_${new Date().toISOString().split('T')[0]}`
+            : `AlphaERP_VendorPayables_Report_${new Date().toISOString().split('T')[0]}`,
+          documentTitle: `AlphaERP - ${activeTab === 'receivables' ? 'Client Receivables & Milestone Billing Report' : 'Vendor Payables & Disbursement Schedule Report'}`
+        });
+      }
     } finally {
       setIsExportingReport(false);
     }
@@ -163,22 +186,13 @@ export const FinancePaymentsView: React.FC<FinancePaymentsViewProps> = ({
           </button>
 
           <button
-            onClick={handleExportReportPDF}
-            disabled={isExportingReport}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-xs transition-all disabled:opacity-50 cursor-pointer"
-            title="Export Current Milestone & Payment Report as PDF"
+            id="btn-finance-download-pdf"
+            onClick={() => setIsPreviewModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+            title="Preview report structure and download milestone & payment report as PDF"
           >
-            {isExportingReport ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Exporting PDF...</span>
-              </>
-            ) : (
-              <>
-                <Download className="w-3.5 h-3.5" />
-                <span>Export to PDF</span>
-              </>
-            )}
+            <Download className="w-3.5 h-3.5" />
+            <span>Download PDF</span>
           </button>
 
           <button
@@ -520,14 +534,14 @@ export const FinancePaymentsView: React.FC<FinancePaymentsViewProps> = ({
                       </td>
                       <td className="py-3.5 px-4 text-right no-print">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Dedicated Export to PDF Button on Invoice Row */}
+                          {/* Dedicated Download PDF Button on Invoice Row */}
                           <button
                             onClick={() => setSelectedInvoiceForModal(p)}
                             className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-bold text-xs border border-blue-200 shadow-2xs transition-all cursor-pointer"
-                            title="View and Export Official Tax Invoice / Payment Voucher as PDF"
+                            title="View and Download Official Tax Invoice / Payment Voucher as PDF"
                           >
                             <Download className="w-3.5 h-3.5" />
-                            <span>Export PDF</span>
+                            <span>Download PDF</span>
                           </button>
 
                           {!isPaid ? (
@@ -950,6 +964,15 @@ export const FinancePaymentsView: React.FC<FinancePaymentsViewProps> = ({
           }}
         />
       )}
+
+      {/* Finance Report PDF Verification & Preview Modal */}
+      <FinancePaymentsPreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        payments={filteredPayments}
+        activeTab={activeTab}
+        filterTitle={activeTab === 'receivables' ? 'Client Milestone Receivables' : 'Vendor Procurement Payables'}
+      />
     </div>
   );
 };

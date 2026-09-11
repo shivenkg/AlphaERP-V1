@@ -40,7 +40,10 @@ import {
   CheckCheck,
   Grid,
   Info,
-  ChevronDown
+  ChevronDown,
+  Database,
+  Server,
+  Cpu
 } from 'lucide-react';
 import { JSAlphaSoftLogo } from './JSAlphaSoftLogo';
 import jsPDF from 'jspdf';
@@ -117,9 +120,9 @@ export const PitchDeckView: React.FC<PitchDeckViewProps> = ({
       subtitle: 'The Intelligent Operating System for Turnkey HVAC & MEP Engineering Contractors',
       badge: 'INVESTOR PITCH DECK • SERIES A',
       speakerNotes:
-        'Welcome everyone. Today we are presenting AlphaERP by HVAC Biz—the industry-specific operating system designed to solve the multi-billion dollar margin leakage and execution crisis facing HVAC and MEP engineering contractors.',
+        'Welcome everyone. Today we are presenting AlphaERP by HVAC Biz—the industry-specific operating system designed to solve the multi-billion dollar margin leakage and execution crisis facing HVAC and MEP engineering contractors. Live and operational on our custom production domain hvacbiz.insforge.site with 100% passing enterprise UAT verification.',
       renderContent: () => (
-        <div className="flex flex-col items-center justify-center text-center h-full px-6 py-8 space-y-8 animate-in fade-in duration-300">
+        <div className="flex flex-col items-center justify-center text-center h-full px-6 py-8 space-y-6 animate-in fade-in duration-300">
           <div className="flex items-center gap-3 p-3 bg-blue-50/80 dark:bg-blue-950/40 rounded-2xl border border-blue-200 dark:border-blue-800 shadow-sm">
             <div className="w-12 h-12 rounded-xl bg-blue-900 flex items-center justify-center shadow-md overflow-hidden shrink-0">
               <JSAlphaSoftLogo variant="icon" size="sm" isDarkTheme={true} />
@@ -134,10 +137,29 @@ export const PitchDeckView: React.FC<PitchDeckViewProps> = ({
             </div>
           </div>
 
-          <div className="max-w-3xl space-y-4">
-            <span className="px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm">
-              Proprietary Vertical ERP Platform
-            </span>
+          <div className="max-w-3xl space-y-3">
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <span className="px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm">
+                Proprietary Vertical ERP Platform
+              </span>
+              <a
+                href="https://hvacbiz.insforge.site/#dashboard"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold shadow-xs hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors cursor-pointer"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Live: hvacbiz.insforge.site</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs font-semibold font-mono">
+                <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                100% UAT Pass (40/40)
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-xs font-semibold font-mono">
+                v3.5.0-Production
+              </span>
+            </div>
             <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
               Transforming High-Stakes HVAC & MEP Contracting into a High-Margin Science
             </h1>
@@ -385,9 +407,17 @@ export const PitchDeckView: React.FC<PitchDeckViewProps> = ({
               </div>
             </div>
 
-            <div className="text-[11px] text-slate-400 pt-2 border-t border-slate-800/80 flex items-center justify-between">
-              <span>Security: Role-Based Access Control (RBAC: Admin, Project Manager, Site Engineer, Finance, HR)</span>
-              <span className="text-blue-400">Cloud Sync: Google Sheets 2-Way API</span>
+            <div className="text-[11px] text-slate-400 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
+              <span>Security: 7 Enterprise RBAC Roles (Governance, Sales, Estimator, SCM, Warehouse, Finance, Field)</span>
+              <span className="text-blue-400 flex items-center gap-2">
+                <span className="text-emerald-400 font-semibold">InsForge BaaS (Postgres)</span>
+                <span>•</span>
+                <span>MongoDB Atlas</span>
+                <span>•</span>
+                <span>Google Sheets GIS</span>
+                <span>•</span>
+                <span className="text-purple-400">Gemini Live AI</span>
+              </span>
             </div>
           </div>
         </div>
@@ -1324,7 +1354,153 @@ export const PitchDeckView: React.FC<PitchDeckViewProps> = ({
       )
     },
 
-    // Slide 17: Vision, Roadmap & The Ask
+    // Slide 17: Enterprise Cloud Infrastructure & BaaS Architecture
+    {
+      id: 'slide-cloud-infrastructure',
+      category: 'Product Showcase',
+      title: 'Enterprise Multi-Cloud Infrastructure & InsForge BaaS',
+      subtitle: 'Hybrid Serverless Edge, PostgreSQL 14+ BaaS, MongoDB Atlas & Duplex Gemini Live AI',
+      badge: 'CLOUD TOPOLOGY & RESILIENCE',
+      speakerNotes:
+        'AlphaERP is built on an enterprise hybrid architecture. We leverage InsForge BaaS for relational PostgreSQL operations, user authentication, and high-speed edge delivery at hvacbiz.insforge.site. MongoDB Atlas provides cloud document synchronicity, Google Sheets GIS 2-way sync offers spreadsheet compatibility, and Gemini Live delivers hands-free voice assistance for field technicians. The entire platform is backed by our 100% passing UAT suite.',
+      renderContent: () => (
+        <div className="flex flex-col justify-between h-full p-2 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            {/* Cloud Pillar 1: InsForge BaaS */}
+            <div className="p-3.5 bg-gradient-to-b from-emerald-50 to-white dark:from-emerald-950/40 dark:to-slate-900 rounded-2xl border border-emerald-200 dark:border-emerald-800 space-y-2 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-xs">
+                  <Database className="w-4 h-4" />
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 font-mono">
+                  LIVE PROD
+                </span>
+              </div>
+              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">InsForge BaaS & Postgres</h4>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                Relational PostgreSQL 14+ engine with PostgREST, RLS policies, Auth tokens, file storage, and edge deployments at <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">hvacbiz.insforge.site</span>.
+              </p>
+              <div className="pt-1 text-[10px] font-mono text-emerald-700 dark:text-emerald-300">
+                API: as2hwz72.us-east.insforge.app
+              </div>
+            </div>
+
+            {/* Cloud Pillar 2: MongoDB Atlas */}
+            <div className="p-3.5 bg-gradient-to-b from-green-50 to-white dark:from-green-950/40 dark:to-slate-900 rounded-2xl border border-green-200 dark:border-green-800 space-y-2 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 rounded-xl bg-green-600 text-white flex items-center justify-center font-bold shadow-xs">
+                  <Server className="w-4 h-4" />
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 font-mono">
+                  DOCUMENT DB
+                </span>
+              </div>
+              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">MongoDB Atlas Cloud</h4>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                Dedicated AWS cluster (<span className="font-mono">alphaerp</span>) powering dual-direction document sync, JSON snapshot exports, and disaster recovery hydration.
+              </p>
+              <div className="pt-1 text-[10px] font-mono text-green-700 dark:text-green-300">
+                Collection: projects, quotes, leads
+              </div>
+            </div>
+
+            {/* Cloud Pillar 3: Google Sheets GIS */}
+            <div className="p-3.5 bg-gradient-to-b from-blue-50 to-white dark:from-blue-950/40 dark:to-slate-900 rounded-2xl border border-blue-200 dark:border-blue-800 space-y-2 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-xs">
+                  <FileSpreadsheet className="w-4 h-4" />
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-mono">
+                  GIS OAUTH 2.0
+                </span>
+              </div>
+              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">Google Sheets 9-Tab Sync</h4>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                Native bidirectional spreadsheet interop via Google Identity Services. Live sync across Projects, Quotes, Inventory, PR/PO, Finance, and HRMS.
+              </p>
+              <div className="pt-1 text-[10px] font-mono text-blue-700 dark:text-blue-300">
+                OAuth 2.0 Client-Side Tokens
+              </div>
+            </div>
+
+            {/* Cloud Pillar 4: Gemini Live Voice */}
+            <div className="p-3.5 bg-gradient-to-b from-purple-50 to-white dark:from-purple-950/40 dark:to-slate-900 rounded-2xl border border-purple-200 dark:border-purple-800 space-y-2 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold shadow-xs">
+                  <Cpu className="w-4 h-4" />
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 font-mono">
+                  PCM AUDIO
+                </span>
+              </div>
+              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">Gemini Live Voice AI</h4>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                Duplex real-time audio WebSocket (<span className="font-mono">/live</span>) streaming 16kHz PCM upstream and 24kHz downstream for hands-free site calculations.
+              </p>
+              <div className="pt-1 text-[10px] font-mono text-purple-700 dark:text-purple-300">
+                Low Latency Audio Worklet
+              </div>
+            </div>
+          </div>
+
+          {/* UAT Test Suite Verification Banner */}
+          <div className="p-4 bg-slate-900 text-slate-100 rounded-2xl border border-slate-800 space-y-2 shadow-md">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                <span className="font-bold text-xs uppercase tracking-wider text-emerald-400">
+                  Automated Enterprise UAT Verification Suite
+                </span>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono">
+                100% Pass (12 Modules • 40 Scenarios)
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 text-[10px] font-mono pt-1">
+              <div className="p-1.5 bg-slate-800/80 rounded-lg border border-slate-700/60 text-slate-300">
+                <span className="text-emerald-400 font-bold">UAT-01:</span> CRM & Sizing
+              </div>
+              <div className="p-1.5 bg-slate-800/80 rounded-lg border border-slate-700/60 text-slate-300">
+                <span className="text-emerald-400 font-bold">UAT-02:</span> BOQ & Pricing
+              </div>
+              <div className="p-1.5 bg-slate-800/80 rounded-lg border border-slate-700/60 text-slate-300">
+                <span className="text-emerald-400 font-bold">UAT-03:</span> Projects & BOQ
+              </div>
+              <div className="p-1.5 bg-slate-800/80 rounded-lg border border-slate-700/60 text-slate-300">
+                <span className="text-emerald-400 font-bold">UAT-04:</span> Work Orders
+              </div>
+              <div className="p-1.5 bg-slate-800/80 rounded-lg border border-slate-700/60 text-slate-300">
+                <span className="text-emerald-400 font-bold">UAT-05:</span> SCM PR & PO
+              </div>
+              <div className="p-1.5 bg-slate-800/80 rounded-lg border border-slate-700/60 text-slate-300">
+                <span className="text-emerald-400 font-bold">UAT-06:</span> GRN & Stock
+              </div>
+              <div className="p-1.5 bg-slate-800/80 rounded-lg border border-slate-700/60 text-slate-300">
+                <span className="text-emerald-400 font-bold">UAT-07:</span> Milestone AR
+              </div>
+              <div className="p-1.5 bg-slate-800/80 rounded-lg border border-slate-700/60 text-slate-300">
+                <span className="text-emerald-400 font-bold">UAT-08:</span> HRMS Payroll
+              </div>
+              <div className="p-1.5 bg-slate-800/80 rounded-lg border border-slate-700/60 text-slate-300">
+                <span className="text-emerald-400 font-bold">UAT-09:</span> RBAC Security
+              </div>
+              <div className="p-1.5 bg-slate-800/80 rounded-lg border border-slate-700/60 text-slate-300">
+                <span className="text-emerald-400 font-bold">UAT-10:</span> Atlas & Audit
+              </div>
+              <div className="p-1.5 bg-slate-800/80 rounded-lg border border-slate-700/60 text-slate-300">
+                <span className="text-emerald-400 font-bold">UAT-11:</span> Cost Variance
+              </div>
+              <div className="p-1.5 bg-slate-800/80 rounded-lg border border-slate-700/60 text-slate-300">
+                <span className="text-emerald-400 font-bold">UAT-12:</span> UOM & Handover
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+
+    // Slide 18: Vision, Roadmap & The Ask
     {
       id: 'slide-vision-ask',
       category: 'Vision & Roadmap',
@@ -1366,16 +1542,28 @@ export const PitchDeckView: React.FC<PitchDeckViewProps> = ({
               <div className="text-xs font-bold uppercase tracking-wider text-blue-300">Contact & Investor Relations</div>
               <div className="text-xl font-bold">HVAC BIZ PRIVATE LIMITED</div>
               <div className="text-xs text-blue-200">Plot No. 42, Sector 18, Vashi Commercial Hub, Navi Mumbai, MH - 400705</div>
-              <div className="text-xs text-blue-300/80 font-mono pt-1">Email: contact@hvacbiz.com • Phone: +91 22 2789 4400</div>
+              <div className="text-xs text-blue-300/80 font-mono pt-1">
+                Email: contact@hvacbiz.com • Web: <a href="https://hvacbiz.insforge.site" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">hvacbiz.insforge.site</a>
+              </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-              <button
-                onClick={() => onNavigateTab('dashboard')}
-                className="no-print px-5 py-2.5 bg-white text-blue-950 hover:bg-blue-50 font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+            <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+              <a
+                href="https://hvacbiz.insforge.site/#dashboard"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="no-print px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
                 data-no-print="true"
               >
-                Experience Live Demo
+                <span>Launch Live Production</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+              <button
+                onClick={() => onNavigateTab('dashboard')}
+                className="no-print px-4 py-2.5 bg-white text-blue-950 hover:bg-blue-50 font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+                data-no-print="true"
+              >
+                Experience In-App Demo
               </button>
             </div>
           </div>
