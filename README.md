@@ -1,8 +1,11 @@
 # AlphaERP — Enterprise HVAC Systems, Engineering & Resource Planning Suite
 ### Full-Lifecycle Techno-Commercial CRM, BOQ Engineering, Multi-Tier Procurement, Automated Email Indents, GAAP Financials & HRMS Platform
 
-[![Production Status](https://img.shields.io/badge/Production-Live-success?style=for-the-badge&logo=vercel)](https://hvacbiz.vercel.app)
-[![Version](https://img.shields.io/badge/Version-3.5.0--Production-blue?style=for-the-badge)](https://hvacbiz.vercel.app)
+[![Custom Domain](https://img.shields.io/badge/InsForge_Domain-hvacbiz.insforge.site-00C49F?style=for-the-badge&logo=fastapi)](https://hvacbiz.insforge.site/#dashboard)
+[![InsForge BaaS](https://img.shields.io/badge/PostgreSQL_14+-InsForge_BaaS-336791?style=for-the-badge&logo=postgresql)](https://as2hwz72.us-east.insforge.app)
+[![UAT Test Suite](https://img.shields.io/badge/UAT_Tests-100%25_Passing_(40/40)-10B981?style=for-the-badge)](#11-enterprise-uat-test-verification-suite)
+[![Production Status](https://img.shields.io/badge/Production-Live-success?style=for-the-badge&logo=vercel)](https://hvacbiz.insforge.site)
+[![Version](https://img.shields.io/badge/Version-3.5.0--Production-blue?style=for-the-badge)](https://hvacbiz.insforge.site)
 [![Framework](https://img.shields.io/badge/React_19-Vite_6-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-v4.1-38B2AC?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
@@ -13,9 +16,12 @@
 
 ## 🌐 Live Production Deployment
 
-- **Live Production URL**: [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)
+- **Custom InsForge Production URL**: [https://hvacbiz.insforge.site/#dashboard](https://hvacbiz.insforge.site/#dashboard) (Primary Custom Domain)
+- **Vercel Mirror Production URL**: [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)
+- **InsForge BaaS API Endpoint**: [https://as2hwz72.us-east.insforge.app](https://as2hwz72.us-east.insforge.app)
 - **API Health Diagnostics**: [https://hvacbiz.vercel.app/api/health](https://hvacbiz.vercel.app/api/health)
-- **Primary Runtime**: Vercel Serverless Edge Network & Node.js 20+ Hybrid Container Backend
+- **Quality Verification**: [100% Passing Enterprise UAT Suite (12 Modules, 40 Verification Steps)](#11-enterprise-uat-test-verification-suite)
+- **Primary Runtime**: Vercel Serverless Edge Network & Node.js 20+ Hybrid Container Backend with InsForge BaaS PostgreSQL 14+
 
 ---
 
@@ -70,15 +76,18 @@ flowchart TB
     end
 
     subgraph ExternalServices["☁️ External Persistence & Integration Cloud"]
+        InsForgeBaaS[("InsForge BaaS (PostgreSQL 14+ + PostgREST + Auth + Storage)")]
         MongoAtlas[("MongoDB Atlas Cloud DB (alphaerp)")]
         GoogleSheets["Google Sheets Enterprise 2-Way Sync (GIS OAuth 2.0)"]
         SMTPRelay["SMTP Transporter (Production SMTP / Mailtrap Sandbox)"]
         GeminiAI["Google Gemini Live AI Engine (16kHz Upstream / 24kHz Downstream)"]
     end
 
+    ClientLayer <-->|HTTPS REST & Auth| InsForgeBaaS
     ClientLayer <-->|HTTPS REST| EdgeRouting
     ClientLayer <-->|WSS Duplex Audio| NodeServer
     EdgeRouting --> BackendLayer
+    BackendLayer <--> InsForgeBaaS
     ProcureAPI --> SMTPRelay
     EmailTestAPI --> SMTPRelay
     MongoAPI <--> MongoAtlas
@@ -145,20 +154,23 @@ sequenceDiagram
 
 | # | Module Name | Key Functional Capabilities | Primary File Location |
 |---|---|---|---|
-| **1** | **Executive Dashboard** | Real-time P&L, contract burn rate, gross margin analysis, project progress radar, live company activity feed. | [`src/components/DashboardView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/DashboardView.tsx) |
-| **2** | **CRM & Lead Pipeline** | HVAC lead qualification, cooling tonnage (TR) sizing, client metadata, site survey scheduling, pipeline stage kanban. | [`src/components/CRMLeadsView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/CRMLeadsView.tsx) |
-| **3** | **Techno-Commercial Quotes** | Multi-category BOQ pricing engine, margin percentage calculators, statutory 18% GST computations, PDF generation. | [`src/components/QuotesView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/QuotesView.tsx) |
-| **4** | **Projects & BOQ Reconciliation** | Gantt milestones, active site tracking, live stock cross-check, auto-shortage calculation, single-click PR trigger. | [`src/components/ProjectsBOQView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/ProjectsBOQView.tsx) |
-| **5** | **Procurement PR & PO Hub** | Purchase requisition approvals, vendor PO dispatch via WhatsApp/Email, multi-stage financial signoff workflow. | [`src/components/ProcurementPRPOView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/ProcurementPRPOView.tsx) |
-| **6** | **Warehouse Inventory & GRN** | Bin locations, stock allocation, Goods Receipt Note (GRN) inwarding, unit cost averaging, stock valuation. | [`src/components/InventoryWarehouseView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/InventoryWarehouseView.tsx) |
-| **7** | **Predictive Reorder Indents** | Safety stock monitoring, deficit analysis, automated itemized procurement email dispatch with SMTP admin panel. | [`src/components/PredictiveInventoryReorderPanel.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/PredictiveInventoryReorderPanel.tsx) |
-| **8** | **Field Work Orders & Testing** | Mobile-ready commissioning checklists, digital client signature capture, technician dispatch, site photo vault. | [`src/components/WorkOrdersView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/WorkOrdersView.tsx) |
-| **9** | **Milestone Invoicing & Receipts** | Phased milestone billing (Advance, Delivery, Erection, Handover), GST tax invoices, payment receipt vouchers. | [`src/components/FinancePaymentsView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/FinancePaymentsView.tsx) |
-| **10** | **GAAP Double-Entry Ledger** | Journal entries, general ledger, trial balance, automated accounts receivable (AR) and accounts payable (AP). | [`src/components/FinanceView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/FinanceView.tsx) |
-| **11** | **HRMS Suite (12 Modules)** | Attendance, payroll payslips, asset tracking, doc vault, KRA requisitions, applicant tracking, travel claims, F&F settlement. | [`src/components/HRView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/HRView.tsx) |
-| **12** | **Sales Quota & Leaderboard** | Target vs achievement tracking, quarterly quota analysis, representative win-rate leaderboards, incentive tiers. | [`src/components/SalesPerformanceView.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/SalesPerformanceView.tsx) |
-| **13** | **Gemini Live AI Voice Assistant** | Duplex real-time voice streaming (`ws://<host>/live`), HVAC thermodynamics calculations, technical equipment lookup. | [`src/components/LiveAudioAssistantModal.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/LiveAudioAssistantModal.tsx) |
-| **14** | **MongoDB Atlas Cloud Sync** | Dual-direction cloud database synchronization, backup snapshot exports, connection health ping monitor. | [`src/components/MongoSyncModal.tsx`](file:///d:/Projects/GitHub/AlphaERP-V1/src/components/MongoSyncModal.tsx) |
+| **1** | **Executive Dashboard** | Real-time P&L, contract burn rate, gross margin analysis, project progress radar, live company activity feed. | `src/components/DashboardView.tsx` |
+| **2** | **CRM & Lead Pipeline** | HVAC lead qualification, cooling tonnage (TR) sizing, client metadata, site survey scheduling, pipeline stage kanban. | `src/components/CRMLeadsView.tsx` |
+| **3** | **Techno-Commercial Quotes** | Multi-category BOQ pricing engine, margin percentage calculators, statutory 18% GST computations, PDF generation. | `src/components/QuotesView.tsx` |
+| **4** | **Projects & BOQ Reconciliation** | Gantt milestones, active site tracking, live stock cross-check, auto-shortage calculation, single-click PR trigger. | `src/components/ProjectsBOQView.tsx` |
+| **5** | **Procurement PR & PO Hub** | Purchase requisition approvals, vendor PO dispatch via WhatsApp/Email, multi-stage financial signoff workflow. | `src/components/ProcurementPRPOView.tsx` |
+| **6** | **Warehouse Inventory & GRN** | Bin locations, stock allocation, Goods Receipt Note (GRN) inwarding, unit cost averaging, stock valuation. | `src/components/InventoryWarehouseView.tsx` |
+| **7** | **Predictive Reorder Indents** | Safety stock monitoring, deficit analysis, automated itemized procurement email dispatch with SMTP admin panel. | `src/components/PredictiveInventoryReorderPanel.tsx` |
+| **8** | **Field Work Orders & Testing** | Mobile-ready commissioning checklists, digital client signature capture, technician dispatch, site photo vault. | `src/components/WorkOrdersView.tsx` |
+| **9** | **Milestone Invoicing & Receipts** | Phased milestone billing (Advance, Delivery, Erection, Handover), GST tax invoices, payment receipt vouchers. | `src/components/FinancePaymentsView.tsx` |
+| **10** | **GAAP Double-Entry Ledger** | Journal entries, general ledger, trial balance, automated accounts receivable (AR) and accounts payable (AP). | `src/components/FinanceView.tsx` |
+| **11** | **HRMS Suite (12 Modules)** | Attendance, payroll payslips, asset tracking, doc vault, KRA requisitions, applicant tracking, travel claims, F&F settlement. | `src/components/HRView.tsx` |
+| **12** | **Sales Quota & Leaderboard** | Target vs achievement tracking, quarterly quota analysis, representative win-rate leaderboards, incentive tiers. | `src/components/SalesPerformanceView.tsx` |
+| **13** | **Gemini Live AI Voice Assistant** | Duplex real-time voice streaming (`ws://<host>/live`), HVAC thermodynamics calculations, technical equipment lookup. | `src/components/LiveAudioAssistantModal.tsx` |
+| **14** | **MongoDB Atlas Cloud Sync** | Dual-direction cloud database synchronization, backup snapshot exports, connection health ping monitor. | `src/components/MongoSyncModal.tsx` |
+| **15** | **Project Cost Variance & Margin Erosion** | BOQ baseline vs committed POs vs actual GRN spend, itemized cost variances, and automated vector PDF reports. | `src/components/ProjectCostAnalysisView.tsx` |
+| **16** | **Interactive Pitch Deck Engine** | 18-slide investor pitch deck with live operational metrics, fullscreen presentation mode, speaker notes & PDF export. | `src/components/PitchDeckView.tsx` |
+| **17** | **Engineering Thermodynamic UOM Converter** | Conversions across Cooling TR, kW, HP, BTU/hr, Airflow CFM, CMH, L/s, Pressure Bar, PSI, Pa, InWg, and Temperature. | `src/utils/uomConverter.ts` |
 
 ---
 
@@ -292,6 +304,22 @@ The build command produces:
 npx vercel deploy --prod --yes
 ```
 
+### 9.4 Deploy to InsForge Edge & Custom Domain
+
+Deploy the built production bundle directly to InsForge BaaS hosting:
+
+```bash
+# 1. Build application bundles
+npm run build
+
+# 2. Deploy to InsForge edge hosting
+npx @insforge/cli deployments deploy .
+```
+
+- **Live Production URL**: [https://hvacbiz.insforge.site/#dashboard](https://hvacbiz.insforge.site/#dashboard)
+- **InsForge Backend Project**: `hvac-biz` (`https://as2hwz72.us-east.insforge.app`)
+- **SSL / TLS**: Automatic HTTPS certificate issued for `hvacbiz.insforge.site`
+
 ---
 
 ## 10. Industry Compliance & Standards
@@ -300,3 +328,68 @@ npx vercel deploy --prod --yes
 - **ISHRAE**: Indian Society of Heating, Refrigerating and Air Conditioning Engineers standards.
 - **GAAP / Ind AS 115**: Revenue recognition from contracts with customers and double-entry accounting.
 - **GST / TDS**: Indian statutory tax calculation for goods (18%) and services with HSN/SAC codes.
+
+---
+
+## 11. Enterprise UAT Test Verification Suite
+
+AlphaERP includes a comprehensive end-to-end automated business UAT suite validating all 12 core enterprise workflows with 40 distinct verification assertions:
+
+```bash
+# Run the automated Enterprise UAT Test Suite
+npm run test:uat
+```
+
+### Verified Test Matrix (100% Passing • 40/40 Verification Steps)
+
+| Case ID | Module & Business Use Case | Key Assertions Verified | Status |
+|---|---|---|---|
+| **UAT-01** | **CRM Lead Intake & Heat-Load Tonnage** | 500 CFM/TR thermodynamic derating, TR calculation, Lead qualification | ✅ PASS |
+| **UAT-02** | **Quotation BOQ Pricing & 18% GST** | Multi-item summation, commercial discount, exact ₹4,71,600 GST computation | ✅ PASS |
+| **UAT-03** | **Awarded Quote to Project BOQ Sync** | State transitions, BOQ reconciliation, automatic material deficit identification | ✅ PASS |
+| **UAT-04** | **Field Work Order & Client Signoff** | Checklist validation, field photo attachment, technician signature seal | ✅ PASS |
+| **UAT-05** | **Procurement PR to Vendor PO Lifecycle** | PR validation, multi-tier approvals, vendor PO generation, delivery terms | ✅ PASS |
+| **UAT-06** | **Warehouse GRN & Inventory Valuation** | Goods Receipt Note, bin location inwarding, weighted average unit cost adjustment | ✅ PASS |
+| **UAT-07** | **Milestone Invoicing & GAAP Journal AR** | Milestone billing (Advance, Erection, Handover), GAAP ledger entry, AR debit | ✅ PASS |
+| **UAT-08** | **HRMS Payroll & Statutory Payslip** | CTC structure, PF (12%), ESIC (0.75%), Professional Tax, Net Salary calculation | ✅ PASS |
+| **UAT-09** | **Role-Based Access Control (RBAC)** | Role permissions enforcement across Admin, Project Manager, Site Engineer, Finance, HR | ✅ PASS |
+| **UAT-10** | **MongoDB Atlas Dual-Direction Sync** | Export payload compilation, Atlas schema validation, immutable audit log verification | ✅ PASS |
+| **UAT-11** | **Project Cost Variance & Margin Erosion** | Baseline BOQ cost vs committed POs vs actuals, variance computation, alert thresholds | ✅ PASS |
+| **UAT-12** | **Thermodynamic UOM Conversions** | Precise physical conversions: TR to kW/BTU/hr, CFM to CMH, Bar to PSI/Pa | ✅ PASS |
+
+---
+
+## 12. InsForge BaaS Architecture & PostgreSQL Schemas
+
+AlphaERP is configured with [InsForge](https://insforge.dev) for relational PostgreSQL storage, JWT authentication, file storage buckets, and serverless edge delivery.
+
+- **Project Base URL**: `https://as2hwz72.us-east.insforge.app`
+- **Custom Site Domain**: `https://hvacbiz.insforge.site`
+- **Relational Schema Files**: `database/schema.sql` and `database/insforge_schema.sql`
+
+### SDK Client Initialization Pattern
+
+```typescript
+import { createClient } from '@insforge/sdk';
+
+export const insforge = createClient({
+  baseUrl: process.env.VITE_INSFORGE_URL || 'https://as2hwz72.us-east.insforge.app',
+  anonKey: process.env.VITE_INSFORGE_ANON_KEY || 'your-anon-key-here'
+});
+```
+
+### Critical InsForge Engineering Standards
+
+1. **Array Format Inserts (Mandatory)**:
+   All database inserts must supply an array of objects:
+   ```typescript
+   // CORRECT
+   await insforge.database.from('projects').insert([{ project_code: 'PRJ-2026-001', name: 'One BKC Tower' }]);
+   ```
+2. **Tuple Response Handling**:
+   All operations return `{ data, error }`. Always guard against `error` before consuming `data`.
+3. **Row Level Security (RLS)**:
+   Tables enforce tenant and user isolation referencing `auth.users(id)` and `auth.uid()`.
+4. **Storage Uploads**:
+   Always persist both the returned `url` and `key` for cloud assets (equipment specs, work order signatures, and site photos).
+

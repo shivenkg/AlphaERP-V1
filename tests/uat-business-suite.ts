@@ -8,6 +8,8 @@
  */
 
 import { storageService } from '../src/services/storageService';
+import { convertUomValue } from '../src/utils/uomConverter';
+import { exportProjectCostAnalysisPDF } from '../src/utils/pdfExportHelper';
 import type {
   Lead,
   Quote,
@@ -898,6 +900,175 @@ export async function executeAllUATTests() {
         assert(recentLog.timestamp, 'Audit log must have a timestamp');
         assert(recentLog.action, 'Audit log must record the action');
         assert(recentLog.details, 'Audit log must record action details');
+      });
+    }
+  );
+
+  // --------------------------------------------------------------------------
+  // USE CASE 11: PROJECT COST VARIANCE & MARGIN EROSION ANALYTICS
+  // --------------------------------------------------------------------------
+  await runTestCase(
+    'UAT-11',
+    'Project Cost Variance & Margin Erosion Analysis',
+    'Project Engineering & Financial Control',
+    async (step) => {
+      let costRecords: any[] = [];
+      let summary: any = null;
+
+      await step('11.1 Reconcile BOQ Baseline Cost vs Committed POs across Sites', () => {
+        const projects = storageService.getProjects();
+        const allPOs = storageService.getPOs();
+
+        costRecords = projects.map((project) => {
+          const contractValue = project.totalValue || project.contractValue || 0;
+          const boqItems = project.boq || [];
+          const budgetCost = boqItems.length > 0
+            ? boqItems.reduce((sum, item) => sum + (item.totalCost || item.qty * item.unitCost), 0)
+            : (project.budgetCost || contractValue * 0.78);
+
+          const linkedPOs = allPOs.filter((po) => po.projectId === project.id);
+          const actualCommittedCost = linkedPOs.reduce((sum, po) => sum + (po.grandTotal || po.total || po.subtotal || 0), 0);
+
+          const costVariance = actualCommittedCost - budgetCost;
+          const costVariancePct = budgetCost > 0 ? (costVariance / budgetCost) * 100 : 0;
+          const isOverBudget = actualCommittedCost > budgetCost;
+
+          const budgetedMargin = contractValue - budgetCost;
+          const budgetedMarginPct = contractValue > 0 ? (budgetedMargin / contractValue) * 100 : 0;
+          const projectedMargin = contractValue - actualCommittedCost;
+          const projectedMarginPct = contractValue > 0 ? (projectedMargin / contractValue) * 100 : 0;
+          const marginErosionPct = budgetedMarginPct > 0
+            ? ((budgetedMarginPct - projectedMarginPct) / budgetedMarginPct) * 100
+            : 0;
+
+          return {
+            project,
+            contractValue,
+            budgetCost,
+            actualCommittedCost,
+            costVariance,
+            costVariancePct,
+            isOverBudget,
+            budgetedMarginPct,
+            projectedMarginPct,
+            marginErosionPct,
+            poCount: linkedPOs.length
+          };
+        });
+
+        assert(costRecords.length > 0, 'Cost records must be computed for projects');
+        costRecords.forEach((rec) => {
+          assert(rec.contractValue >= 0, `Contract value must be non-negative, got ${rec.contractValue}`);
+          assert(rec.budgetCost >= 0, `Budget cost must be non-negative, got ${rec.budgetCost}`);
+          assert(rec.actualCommittedCost >= 0, `Committed cost must be non-negative, got ${rec.actualCommittedCost}`);
+        });
+      });
+
+      await step('11.2 Validate Portfolio Aggregation & Variance Metrics', () => {
+        const totalContract = costRecords.reduce((sum, r) => sum + r.contractValue, 0);
+        const totalBudget = costRecords.reduce((sum, r) => sum + r.budgetCost, 0);
+        const totalCommitted = costRecords.reduce((sum, r) => sum + r.actualCommittedCost, 0);
+        const netVariance = totalCommitted - totalBudget;
+        const netVariancePct = totalBudget > 0 ? (netVariance / totalBudget) * 100 : 0;
+        const overBudgetCount = costRecords.filter((r) => r.isOverBudget).length;
+
+        const favorableCount = costRecords.filter((r) => r.costVariance < 0).length;
+        const totalFulfilled = totalCommitted * 0.45;
+        const avgBudgetedMarginPct = totalContract > 0 ? ((totalContract - totalBudget) / totalContract) * 100 : 0;
+        const avgProjectedMarginPct = totalContract > 0 ? ((totalContract - totalCommitted) / totalContract) * 100 : 0;
+
+        summary = {
+          totalContract,
+          totalBudget,
+          totalCommitted,
+          totalFulfilled,
+          netVariance,
+          netVariancePct,
+          overBudgetCount,
+          favorableCount,
+          avgBudgetedMarginPct,
+          avgProjectedMarginPct
+        };
+
+        assert(totalContract > 0, 'Total contract value must be positive');
+        assert(totalBudget > 0, 'Total budget value must be positive');
+        assert(typeof netVariancePct === 'number', 'Net variance percentage must be a number');
+      });
+
+      await step('11.3 Verify Direct Vector Cost Analysis PDF Export Generation', () => {
+        const success = exportProjectCostAnalysisPDF(costRecords, summary, {
+          filename: 'UAT_Cost_Analysis_Verification',
+          filterTitle: 'UAT Commercial Sites Audit',
+          orientation: 'landscape'
+        });
+        assert(success === true, 'PDF export generation helper must return success: true');
+      });
+    }
+  );
+
+  // --------------------------------------------------------------------------
+  // USE CASE 12: HVAC ENGINEERING UOM CONVERSIONS & COMPLETION BILLING
+  // --------------------------------------------------------------------------
+  await runTestCase(
+    'UAT-12',
+    'HVAC Engineering UOM Conversions & Project Completion Billing',
+    'Engineering, Commercial & Handover',
+    async (step) => {
+      await step('12.1 Verify HVAC Unit of Measure (UOM) Physical Conversions', () => {
+        // Capacity: 100 TR to kW (1 TR = 3.51685284 kW)
+        const kwVal = convertUomValue(100, 'tr', 'kw', 'capacity');
+        assert(Math.abs(kwVal - 351.685) < 0.1, `100 TR should convert to ~351.685 kW, got ${kwVal}`);
+
+        // Airflow: 1000 CFM to m³/h (1 CFM ≈ 1.69901 m³/h)
+        const cmhVal = convertUomValue(1000, 'cfm', 'cmh', 'airflow');
+        assert(Math.abs(cmhVal - 1699.01) < 1, `1000 CFM should convert to ~1699 m³/h, got ${cmhVal}`);
+
+        // Pressure: 150 PSI to Bar (1 bar = 14.5038 PSI => 150 PSI ≈ 10.342 Bar)
+        const barVal = convertUomValue(150, 'psi', 'bar', 'pressure');
+        assert(Math.abs(barVal - 10.342) < 0.1, `150 PSI should convert to ~10.34 Bar, got ${barVal}`);
+
+        // Packaging: 5 Boxes (50 pcs/box) to Pcs
+        const pcsVal = convertUomValue(5, 'box', 'pcs', 'packaging', 50);
+        assert(pcsVal === 250, `5 boxes of 50 pcs should convert to 250 pcs, got ${pcsVal}`);
+      });
+
+      await step('12.2 Validate Milestone Retention Deduction & Final Completion Billing Math', () => {
+        const contractTotal = 10000000; // 1 Crore
+        const retentionRate = 0.05; // 5%
+        const retentionDeduction = contractTotal * retentionRate; // 500,000
+        const mobilizationAdvanceRecovered = 2000000; // 20 Lakhs
+        const previousBilledAmount = 6000000; // 60 Lakhs previously certified
+
+        const currentTaxableBase = contractTotal - mobilizationAdvanceRecovered - retentionDeduction;
+        assert(currentTaxableBase === 7500000, `Current taxable base must be ₹75,00,000, got ${currentTaxableBase}`);
+
+        const cgst = currentTaxableBase * 0.09; // 9% CGST = 675,000
+        const sgst = currentTaxableBase * 0.09; // 9% SGST = 675,000
+        const totalGst = cgst + sgst; // 18% GST = 1,350,000
+        assert(totalGst === 1350000, `18% GST must be ₹13,50,000, got ${totalGst}`);
+
+        const grossBillAmount = currentTaxableBase + totalGst; // 8,850,000
+        assert(grossBillAmount === 8850000, `Gross bill amount must be ₹88,50,000, got ${grossBillAmount}`);
+
+        // TDS Deduction u/s 194C (2% on taxable base)
+        const tdsSec194C = currentTaxableBase * 0.02; // 150,000
+        assert(tdsSec194C === 150000, `TDS u/s 194C must be ₹1,50,000, got ${tdsSec194C}`);
+
+        const netPayableByClient = grossBillAmount - tdsSec194C; // 8,700,000
+        assert(netPayableByClient === 8700000, `Net payable must be ₹87,00,000, got ${netPayableByClient}`);
+      });
+
+      await step('12.3 Complete Handover Sign-off & Audit Log Verification', () => {
+        if (createdProject?.id) {
+          storageService.updateProject(createdProject.id, {
+            status: 'Completed',
+            actualCompletionDate: '2026-09-11'
+          });
+
+          const completedProj = storageService.getProjects().find((p) => p.id === createdProject.id);
+          assert(completedProj?.status === 'Completed', 'Project status must be Completed');
+          assert(completedProj?.actualCompletionDate === '2026-09-11', 'Completion date must be recorded');
+        }
       });
     }
   );

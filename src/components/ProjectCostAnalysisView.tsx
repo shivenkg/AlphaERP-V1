@@ -23,11 +23,13 @@ import {
   Calendar,
   Percent,
   Clock,
-  ShoppingCart
+  ShoppingCart,
+  Loader2
 } from 'lucide-react';
 import { Project, PurchaseOrder, BOQItem } from '../types';
 import { storageService } from '../services/storageService';
-import { downloadElementAsPDF, triggerDirectPrint } from '../utils/pdfExportHelper';
+import { downloadElementAsPDF, triggerDirectPrint, exportProjectCostAnalysisPDF } from '../utils/pdfExportHelper';
+import { ProjectCostAnalysisPreviewModal } from './ProjectCostAnalysisPreviewModal';
 
 interface ProjectCostAnalysisViewProps {
   projects?: Project[];
@@ -71,6 +73,10 @@ export const ProjectCostAnalysisView: React.FC<ProjectCostAnalysisViewProps> = (
   const [managerFilter, setManagerFilter] = useState<string>('ALL');
   const [selectedProjectForDetail, setSelectedProjectForDetail] = useState<ProjectCostVarianceRecord | null>(null);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [previewRecords, setPreviewRecords] = useState<ProjectCostVarianceRecord[]>([]);
+  const [previewSummary, setPreviewSummary] = useState<any>(null);
+  const [previewTitle, setPreviewTitle] = useState<string>('All Active Commercial Sites');
   const printRef = useRef<HTMLDivElement>(null);
 
   // Retrieve latest projects & POs from storage
@@ -231,18 +237,17 @@ export const ProjectCostAnalysisView: React.FC<ProjectCostAnalysisViewProps> = (
     });
   }, [costRecords, term, filterMode, managerFilter]);
 
-  const handleExportPDF = async () => {
-    if (!printRef.current) return;
-    setIsExportingPDF(true);
-    try {
-      await downloadElementAsPDF(printRef.current, {
-        filename: `AlphaERP_Project_Cost_Variance_Report_${new Date().toISOString().split('T')[0]}`,
-        documentTitle: `AlphaERP - Project Budget vs Actual Cost Variance & Margin Schedule`,
-        orientation: 'landscape'
-      });
-    } finally {
-      setIsExportingPDF(false);
-    }
+  const handleOpenPortfolioPreview = () => {
+    setPreviewRecords(filteredRecords);
+    setPreviewSummary(portfolioSummary);
+    setPreviewTitle(
+      filterMode === 'ACTIVE_ONLY'
+        ? 'Active Projects'
+        : filterMode === 'OVER_BUDGET'
+        ? 'Over-Budget Sites'
+        : 'All Commercial Sites'
+    );
+    setIsPreviewModalOpen(true);
   };
 
   const handlePrint = () => {
@@ -275,7 +280,7 @@ export const ProjectCostAnalysisView: React.FC<ProjectCostAnalysisViewProps> = (
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 shadow-xs transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 shadow-xs transition-colors cursor-pointer"
             title="Direct Browser Print of Variance Schedule"
           >
             <Printer className="w-4 h-4" />
@@ -283,13 +288,13 @@ export const ProjectCostAnalysisView: React.FC<ProjectCostAnalysisViewProps> = (
           </button>
 
           <button
-            onClick={handleExportPDF}
-            disabled={isExportingPDF}
-            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-xs transition-all disabled:opacity-50"
-            title="Export Cost Variance Matrix as PDF"
+            id="btn-cost-analysis-download-pdf"
+            onClick={handleOpenPortfolioPreview}
+            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+            title="Preview report structure and download cost variance analysis as PDF"
           >
             <Download className="w-4 h-4" />
-            <span>{isExportingPDF ? 'Exporting...' : 'Export Cost Variance PDF'}</span>
+            <span>Download PDF</span>
           </button>
         </div>
       </div>
@@ -729,13 +734,40 @@ export const ProjectCostAnalysisView: React.FC<ProjectCostAnalysisViewProps> = (
             </div>
 
             {/* Modal Footer */}
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <button
-                onClick={() => setSelectedProjectForDetail(null)}
-                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl"
-              >
-                Close
-              </button>
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedProjectForDetail(null)}
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl cursor-pointer"
+                >
+                  Close
+                </button>
+
+                <button
+                  onClick={() => {
+                    setPreviewRecords([selectedProjectForDetail]);
+                    setPreviewSummary({
+                      totalContract: selectedProjectForDetail.contractValue,
+                      totalBudget: selectedProjectForDetail.budgetCost,
+                      totalCommitted: selectedProjectForDetail.actualCommittedCost,
+                      totalFulfilled: selectedProjectForDetail.actualFulfilledCost,
+                      netVariance: selectedProjectForDetail.costVariance,
+                      netVariancePct: selectedProjectForDetail.costVariancePct,
+                      overBudgetCount: selectedProjectForDetail.isOverBudget ? 1 : 0,
+                      favorableCount: selectedProjectForDetail.costVariance < 0 ? 1 : 0,
+                      avgBudgetedMarginPct: selectedProjectForDetail.budgetedMarginPct,
+                      avgProjectedMarginPct: selectedProjectForDetail.projectedMarginPct
+                    });
+                    setPreviewTitle(`Site Audit: ${selectedProjectForDetail.project.projectName} (${selectedProjectForDetail.project.projectNumber})`);
+                    setIsPreviewModalOpen(true);
+                  }}
+                  className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  title="Preview report structure and download individual project cost variance as PDF"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download PDF</span>
+                </button>
+              </div>
 
               {onNavigateToProcurement && (
                 <button
@@ -743,7 +775,7 @@ export const ProjectCostAnalysisView: React.FC<ProjectCostAnalysisViewProps> = (
                     setSelectedProjectForDetail(null);
                     onNavigateToProcurement();
                   }}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-xs"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
                 >
                   <span>Open Procurement Desk</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -753,6 +785,15 @@ export const ProjectCostAnalysisView: React.FC<ProjectCostAnalysisViewProps> = (
           </div>
         </div>
       )}
+
+      {/* PDF Report Verification & Preview Modal */}
+      <ProjectCostAnalysisPreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        records={previewRecords.length > 0 ? previewRecords : filteredRecords}
+        summary={previewSummary || portfolioSummary}
+        filterTitle={previewTitle}
+      />
     </div>
   );
 };

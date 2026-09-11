@@ -702,24 +702,6 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Global Theme Toggle Button */}
-          <button
-            onClick={toggleTheme}
-            id="global-theme-toggle"
-            title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode (Ctrl+Shift+D)`}
-            className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-amber-400 transition-all duration-150 cursor-pointer shadow-xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 shrink-0"
-            aria-label={`Toggle theme, current is ${theme}`}
-          >
-            {isDark ? (
-              <Sun className="w-4 h-4 text-amber-400 animate-in spin-in-180 duration-300" />
-            ) : (
-              <Moon className="w-4 h-4 text-slate-600 animate-in spin-in-180 duration-300" />
-            )}
-            <span className="hidden 2xl:inline text-xs font-semibold text-slate-700 dark:text-slate-200">
-              {isDark ? 'Light' : 'Dark'}
-            </span>
-          </button>
-
           {/* Role-Based Access Control (RBAC) Selector */}
           <div className="relative shrink-0">
             <button

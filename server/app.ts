@@ -36,7 +36,7 @@ app.use(
       }
       return compression.filter(req, res);
     },
-  })
+  }) as any
 );
 
 // Security: Apply Enterprise HTTP Security Headers

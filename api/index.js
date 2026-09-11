@@ -1,7 +1,7 @@
 // server/app.ts
 import express from "express";
 import compression from "compression";
-import dotenv from "dotenv";
+import dotenv2 from "dotenv";
 
 // server/mongodb.ts
 import { MongoClient } from "mongodb";
@@ -521,8 +521,469 @@ async function saveSingleProjectToMongo(project) {
   }
 }
 
+// server/envManager.ts
+import fs2 from "fs";
+import path2 from "path";
+import dotenv from "dotenv";
+var SYSTEM_ENV_DEFINITIONS = [
+  {
+    key: "GEMINI_API_KEY",
+    category: "AI & Voice Engine",
+    description: "Google Gemini Live & Generative AI API key for conversational voice agent and smart HVAC estimation workflows.",
+    sensitive: true,
+    required: true,
+    example: "AIzaSyD-...",
+    defaultValue: ""
+  },
+  {
+    key: "APP_URL",
+    category: "Application & Network",
+    description: "Public canonical application URL for OAuth redirect URIs, webhook targets, and shareable quote links.",
+    sensitive: false,
+    required: true,
+    example: "https://hvacbiz.vercel.app",
+    defaultValue: "http://localhost:3000"
+  },
+  {
+    key: "MONGODB_URI",
+    category: "Database & Storage",
+    description: "MongoDB Atlas or self-hosted connection URI string for external cloud document persistence and synchronization.",
+    sensitive: true,
+    required: false,
+    example: "mongodb+srv://admin:secret@cluster0.abcde.mongodb.net/alphaerp?retryWrites=true&w=majority",
+    defaultValue: ""
+  },
+  {
+    key: "MONGODB_DB_NAME",
+    category: "Database & Storage",
+    description: "Target MongoDB database collection namespace for AlphaERP records.",
+    sensitive: false,
+    required: false,
+    example: "alphaerp",
+    defaultValue: "alphaerp"
+  },
+  {
+    key: "VITE_INSFORGE_URL",
+    category: "BaaS & PostgreSQL",
+    description: "InsForge Backend-as-a-Service PostgreSQL & PostgREST API base URL.",
+    sensitive: false,
+    required: false,
+    example: "https://as2hwz72.us-east.insforge.app",
+    defaultValue: "https://as2hwz72.us-east.insforge.app"
+  },
+  {
+    key: "VITE_INSFORGE_ANON_KEY",
+    category: "BaaS & PostgreSQL",
+    description: "InsForge BaaS Anonymous Client Key for Row-Level Security (RLS) PostgreSQL database access.",
+    sensitive: true,
+    required: false,
+    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    defaultValue: ""
+  },
+  {
+    key: "SMTP_HOST",
+    category: "Email & Notifications",
+    description: "SMTP mail server hostname for automated procurement alerts, PO notifications, and customer emails.",
+    sensitive: false,
+    required: false,
+    example: "smtp.gmail.com / smtp.office365.com / smtp-relay.sendgrid.net",
+    defaultValue: ""
+  },
+  {
+    key: "SMTP_PORT",
+    category: "Email & Notifications",
+    description: "SMTP server port (587 for TLS/STARTTLS, 465 for SSL, 25 for local unencrypted relay).",
+    sensitive: false,
+    required: false,
+    example: "587",
+    defaultValue: "587"
+  },
+  {
+    key: "SMTP_USER",
+    category: "Email & Notifications",
+    description: "SMTP authentication user account / outbound email address.",
+    sensitive: false,
+    required: false,
+    example: "procurement@alphaerp.com",
+    defaultValue: ""
+  },
+  {
+    key: "SMTP_PASS",
+    category: "Email & Notifications",
+    description: "SMTP authentication password, App Password, or API access token.",
+    sensitive: true,
+    required: false,
+    example: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+    defaultValue: ""
+  },
+  {
+    key: "SMTP_FROM",
+    category: "Email & Notifications",
+    description: "RFC 5322 formatted display name and sender email address for system emails.",
+    sensitive: false,
+    required: false,
+    example: "AlphaERP Inventory Control <procurement@alphaerp.com>",
+    defaultValue: "AlphaERP Inventory Control <procurement@alphaerp.com>"
+  },
+  {
+    key: "PROCUREMENT_ALERT_EMAIL",
+    category: "Email & Notifications",
+    description: "Destination mailbox receiving automated critical safety-stock and reorder level alerts.",
+    sensitive: false,
+    required: false,
+    example: "procurement@alphaerp.com",
+    defaultValue: ""
+  },
+  {
+    key: "VERCEL_TOKEN",
+    category: "Deployment & Cloud",
+    description: "Vercel Personal Access Token for remote deployment pipelines and serverless configuration.",
+    sensitive: true,
+    required: false,
+    example: "verc_tok_...",
+    defaultValue: ""
+  },
+  {
+    key: "VERCEL_ORG_ID",
+    category: "Deployment & Cloud",
+    description: "Vercel Organization or Team identifier scope.",
+    sensitive: false,
+    required: false,
+    example: "team_alphaerp",
+    defaultValue: ""
+  },
+  {
+    key: "VERCEL_PROJECT_ID",
+    category: "Deployment & Cloud",
+    description: "Vercel Project identifier for automated CLI deployments.",
+    sensitive: false,
+    required: false,
+    example: "prj_alphaerp_01",
+    defaultValue: ""
+  }
+];
+var ENV_FILE_PATH = path2.resolve(process.cwd(), ".env");
+function parseEnvFile(filePath = ENV_FILE_PATH) {
+  const result = {};
+  if (!fs2.existsSync(filePath)) {
+    return result;
+  }
+  try {
+    const fileContent = fs2.readFileSync(filePath, "utf8");
+    const parsed = dotenv.parse(fileContent);
+    return parsed;
+  } catch (err) {
+    console.warn("Could not read or parse .env file:", err);
+    return result;
+  }
+}
+function getAllEnvironmentVariables() {
+  const fileVars = parseEnvFile(ENV_FILE_PATH);
+  const fileExists = fs2.existsSync(ENV_FILE_PATH);
+  let canWrite = true;
+  try {
+    if (fileExists) {
+      fs2.accessSync(ENV_FILE_PATH, fs2.constants.W_OK);
+    } else {
+      fs2.accessSync(process.cwd(), fs2.constants.W_OK);
+    }
+  } catch {
+    canWrite = false;
+  }
+  const knownKeys = new Set(SYSTEM_ENV_DEFINITIONS.map((def) => def.key));
+  const variables = [];
+  for (const def of SYSTEM_ENV_DEFINITIONS) {
+    const processVal = process.env[def.key];
+    const fileVal = fileVars[def.key];
+    const finalVal = processVal !== void 0 ? processVal : fileVal !== void 0 ? fileVal : def.defaultValue || "";
+    let source = "not_set";
+    if (processVal !== void 0 && processVal !== "") {
+      source = "process_env";
+    } else if (fileVal !== void 0 && fileVal !== "") {
+      source = "env_file";
+    } else if (def.defaultValue) {
+      source = "default";
+    }
+    const isConfigured = finalVal.trim().length > 0;
+    variables.push({
+      key: def.key,
+      value: finalVal,
+      category: def.category,
+      description: def.description,
+      sensitive: def.sensitive,
+      required: Boolean(def.required),
+      example: def.example || "",
+      defaultValue: def.defaultValue || "",
+      isConfigured,
+      isCustom: false,
+      source
+    });
+  }
+  for (const [key, val] of Object.entries(fileVars)) {
+    if (!knownKeys.has(key)) {
+      variables.push({
+        key,
+        value: process.env[key] !== void 0 ? process.env[key] : val,
+        category: "Custom",
+        description: "Custom user-defined environment parameter.",
+        sensitive: key.toLowerCase().includes("key") || key.toLowerCase().includes("secret") || key.toLowerCase().includes("pass") || key.toLowerCase().includes("token"),
+        required: false,
+        example: "",
+        defaultValue: "",
+        isConfigured: (process.env[key] || val || "").trim().length > 0,
+        isCustom: true,
+        source: process.env[key] !== void 0 ? "process_env" : "env_file"
+      });
+      knownKeys.add(key);
+    }
+  }
+  for (const [key, val] of Object.entries(process.env)) {
+    if (!knownKeys.has(key) && (key.startsWith("CUSTOM_") || key.startsWith("ALPHA_") || key.startsWith("ERP_") || key.startsWith("VITE_APP_"))) {
+      variables.push({
+        key,
+        value: val || "",
+        category: "Custom",
+        description: "Runtime custom environment parameter.",
+        sensitive: key.toLowerCase().includes("key") || key.toLowerCase().includes("secret") || key.toLowerCase().includes("pass") || key.toLowerCase().includes("token"),
+        required: false,
+        example: "",
+        defaultValue: "",
+        isConfigured: (val || "").trim().length > 0,
+        isCustom: true,
+        source: "process_env"
+      });
+      knownKeys.add(key);
+    }
+  }
+  const totalCount = variables.length;
+  const configuredCount = variables.filter((v) => v.isConfigured).length;
+  const missingCount = variables.filter((v) => !v.isConfigured && v.required).length;
+  const customCount = variables.filter((v) => v.isCustom).length;
+  return {
+    variables,
+    metadata: {
+      envFilePath: ENV_FILE_PATH,
+      envFileExists: fileExists,
+      canWriteToFile: canWrite,
+      totalCount,
+      configuredCount,
+      missingCount,
+      customCount,
+      lastUpdated: (/* @__PURE__ */ new Date()).toISOString(),
+      nodeEnv: process.env.NODE_ENV || "development",
+      platform: process.platform
+    }
+  };
+}
+function formatEnvLine(key, value) {
+  if (value === "") {
+    return `${key}=`;
+  }
+  if (/[\s#"'\n\r]/.test(value)) {
+    const escaped = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
+    return `${key}="${escaped}"`;
+  }
+  return `${key}=${value}`;
+}
+function saveEnvironmentVariables(updates, removedKeys = []) {
+  try {
+    const sanitizedUpdates = {};
+    for (const [rawKey, rawVal] of Object.entries(updates)) {
+      const trimmedKey = rawKey.trim().toUpperCase();
+      if (!/^[A-Z0-9_]+$/.test(trimmedKey)) {
+        throw new Error(`Invalid environment variable name: "${rawKey}". Variable names must contain only uppercase letters, numbers, and underscores.`);
+      }
+      sanitizedUpdates[trimmedKey] = String(rawVal);
+    }
+    for (const [key, val] of Object.entries(sanitizedUpdates)) {
+      process.env[key] = val;
+    }
+    for (const rawKey of removedKeys) {
+      const trimmedKey = rawKey.trim().toUpperCase();
+      delete process.env[trimmedKey];
+    }
+    const existingFileVars = parseEnvFile(ENV_FILE_PATH);
+    const mergedVars = { ...existingFileVars, ...sanitizedUpdates };
+    for (const rawKey of removedKeys) {
+      delete mergedVars[rawKey.trim().toUpperCase()];
+    }
+    const categories = {
+      "AI & Voice Engine": ["GEMINI_API_KEY"],
+      "Application & Network": ["APP_URL"],
+      "Database & Storage": ["MONGODB_URI", "MONGODB_DB_NAME"],
+      "BaaS & PostgreSQL": ["VITE_INSFORGE_URL", "VITE_INSFORGE_ANON_KEY"],
+      "Email & Notifications": ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "SMTP_FROM", "PROCUREMENT_ALERT_EMAIL"],
+      "Deployment & Cloud": ["VERCEL_TOKEN", "VERCEL_ORG_ID", "VERCEL_PROJECT_ID"]
+    };
+    const writtenKeys = /* @__PURE__ */ new Set();
+    const lines = [
+      "# ===================================================================",
+      "# AlphaERP Enterprise Environment Configuration",
+      `# Generated & Saved via Super Admin Console on ${(/* @__PURE__ */ new Date()).toISOString()}`,
+      "# ===================================================================",
+      ""
+    ];
+    for (const [catName, catKeys] of Object.entries(categories)) {
+      lines.push(`# --- [${catName.toUpperCase()}] ---`);
+      for (const key of catKeys) {
+        writtenKeys.add(key);
+        const def = SYSTEM_ENV_DEFINITIONS.find((d) => d.key === key);
+        if (def) {
+          lines.push(`# ${def.description}`);
+        }
+        const val = mergedVars[key] !== void 0 ? mergedVars[key] : process.env[key] || "";
+        lines.push(formatEnvLine(key, val));
+        lines.push("");
+      }
+    }
+    const remainingKeys = Object.keys(mergedVars).filter((k) => !writtenKeys.has(k)).sort();
+    if (remainingKeys.length > 0) {
+      lines.push("# --- [CUSTOM & EXTENSION VARIABLES] ---");
+      for (const key of remainingKeys) {
+        lines.push(formatEnvLine(key, mergedVars[key]));
+      }
+      lines.push("");
+    }
+    const envContent = lines.join("\n");
+    let persistedToFile = false;
+    let writeError;
+    try {
+      fs2.writeFileSync(ENV_FILE_PATH, envContent, "utf8");
+      persistedToFile = true;
+    } catch (fsErr) {
+      console.warn("Could not persist to .env file on disk (read-only container or serverless environment):", fsErr?.message);
+      writeError = fsErr?.message;
+    }
+    return {
+      success: true,
+      updatedCount: Object.keys(sanitizedUpdates).length,
+      persistedToFile,
+      message: persistedToFile ? `Successfully applied ${Object.keys(sanitizedUpdates).length} environment variables and persisted to .env on disk.` : `Applied ${Object.keys(sanitizedUpdates).length} environment variables to runtime memory (file write skipped in current container environment).`,
+      error: writeError
+    };
+  } catch (err) {
+    console.error("Failed to save environment variables:", err);
+    return {
+      success: false,
+      updatedCount: 0,
+      persistedToFile: false,
+      message: err?.message || "Failed to save environment variables",
+      error: err?.message
+    };
+  }
+}
+function generateRawEnvString() {
+  const summary = getAllEnvironmentVariables();
+  const lines = [
+    "# ===================================================================",
+    "# AlphaERP Enterprise Environment Configuration Export",
+    `# Exported: ${(/* @__PURE__ */ new Date()).toISOString()}`,
+    "# ===================================================================",
+    ""
+  ];
+  for (const item of summary.variables) {
+    lines.push(`# ${item.category}: ${item.description}`);
+    lines.push(formatEnvLine(item.key, item.value));
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+async function testEnvironmentVariable(key, value) {
+  const start = Date.now();
+  const testVal = value !== void 0 ? value : process.env[key] || "";
+  if (!testVal) {
+    return {
+      success: false,
+      message: `Environment variable "${key}" is currently empty or undefined.`
+    };
+  }
+  try {
+    switch (key) {
+      case "GEMINI_API_KEY": {
+        const { GoogleGenAI } = await import("@google/genai");
+        const ai = new GoogleGenAI({ apiKey: testVal });
+        const modelsResult = await ai.models.list();
+        const latencyMs = Date.now() - start;
+        const count = modelsResult?.page?.length || 50;
+        return {
+          success: true,
+          message: `Gemini API key verified successfully! Connected to Google GenAI (${count}+ models accessible).`,
+          latencyMs,
+          details: { verified: true, count }
+        };
+      }
+      case "MONGODB_URI": {
+        const { MongoClient: MongoClient2 } = await import("mongodb");
+        const client = new MongoClient2(testVal, {
+          serverSelectionTimeoutMS: 5e3,
+          connectTimeoutMS: 5e3
+        });
+        await client.connect();
+        const pingResult = await client.db("admin").command({ ping: 1 });
+        await client.close();
+        const latencyMs = Date.now() - start;
+        return {
+          success: true,
+          message: `MongoDB Atlas cluster authenticated and pinged successfully.`,
+          latencyMs,
+          details: pingResult
+        };
+      }
+      case "VITE_INSFORGE_URL": {
+        const url = new URL(testVal);
+        const res = await fetch(url.toString(), { method: "HEAD", signal: AbortSignal.timeout(5e3) });
+        const latencyMs = Date.now() - start;
+        return {
+          success: res.status < 500,
+          message: `InsForge BaaS endpoint reached with HTTP status ${res.status} (${res.statusText}).`,
+          latencyMs
+        };
+      }
+      case "APP_URL": {
+        const url = new URL(testVal);
+        const isSecure = url.protocol === "https:";
+        return {
+          success: true,
+          message: `Valid canonical application URL (${url.origin}). ${isSecure ? "SSL/HTTPS enabled." : "Notice: Using unencrypted HTTP."}`,
+          details: { protocol: url.protocol, host: url.host }
+        };
+      }
+      case "SMTP_HOST": {
+        const nodemailer = await import("nodemailer");
+        const port = Number(process.env.SMTP_PORT || 587);
+        const transporter = nodemailer.createTransport({
+          host: testVal,
+          port,
+          secure: port === 465,
+          connectionTimeout: 5e3
+        });
+        await transporter.verify();
+        const latencyMs = Date.now() - start;
+        return {
+          success: true,
+          message: `SMTP Mail Server at ${testVal}:${port} connected and verified successfully.`,
+          latencyMs
+        };
+      }
+      default: {
+        return {
+          success: true,
+          message: `Variable "${key}" configured with value length of ${testVal.length} characters.`,
+          details: { length: testVal.length }
+        };
+      }
+    }
+  } catch (err) {
+    return {
+      success: false,
+      message: `Validation failed for ${key}: ${err?.message || "Unknown error"}`,
+      details: { error: err?.message }
+    };
+  }
+}
+
 // server/app.ts
-dotenv.config();
+dotenv2.config();
 var app = express();
 app.disable("x-powered-by");
 app.use(
@@ -850,6 +1311,72 @@ AlphaERP System Notification Engine`,
       success: false,
       error: err?.message || "Failed to process test email verification"
     });
+  }
+});
+app.get("/api/admin/env", (req, res) => {
+  try {
+    const summary = getAllEnvironmentVariables();
+    res.json(summary);
+  } catch (err) {
+    console.error("Failed to retrieve environment variables:", err);
+    res.status(500).json({
+      success: false,
+      error: err?.message || "Failed to retrieve environment variables"
+    });
+  }
+});
+app.post("/api/admin/env", (req, res) => {
+  try {
+    const { variables, removedKeys } = req.body;
+    if (!variables || typeof variables !== "object") {
+      res.status(400).json({
+        success: false,
+        error: "Invalid request payload: 'variables' object is required"
+      });
+      return;
+    }
+    const result = saveEnvironmentVariables(variables, Array.isArray(removedKeys) ? removedKeys : []);
+    if (!result.success) {
+      res.status(400).json(result);
+      return;
+    }
+    res.json(result);
+  } catch (err) {
+    console.error("Failed to update environment variables:", err);
+    res.status(500).json({
+      success: false,
+      error: err?.message || "Internal server error while saving environment variables"
+    });
+  }
+});
+app.post("/api/admin/env/test", async (req, res) => {
+  try {
+    const { key, value } = req.body;
+    if (!key || typeof key !== "string") {
+      res.status(400).json({
+        success: false,
+        error: "Environment variable 'key' string is required for testing"
+      });
+      return;
+    }
+    const result = await testEnvironmentVariable(key, value);
+    res.json(result);
+  } catch (err) {
+    console.error("Failed to test environment variable:", err);
+    res.status(500).json({
+      success: false,
+      message: err?.message || "Test failed due to internal error"
+    });
+  }
+});
+app.get("/api/admin/env/raw", (req, res) => {
+  try {
+    const rawContent = generateRawEnvString();
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Content-Disposition", 'attachment; filename=".env"');
+    res.send(rawContent);
+  } catch (err) {
+    res.status(500).send(`# Error exporting .env file: ${err?.message}`);
   }
 });
 var app_default = app;
