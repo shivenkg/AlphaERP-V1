@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   FileSpreadsheet,
   Key,
@@ -17,7 +17,11 @@ import {
   Download,
   ShieldCheck,
   Activity,
-  X
+  X,
+  LogIn,
+  LogOut,
+  Clock,
+  UserCheck
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import { googleSheetsService } from '../services/googleSheets';
@@ -36,7 +40,11 @@ export const GoogleSheetsAdminSection: React.FC = () => {
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
-  const [syncStatusMsg, setSyncStatusMsg] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
+  const [syncStatusMsg, setSyncStatusMsg] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+
+  // Auth Status state
+  const [authStatus, setAuthStatus] = useState(() => googleSheetsService.getAuthStatus());
 
   // Cloud Master & Transaction Vault Backup / Restore states
   const [isBackingUp, setIsBackingUp] = useState<boolean>(false);
@@ -47,13 +55,58 @@ export const GoogleSheetsAdminSection: React.FC = () => {
   const [backupStats, setBackupStats] = useState<GoogleSheetBackupStats | null>(config.lastBackupStats || null);
   const [showRestoreModal, setShowRestoreModal] = useState<boolean>(false);
 
+  const refreshAuthStatus = useCallback(() => {
+    setAuthStatus(googleSheetsService.getAuthStatus());
+  }, []);
+
   useEffect(() => {
+    refreshAuthStatus();
+    const interval = setInterval(refreshAuthStatus, 15000);
     const unsub = storageService.subscribe(() => {
       const current = storageService.getGoogleSheetsConfig();
       setConfig(current);
+      refreshAuthStatus();
     });
-    return () => unsub();
-  }, []);
+    return () => {
+      clearInterval(interval);
+      unsub();
+    };
+  }, [refreshAuthStatus]);
+
+  const handleAuthorizeGoogle = async () => {
+    if (isAuthorizing) return;
+    setIsAuthorizing(true);
+    setSyncStatusMsg(null);
+
+    try {
+      const authRes = await googleSheetsService.signInWithGoogle();
+      refreshAuthStatus();
+      if (authRes.token) {
+        setApiKeyInput(authRes.token);
+      }
+      setSyncStatusMsg({
+        type: 'success',
+        message: `Google Workspace authorized successfully (${authRes.user?.email || 'Account connected'})! Automatic token refresh is active.`
+      });
+    } catch (err: any) {
+      setSyncStatusMsg({
+        type: 'error',
+        message: err.message || 'Failed to authenticate with Google Workspace.'
+      });
+    } finally {
+      setIsAuthorizing(false);
+    }
+  };
+
+  const handleClearAuth = () => {
+    googleSheetsService.clearAuthToken();
+    setApiKeyInput('');
+    refreshAuthStatus();
+    setSyncStatusMsg({
+      type: 'info',
+      message: 'Google Sheets authorization cleared. You can re-authenticate anytime.'
+    });
+  };
 
   const handleSaveCredentials = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -251,14 +304,18 @@ export const GoogleSheetsAdminSection: React.FC = () => {
           className={`p-3.5 rounded-xl border text-xs font-medium flex items-center justify-between gap-3 animate-in fade-in ${
             syncStatusMsg.type === 'success'
               ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
-              : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200'
+              : syncStatusMsg.type === 'error'
+              ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200'
+              : 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200'
           }`}
         >
           <div className="flex items-center gap-2">
             {syncStatusMsg.type === 'success' ? (
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            ) : (
+            ) : syncStatusMsg.type === 'error' ? (
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            ) : (
+              <HelpCircle className="w-4 h-4 text-indigo-600 shrink-0" />
             )}
             <span>{syncStatusMsg.message}</span>
           </div>
@@ -271,6 +328,124 @@ export const GoogleSheetsAdminSection: React.FC = () => {
           </button>
         </div>
       )}
+
+      {/* Google Workspace Account & OAuth Authorization Status Card */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div
+              className={`p-3 rounded-xl text-white shadow-xs shrink-0 ${
+                authStatus.isAuthenticated
+                  ? 'bg-emerald-600'
+                  : authStatus.isExpired
+                  ? 'bg-amber-500'
+                  : 'bg-indigo-600'
+              }`}
+            >
+              {authStatus.isAuthenticated ? (
+                <ShieldCheck className="w-6 h-6" />
+              ) : (
+                <Key className="w-6 h-6" />
+              )}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  Google Workspace Authorization & Token Lifecycle
+                </h4>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    authStatus.isAuthenticated
+                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                      : authStatus.isExpired
+                      ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                      : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                  }`}
+                >
+                  {authStatus.isAuthenticated
+                    ? 'Active & Authenticated'
+                    : authStatus.isExpired
+                    ? 'Authorization Expired'
+                    : 'Not Authorized'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
+                {authStatus.isAuthenticated
+                  ? `Authorized Google Account: ${authStatus.email || 'Connected'}. Active session with automatic 401 retry & token renewal.`
+                  : authStatus.isExpired
+                  ? 'Your Google OAuth token has expired. Click "Re-Authenticate with Google" below to refresh credentials without leaving this page.'
+                  : 'Connect your Google Workspace account to grant AlphaERP permission to read, write, and create spreadsheets directly in your Google Drive.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {authStatus.isAuthenticated && (
+              <button
+                type="button"
+                onClick={handleClearAuth}
+                title="Disconnect stored credentials"
+                className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Disconnect</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={handleAuthorizeGoogle}
+              disabled={isAuthorizing}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white shadow-xs transition-all cursor-pointer disabled:opacity-50 ${
+                authStatus.isAuthenticated
+                  ? 'bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600'
+                  : 'bg-emerald-600 hover:bg-emerald-700'
+              }`}
+            >
+              {isAuthorizing ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Authenticating...</span>
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>
+                    {authStatus.isAuthenticated
+                      ? 'Re-Authenticate with Google'
+                      : authStatus.isExpired
+                      ? 'Re-Authenticate Expired Token'
+                      : 'Authorize Google Workspace (1-Click)'}
+                  </span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {authStatus.isAuthenticated && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+              <UserCheck className="w-4 h-4 text-emerald-600" />
+              <span>
+                Account: <strong>{authStatus.email || 'Authenticated User'}</strong>
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+              <Clock className="w-4 h-4 text-indigo-600" />
+              <span>
+                Session Remaining: <strong>{authStatus.expiresInMinutes > 0 ? `~${authStatus.expiresInMinutes} mins` : 'Active'}</strong>
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>
+                Auto-Refresh: <strong>Transparent 401 Interceptor Active</strong>
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Form Settings Card */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-5">

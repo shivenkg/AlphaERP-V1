@@ -91,15 +91,19 @@ class GoogleSheetsService {
   private isSigningIn: boolean = false;
   private readonly STORAGE_KEY_TOKEN = 'ALPHA_ERP_GSHEETS_AUTH_TOKEN';
   private readonly STORAGE_KEY_EXPIRY = 'ALPHA_ERP_GSHEETS_AUTH_EXPIRY';
+  private readonly STORAGE_KEY_USER_EMAIL = 'ALPHA_ERP_GSHEETS_USER_EMAIL';
 
   constructor() {
-    // Load persistently saved token or API key from localStorage
+    // Load persistently saved token only if strictly non-expired (with 60s buffer)
     try {
       const savedToken = localStorage.getItem(this.STORAGE_KEY_TOKEN);
       const savedExpiry = localStorage.getItem(this.STORAGE_KEY_EXPIRY);
-      if (savedToken && savedExpiry && Number(savedExpiry) > Date.now()) {
+      if (savedToken && savedExpiry && Number(savedExpiry) > Date.now() + 60000) {
         this.accessToken = savedToken;
         this.tokenExpiry = Number(savedExpiry);
+      } else if (savedToken) {
+        // Expired or stale token detected on boot - purge immediately to prevent 401 cascade
+        this.clearAuthToken();
       }
     } catch {
       // localStorage may be restricted in sandbox
@@ -108,6 +112,11 @@ class GoogleSheetsService {
     // Listen for auth state changes
     onAuthStateChanged(auth, (user) => {
       this.currentUser = user;
+      if (user?.email) {
+        try {
+          localStorage.setItem(this.STORAGE_KEY_USER_EMAIL, user.email);
+        } catch {}
+      }
     });
   }
 
@@ -116,10 +125,61 @@ class GoogleSheetsService {
   }
 
   public hasValidToken(): boolean {
-    return !!this.accessToken && Date.now() < this.tokenExpiry;
+    return !!this.accessToken && Date.now() < (this.tokenExpiry - 60000);
   }
 
-  public setToken(token: string, expiresInSeconds: number = 86400 * 30) {
+  public isAuthorized(): boolean {
+    return this.hasValidToken();
+  }
+
+  public getAuthStatus(): {
+    isAuthenticated: boolean;
+    isExpired: boolean;
+    email: string | null;
+    expiresInMinutes: number;
+    hasSpreadsheet: boolean;
+  } {
+    const valid = this.hasValidToken();
+    let email: string | null = this.currentUser?.email || null;
+    if (!email) {
+      try {
+        email = localStorage.getItem(this.STORAGE_KEY_USER_EMAIL);
+      } catch {}
+    }
+
+    let isExpired = false;
+    try {
+      const savedToken = localStorage.getItem(this.STORAGE_KEY_TOKEN);
+      const savedExpiry = localStorage.getItem(this.STORAGE_KEY_EXPIRY);
+      if (savedToken && savedExpiry && Number(savedExpiry) <= Date.now()) {
+        isExpired = true;
+      }
+    } catch {}
+
+    const expiresInMinutes = valid ? Math.max(0, Math.round((this.tokenExpiry - Date.now()) / 60000)) : 0;
+    const config = storageService.getGoogleSheetsConfig();
+
+    return {
+      isAuthenticated: valid,
+      isExpired: !valid && (isExpired || !!this.accessToken),
+      email,
+      expiresInMinutes,
+      hasSpreadsheet: Boolean(config.spreadsheetId)
+    };
+  }
+
+  public clearAuthToken(): void {
+    this.accessToken = null;
+    this.tokenExpiry = 0;
+    try {
+      localStorage.removeItem(this.STORAGE_KEY_TOKEN);
+      localStorage.removeItem(this.STORAGE_KEY_EXPIRY);
+      localStorage.removeItem(this.STORAGE_KEY_USER_EMAIL);
+    } catch {}
+    storageService.updateGoogleSheetsConfig({ syncStatus: 'idle' });
+  }
+
+  public setToken(token: string, expiresInSeconds: number = 3500): void {
     this.accessToken = token;
     this.tokenExpiry = Date.now() + expiresInSeconds * 1000;
     try {
@@ -132,16 +192,83 @@ class GoogleSheetsService {
     if (this.hasValidToken() && this.accessToken) {
       return this.accessToken;
     }
+    // Check saved token in localStorage with valid non-expired timestamp
+    try {
+      const savedToken = localStorage.getItem(this.STORAGE_KEY_TOKEN);
+      const savedExpiry = localStorage.getItem(this.STORAGE_KEY_EXPIRY);
+      if (savedToken && savedExpiry && Number(savedExpiry) > Date.now() + 60000) {
+        this.accessToken = savedToken;
+        this.tokenExpiry = Number(savedExpiry);
+        return this.accessToken;
+      } else if (savedToken) {
+        this.clearAuthToken();
+      }
+    } catch {}
+
     // Check saved config in storageService
     const config = storageService.getGoogleSheetsConfig();
     if (config?.apiKey && config.apiKey.trim()) {
       return config.apiKey.trim();
     }
-    try {
-      const saved = localStorage.getItem(this.STORAGE_KEY_TOKEN);
-      if (saved) return saved;
-    } catch {}
+
     return null;
+  }
+
+  /**
+   * Universal fetch wrapper that manages authorization tokens,
+   * detects 401 expiry, purges invalid credentials, and transparently re-authenticates.
+   */
+  public async fetchWithAuth(
+    url: string,
+    options: RequestInit = {},
+    retryOn401: boolean = true
+  ): Promise<Response> {
+    let token = this.getAccessToken();
+    if (!token) {
+      const authRes = await this.signInWithGoogle();
+      token = authRes.token;
+    }
+
+    const headers = new Headers(options.headers || {});
+    if (!headers.has('Authorization')) {
+      const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+      headers.set('Authorization', authHeader);
+    }
+
+    let response = await fetch(url, {
+      ...options,
+      headers
+    });
+
+    if (response.status === 401) {
+      console.warn('Google Sheets API returned 401 Unauthorized. Invalidating expired token.');
+      this.clearAuthToken();
+
+      if (retryOn401) {
+        try {
+          const reauthRes = await this.signInWithGoogle();
+          const freshHeaders = new Headers(options.headers || {});
+          freshHeaders.set('Authorization', `Bearer ${reauthRes.token}`);
+          const retryResponse = await fetch(url, {
+            ...options,
+            headers: freshHeaders
+          });
+          if (retryResponse.ok) {
+            return retryResponse;
+          }
+          response = retryResponse;
+        } catch (reauthErr) {
+          console.warn('Re-authentication after 401 failed or was dismissed:', reauthErr);
+        }
+      }
+
+      storageService.updateGoogleSheetsConfig({ syncStatus: 'error' });
+      throw new Error(
+        'Google Sheets authorization expired or invalid. Please re-authenticate via the "Authorize Google Workspace" button in Admin Settings or Google Sheets modal.'
+      );
+    }
+
+    return response;
   }
 
   /**
@@ -164,7 +291,9 @@ class GoogleSheetsService {
     });
 
     if (cleanApiKey) {
-      this.setToken(cleanApiKey, 86400 * 30);
+      // If it looks like an OAuth access token (starts with ya29.), treat as standard 1-hour token
+      const expiry = cleanApiKey.startsWith('ya29.') ? 3600 : 86400 * 30;
+      this.setToken(cleanApiKey, expiry);
     }
 
     storageService.logAudit(
@@ -181,48 +310,97 @@ class GoogleSheetsService {
   }
 
   // Sign in to Google Workspace with popup to acquire Sheets & Drive scopes
-  public async signInWithGoogle(): Promise<{ user: FirebaseUser; token: string }> {
+  public async signInWithGoogle(): Promise<{ user?: FirebaseUser; token: string; email?: string }> {
     if (this.isSigningIn) {
       throw new Error('Google Sign-In is already in progress.');
     }
 
+    this.isSigningIn = true;
     try {
-      this.isSigningIn = true;
-      provider.setCustomParameters({
-        prompt: 'select_account'
-      });
+      let token: string | null = null;
+      let email: string | undefined = undefined;
 
-      const result = await signInWithPopup(auth, provider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      
-      if (!credential?.accessToken) {
-        throw new Error('No Google Workspace access token received. Please ensure you grant spreadsheet permissions.');
+      // Method A: Check if Google Identity Services (GSI) is available with configured OAuth Client ID
+      const gsiAvailable =
+        typeof window !== 'undefined' &&
+        !!(window as any).google?.accounts?.oauth2 &&
+        !!firebaseConfig.oAuthClientId;
+
+      if (gsiAvailable) {
+        try {
+          token = await new Promise<string>((resolve, reject) => {
+            const tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
+              client_id: firebaseConfig.oAuthClientId,
+              scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file',
+              callback: (tokenResponse: any) => {
+                if (tokenResponse.error) {
+                  reject(new Error(tokenResponse.error_description || tokenResponse.error || 'Google authorization declined'));
+                } else if (tokenResponse.access_token) {
+                  resolve(tokenResponse.access_token);
+                } else {
+                  reject(new Error('No access token received from Google Identity Services.'));
+                }
+              }
+            });
+            tokenClient.requestAccessToken({ prompt: 'consent' });
+          });
+        } catch (gsiErr: any) {
+          console.warn('GSI Token Client prompt was not completed, trying Firebase Auth popup:', gsiErr);
+        }
       }
 
-      this.currentUser = result.user;
-      this.setToken(credential.accessToken, 3600);
+      // Method B: Firebase Auth popup fallback
+      if (!token) {
+        provider.setCustomParameters({
+          prompt: 'select_account'
+        });
+
+        const result = await signInWithPopup(auth, provider);
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        
+        if (!credential?.accessToken) {
+          throw new Error('No Google Workspace access token received. Please ensure you grant spreadsheet permissions.');
+        }
+
+        token = credential.accessToken;
+        this.currentUser = result.user;
+        email = result.user.email || undefined;
+      }
+
+      if (!token) {
+        throw new Error('No Google Workspace access token received. Please complete the sign-in authorization.');
+      }
+
+      this.setToken(token, 3500);
+      if (email) {
+        try {
+          localStorage.setItem(this.STORAGE_KEY_USER_EMAIL, email);
+        } catch {}
+      }
+
+      storageService.updateGoogleSheetsConfig({ syncStatus: 'idle' });
 
       storageService.logAudit(
         'SYNC_SHEETS',
         'GOOGLE_SHEET',
-        result.user.uid,
-        `Google Workspace account authorized: ${result.user.email} (${result.user.displayName || 'User'})`
+        email || 'GOOGLE_WORKSPACE',
+        `Google Workspace account authorized: ${email || 'Connected Account'}`
       );
 
       storageService.addNotification(
         'Google Account Connected',
-        `Authorized as ${result.user.email} with Google Sheets & Drive permissions.`,
+        `Authorized as ${email || 'Google Account'} with Google Sheets & Drive permissions.`,
         'success',
         'sheets'
       );
 
       return {
-        user: result.user,
-        token: credential.accessToken
+        user: this.currentUser || undefined,
+        token,
+        email
       };
     } catch (error: any) {
       console.error('Google Sign-In Error:', error);
-      // Fallback: If popup was closed or failed
       if (error.code === 'auth/popup-closed-by-user') {
         throw new Error('Google Sign-in popup was closed before completing authorization.');
       } else if (error.code === 'auth/cancelled-popup-request') {
@@ -236,8 +414,7 @@ class GoogleSheetsService {
 
   public async signOutGoogle(): Promise<void> {
     await signOut(auth);
-    this.accessToken = null;
-    this.tokenExpiry = 0;
+    this.clearAuthToken();
     this.currentUser = null;
   }
 
@@ -751,10 +928,9 @@ class GoogleSheetsService {
       // 1. Create Spreadsheet with all tabs including Data Vault
       const title = `${settings.appTitle || 'AlphaERP'} Master Database - ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
       
-      const createResponse = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+      const createResponse = await this.fetchWithAuth('https://sheets.googleapis.com/v4/spreadsheets', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -788,12 +964,11 @@ class GoogleSheetsService {
         values: tab.values
       }));
 
-      const updateResponse = await fetch(
+      const updateResponse = await this.fetchWithAuth(
         `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`,
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
@@ -867,14 +1042,8 @@ class GoogleSheetsService {
       const vaultTab = this.generateDataVaultSheetTab();
       const allTabsToSync = [...tabs, vaultTab];
 
-      const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-      const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`, {
-        headers: { Authorization: authHeader }
-      });
+      const metaRes = await this.fetchWithAuth(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`);
 
-      if (metaRes.status === 401) {
-        throw new Error('Google Sheets authorization expired or invalid. Please re-authenticate or verify your credentials in Admin Settings.');
-      }
       if (metaRes.status === 404) {
         throw new Error(`The linked Google Sheet (ID: ${spreadsheetId}) was not found in Google Drive. Please verify the Sheet ID.`);
       }
@@ -889,10 +1058,9 @@ class GoogleSheetsService {
       // Create any missing sheet tabs (including the vault tab)
       const missingTabs = allTabsToSync.filter((t) => !existingTitles.includes(t.title));
       if (missingTabs.length > 0) {
-        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+        await this.fetchWithAuth(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
           method: 'POST',
           headers: {
-            Authorization: authHeader,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
@@ -908,15 +1076,15 @@ class GoogleSheetsService {
       }
 
       // Clear the vault sheet tab first to prevent residual rows from previous backups
-      await fetch(
+      await this.fetchWithAuth(
         `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${encodeURIComponent(vaultTab.title)}'!A1:Z5000:clear`,
         {
           method: 'POST',
           headers: {
-            Authorization: authHeader,
             'Content-Type': 'application/json'
           }
-        }
+        },
+        false
       ).catch((err) => console.warn('Clear vault range notice:', err));
 
       // Batch update data across all tabs
@@ -925,12 +1093,11 @@ class GoogleSheetsService {
         values: tab.values
       }));
 
-      const batchUpdateRes = await fetch(
+      const batchUpdateRes = await this.fetchWithAuth(
         `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`,
         {
           method: 'POST',
           headers: {
-            Authorization: authHeader,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
@@ -1043,17 +1210,7 @@ class GoogleSheetsService {
       throw new Error('No Google Sheet is currently linked. Please link a Google Sheet first.');
     }
 
-    let token = this.getAccessToken();
-    if (!token) {
-      const authRes = await this.signInWithGoogle();
-      token = authRes.token;
-    }
-
-    const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-
-    const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`, {
-      headers: { Authorization: authHeader }
-    });
+    const metaRes = await this.fetchWithAuth(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`);
 
     if (!metaRes.ok) {
       const err = await metaRes.json().catch(() => ({}));
@@ -1077,9 +1234,8 @@ class GoogleSheetsService {
 
     if (vaultSheet) {
       const vaultTitle = vaultSheet.properties.title;
-      const valuesRes = await fetch(
-        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${encodeURIComponent(vaultTitle)}'!A2:G3000`,
-        { headers: { Authorization: authHeader } }
+      const valuesRes = await this.fetchWithAuth(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${encodeURIComponent(vaultTitle)}'!A2:G3000`
       );
 
       if (valuesRes.ok) {
@@ -1178,18 +1334,8 @@ class GoogleSheetsService {
         throw new Error('No Google Sheet linked. Please link a Google Sheet before restoring.');
       }
 
-      let token = this.getAccessToken();
-      if (!token) {
-        const authRes = await this.signInWithGoogle();
-        token = authRes.token;
-      }
-
-      const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-
       // 1. Fetch spreadsheet metadata
-      const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`, {
-        headers: { Authorization: authHeader }
-      });
+      const metaRes = await this.fetchWithAuth(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`);
 
       if (!metaRes.ok) {
         const err = await metaRes.json().catch(() => ({}));
@@ -1210,9 +1356,8 @@ class GoogleSheetsService {
       if (vaultSheet) {
         vaultFound = true;
         const vaultTitle = vaultSheet.properties.title;
-        const valuesRes = await fetch(
-          `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${encodeURIComponent(vaultTitle)}'!A2:G5000`,
-          { headers: { Authorization: authHeader } }
+        const valuesRes = await this.fetchWithAuth(
+          `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${encodeURIComponent(vaultTitle)}'!A2:G5000`
         );
 
         if (valuesRes.ok) {
@@ -1249,7 +1394,7 @@ class GoogleSheetsService {
 
       // Fallback: If vault was not present or empty, parse standard table tabs
       if (Object.keys(restoredData).length === 0) {
-        restoredData = await this.fallbackParseStandardTabs(spreadsheetId, authHeader, sheets);
+        restoredData = await this.fallbackParseStandardTabs(spreadsheetId, sheets);
       }
 
       if (Object.keys(restoredData).length === 0) {
@@ -1317,7 +1462,6 @@ class GoogleSheetsService {
   // Parses standard tabular tabs as a fallback when Data Vault tab is absent
   private async fallbackParseStandardTabs(
     spreadsheetId: string,
-    authHeader: string,
     sheets: any[]
   ): Promise<Record<string, any>> {
     const sheetTitles: string[] = (sheets || []).map((s: any) => s.properties?.title || '');
@@ -1327,9 +1471,10 @@ class GoogleSheetsService {
       if (title.includes('Dashboard')) continue;
 
       try {
-        const res = await fetch(
+        const res = await this.fetchWithAuth(
           `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${encodeURIComponent(title)}'!A1:Z500`,
-          { headers: { Authorization: authHeader } }
+          {},
+          false
         );
         if (!res.ok) continue;
         const data = await res.json();
@@ -1423,16 +1568,8 @@ class GoogleSheetsService {
       sheetId = match[1];
     }
 
-    let token = this.getAccessToken();
-    if (!token) {
-      const authRes = await this.signInWithGoogle();
-      token = authRes.token;
-    }
-
     // Verify sheet exists and is accessible
-    const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const metaRes = await this.fetchWithAuth(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`);
 
     if (!metaRes.ok) {
       if (metaRes.status === 404) {
