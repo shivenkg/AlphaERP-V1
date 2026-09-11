@@ -1804,5 +1804,45 @@ export interface MongoRestoreResult {
   source: string;
 }
 
+// Environment Variables & Secrets Management in Super Admin
+export interface AdminEnvVariableItem {
+  key: string;
+  value: string;
+  category: string;
+  description: string;
+  sensitive: boolean;
+  required: boolean;
+  example: string;
+  defaultValue: string;
+  isConfigured: boolean;
+  isCustom: boolean;
+  source: 'process_env' | 'env_file' | 'default' | 'not_set';
+}
+
+export interface AdminEnvMetadata {
+  envFilePath: string;
+  envFileExists: boolean;
+  canWriteToFile: boolean;
+  totalCount: number;
+  configuredCount: number;
+  missingCount: number;
+  customCount: number;
+  lastUpdated: string;
+  nodeEnv: string;
+  platform: string;
+}
+
+export interface AdminEnvSummary {
+  variables: AdminEnvVariableItem[];
+  metadata: AdminEnvMetadata;
+}
+
+export interface AdminEnvTestResult {
+  success: boolean;
+  message: string;
+  latencyMs?: number;
+  details?: any;
+}
+
 
 

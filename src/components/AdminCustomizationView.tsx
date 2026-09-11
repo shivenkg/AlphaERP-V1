@@ -34,7 +34,8 @@ import {
   RefreshCw,
   ZoomIn,
   ZoomOut,
-  Mail
+  Mail,
+  Key
 } from 'lucide-react';
 import { SystemSettings, UserRole, UserProfile } from '../types';
 import { FontSizeScaleMode } from '../types/fontSize';
@@ -47,6 +48,7 @@ import { RoleModulePermissionsManager } from './RoleModulePermissionsManager';
 import { GoogleSheetsAdminSection } from './GoogleSheetsAdminSection';
 import { MongoDbAdminSection } from './MongoDbAdminSection';
 import { EmailSettingsAdminSection } from './EmailSettingsAdminSection';
+import { EnvironmentVariablesAdminSection } from './EnvironmentVariablesAdminSection';
 import {
   FileSpreadsheet,
   ExternalLink,
@@ -88,7 +90,7 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
   } = useFontSize();
   const [settings, setSettings] = useState<SystemSettings>(storageService.getSystemSettings());
   const [activeSubTab, setActiveSubTab] = useState<
-    'branding' | 'report_templates' | 'commercial' | 'procurement' | 'number_series' | 'banking' | 'modules' | 'roles' | 'role_modules' | 'google_sheets' | 'backup' | 'mongodb' | 'email_settings'
+    'branding' | 'report_templates' | 'commercial' | 'procurement' | 'number_series' | 'banking' | 'modules' | 'roles' | 'role_modules' | 'google_sheets' | 'backup' | 'mongodb' | 'email_settings' | 'env_vars'
   >('branding');
 
   // Form states for inclusion/exclusion additions
@@ -555,6 +557,19 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
         >
           <Mail className="w-4 h-4 text-blue-300" />
           <span>13. Email & SMTP</span>
+        </button>
+
+        <button
+          id="tab-admin-env-vars"
+          onClick={() => setActiveSubTab('env_vars')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+            activeSubTab === 'env_vars'
+              ? 'bg-purple-700 text-white shadow-xs ring-1 ring-purple-500'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Key className="w-4 h-4 text-purple-300" />
+          <span>14. Environment Variables</span>
         </button>
       </div>
 
@@ -1995,6 +2010,11 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
       {/* TAB 13: EMAIL & SMTP NOTIFICATIONS */}
       {activeSubTab === 'email_settings' && (
         <EmailSettingsAdminSection currentUser={currentUser} />
+      )}
+
+      {/* TAB 14: ENVIRONMENT VARIABLES & SECRETS */}
+      {activeSubTab === 'env_vars' && (
+        <EnvironmentVariablesAdminSection currentUser={currentUser} />
       )}
     </div>
   );

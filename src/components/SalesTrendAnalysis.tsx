@@ -519,17 +519,36 @@ export const SalesTrendAnalysis: React.FC<SalesTrendAnalysisProps> = ({ salesRep
 
       {/* Equipment Category Breakdown Forecast */}
       <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-slate-500" />
             <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
               Projected Product Division Mix (VRF Systems vs. Chillers vs. Air Distribution)
             </h4>
           </div>
-          <span className="text-[11px] text-slate-500">Predicted breakdown based on project specs</span>
+          <button
+            onClick={() => onNavigate?.('projects')}
+            className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer self-start sm:self-auto"
+            title="Click to view Project BOQ & Equipment allocations"
+          >
+            <span>View BOQ Projects &amp; Equipment Specs</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
         </div>
 
-        <div className="h-56 w-full">
+        <div
+          onClick={() => onNavigate?.('projects')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate?.('projects');
+            }
+          }}
+          title="Click to view BOQ Projects & Equipment specs"
+          className="h-56 w-full cursor-pointer hover:opacity-95 transition-opacity"
+        >
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={chartData.slice(4)} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />

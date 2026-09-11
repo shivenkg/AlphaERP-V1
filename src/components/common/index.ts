@@ -17,3 +17,9 @@ export type { MultiSelectOption, MultiSelectFilterDropdownProps } from './MultiS
 
 export { EmployeeAvatarUploadModal, PRESET_AVATARS } from './EmployeeAvatarUploadModal';
 export type { EmployeeAvatarUploadModalProps } from './EmployeeAvatarUploadModal';
+
+export {
+  TableMetadataTooltip,
+  LeadMetadataTooltipContent,
+  InventoryMetadataTooltipContent
+} from './TableMetadataTooltip';

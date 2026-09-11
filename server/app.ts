@@ -11,6 +11,12 @@ import {
   saveProjectsToMongo,
   saveSingleProjectToMongo,
 } from "./mongodb";
+import {
+  getAllEnvironmentVariables,
+  saveEnvironmentVariables,
+  testEnvironmentVariable,
+  generateRawEnvString,
+} from "./envManager";
 
 dotenv.config();
 
@@ -409,4 +415,86 @@ app.post("/api/email/test-connection", async (req, res) => {
   }
 });
 
+// ========================================================
+// SUPER ADMIN ENVIRONMENT VARIABLES & SECRETS APIs
+// ========================================================
+
+// 1. Get All Environment Variables with Metadata & Status
+app.get("/api/admin/env", (req, res) => {
+  try {
+    const summary = getAllEnvironmentVariables();
+    res.json(summary);
+  } catch (err: any) {
+    console.error("Failed to retrieve environment variables:", err);
+    res.status(500).json({
+      success: false,
+      error: err?.message || "Failed to retrieve environment variables",
+    });
+  }
+});
+
+// 2. Save / Update Environment Variables & Persist to .env File
+app.post("/api/admin/env", (req, res) => {
+  try {
+    const { variables, removedKeys } = req.body;
+    if (!variables || typeof variables !== "object") {
+      res.status(400).json({
+        success: false,
+        error: "Invalid request payload: 'variables' object is required",
+      });
+      return;
+    }
+
+    const result = saveEnvironmentVariables(variables, Array.isArray(removedKeys) ? removedKeys : []);
+    if (!result.success) {
+      res.status(400).json(result);
+      return;
+    }
+
+    res.json(result);
+  } catch (err: any) {
+    console.error("Failed to update environment variables:", err);
+    res.status(500).json({
+      success: false,
+      error: err?.message || "Internal server error while saving environment variables",
+    });
+  }
+});
+
+// 3. Test / Validate an Environment Variable
+app.post("/api/admin/env/test", async (req, res) => {
+  try {
+    const { key, value } = req.body;
+    if (!key || typeof key !== "string") {
+      res.status(400).json({
+        success: false,
+        error: "Environment variable 'key' string is required for testing",
+      });
+      return;
+    }
+
+    const result = await testEnvironmentVariable(key, value);
+    res.json(result);
+  } catch (err: any) {
+    console.error("Failed to test environment variable:", err);
+    res.status(500).json({
+      success: false,
+      message: err?.message || "Test failed due to internal error",
+    });
+  }
+});
+
+// 4. Export / Download Raw .env File Content
+app.get("/api/admin/env/raw", (req, res) => {
+  try {
+    const rawContent = generateRawEnvString();
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Content-Disposition", 'attachment; filename=".env"');
+    res.send(rawContent);
+  } catch (err: any) {
+    res.status(500).send(`# Error exporting .env file: ${err?.message}`);
+  }
+});
+
 export default app;
+

@@ -6,6 +6,7 @@ export interface AtmosAirconLogoProps {
   className?: string;
   isDarkTheme?: boolean;
   iconSize?: number;
+  onClick?: () => void;
 }
 
 export const AtmosAirconLogo: React.FC<AtmosAirconLogoProps> = ({
@@ -13,7 +14,8 @@ export const AtmosAirconLogo: React.FC<AtmosAirconLogoProps> = ({
   variant = 'full',
   className = '',
   isDarkTheme = false,
-  iconSize
+  iconSize,
+  onClick
 }) => {
   // Dimensions map
   const dimensions = {
@@ -174,18 +176,33 @@ export const AtmosAirconLogo: React.FC<AtmosAirconLogoProps> = ({
 
   // Icon only
   if (variant === 'icon') {
-    return (
+    const iconContent = (
       <div className={`inline-flex items-center justify-center shrink-0 ${className}`}>
         <LogoEmblem emblemSize={iconSize || dimensions.icon} />
       </div>
     );
+
+    if (onClick) {
+      return (
+        <button
+          type="button"
+          onClick={onClick}
+          className="focus:outline-none focus:ring-2 focus:ring-blue-500/40 rounded-xl cursor-pointer hover:opacity-85 transition-opacity inline-flex items-center"
+          title="Go to Executive Dashboard"
+          aria-label="Go to Executive Dashboard"
+        >
+          {iconContent}
+        </button>
+      );
+    }
+    return iconContent;
   }
 
   // Full Horizontal or Vertical Logo
-  return (
+  const fullContent = (
     <div className={`inline-flex items-center gap-2 sm:gap-2.5 ${className}`}>
       <LogoEmblem emblemSize={dimensions.icon} />
-      <div className="flex flex-col justify-center leading-none">
+      <div className="flex flex-col justify-center leading-none text-left">
         <div className="flex items-baseline gap-1">
           <span className={`font-black tracking-tight ${isDarkTheme ? 'text-white' : 'text-slate-900'} ${dimensions.text}`}>
             <span className="text-[#0066E0]">HVAC</span>
@@ -197,6 +214,44 @@ export const AtmosAirconLogo: React.FC<AtmosAirconLogoProps> = ({
         </div>
         <span className="text-[9px] font-semibold text-slate-500 dark:text-slate-400 tracking-wider">
           Enterprise HVAC Solutions
+        </span>
+      </div>
+    </div>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="focus:outline-none focus:ring-2 focus:ring-blue-500/40 rounded-xl cursor-pointer hover:opacity-85 active:scale-[0.99] transition-all inline-flex items-center text-left"
+        title="Go to Executive Dashboard"
+        aria-label="Go to Executive Dashboard"
+      >
+        {fullContent}
+      </button>
+    );
+  }
+
+  return fullContent;
+};
+
+// Company Logo component explicitly showing JS AlphaSoft Pvt. Ltd.
+export const JSAlphaSoftCompanyLogo: React.FC<{
+  size?: 'xs' | 'sm' | 'md' | 'lg';
+  className?: string;
+  isDarkTheme?: boolean;
+}> = ({ size = 'sm', className = '', isDarkTheme = false }) => {
+  const iconSizes = { xs: 22, sm: 30, md: 38, lg: 48 };
+  return (
+    <div className={`inline-flex items-center gap-2.5 ${className}`}>
+      <AtmosAirconLogo size={size} variant="icon" isDarkTheme={isDarkTheme} iconSize={iconSizes[size]} />
+      <div className="flex flex-col justify-center leading-tight">
+        <span className={`font-extrabold tracking-tight ${isDarkTheme ? 'text-white' : 'text-slate-900'} ${size === 'xs' ? 'text-xs' : size === 'sm' ? 'text-sm' : 'text-base'}`}>
+          JS AlphaSoft Pvt. Ltd.
+        </span>
+        <span className="text-[9px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide uppercase">
+          Technology &amp; Engineering
         </span>
       </div>
     </div>

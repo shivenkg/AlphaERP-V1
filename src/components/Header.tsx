@@ -407,7 +407,13 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveTab('dashboard')}
+            className="flex items-center gap-2 sm:gap-2.5 shrink-0 text-left p-1 -m-1 rounded-xl hover:opacity-85 active:scale-[0.99] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            title="Click to land on Executive Dashboard"
+            aria-label="Click HVAC Biz to land on Executive Dashboard"
+          >
             <JSAlphaSoftLogo size="sm" variant="icon" isDarkTheme={isDark} />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
@@ -426,7 +432,7 @@ export const Header: React.FC<HeaderProps> = ({
                 HVAC Quotations • Projects • BOQ Inventory • Enterprise Sync
               </p>
             </div>
-          </div>
+          </button>
         </div>
 
         {/* Center: Global Search Bar (Full on large screens) */}

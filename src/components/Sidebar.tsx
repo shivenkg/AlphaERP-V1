@@ -499,7 +499,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="p-2.5 border-b border-[#152347] bg-[#09112c]/90 flex items-center justify-between">
           {isExpanded ? (
             <div className="flex items-center justify-between w-full min-w-0">
-              <div className="flex items-center gap-2 min-w-0">
+              <button
+                type="button"
+                onClick={() => setActiveTab('dashboard')}
+                className="flex items-center gap-2 min-w-0 text-left hover:opacity-85 active:scale-[0.99] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded-lg p-0.5"
+                title="Click to land on Executive Dashboard"
+                aria-label="Click HVAC Biz to land on Executive Dashboard"
+              >
                 <JSAlphaSoftLogo size="xs" variant="icon" isDarkTheme={true} />
                 <div className="min-w-0 truncate">
                   <div className="text-xs font-black text-white tracking-tight flex items-center gap-1">
@@ -510,7 +516,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <span>AlphaERP Hub</span>
                   </div>
                 </div>
-              </div>
+              </button>
 
               <div className="flex items-center gap-1">
                 <button
@@ -533,7 +539,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center w-full gap-2 py-1">
-              <JSAlphaSoftLogo size="xs" variant="icon" isDarkTheme={true} />
+              <button
+                type="button"
+                onClick={() => setActiveTab('dashboard')}
+                className="hover:opacity-85 active:scale-95 transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded-lg p-0.5"
+                title="Click to land on Executive Dashboard"
+                aria-label="Click HVAC Biz to land on Executive Dashboard"
+              >
+                <JSAlphaSoftLogo size="xs" variant="icon" isDarkTheme={true} />
+              </button>
               <button
                 onClick={togglePin}
                 className="p-1.5 text-slate-400 hover:text-white rounded-lg bg-[#14234c] hover:bg-blue-600 transition-colors cursor-pointer"
@@ -569,15 +583,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             <div className="flex items-center gap-1">
               <button
+                id="btn-expand-all-workflows"
                 onClick={expandAll}
-                className="p-1 text-slate-300 hover:text-white rounded bg-[#14234c] hover:bg-blue-600 text-[9px] transition-colors"
+                className="p-1 text-slate-300 hover:text-white rounded bg-[#14234c] hover:bg-blue-600 text-[9px] transition-all duration-200 ease-out transform hover:scale-110 active:scale-95 cursor-pointer"
                 title="Expand all workflow groups"
               >
                 <UnfoldHorizontal className="w-3 h-3" />
               </button>
               <button
+                id="btn-collapse-all-workflows"
                 onClick={collapseAll}
-                className="p-1 text-slate-300 hover:text-white rounded bg-[#14234c] hover:bg-blue-600 text-[9px] transition-colors"
+                className="p-1 text-slate-300 hover:text-white rounded bg-[#14234c] hover:bg-blue-600 text-[9px] transition-all duration-200 ease-out transform hover:scale-110 active:scale-95 cursor-pointer"
                 title="Collapse all workflow groups"
               >
                 <FoldHorizontal className="w-3 h-3" />
@@ -605,20 +621,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   return (
                     <div key={item.id} className="relative flex justify-center">
                       <motion.button
+                        id={`sidebar-rail-nav-${item.id}`}
                         onClick={() => handleSelectTab(item.id)}
-                        whileHover={{ scale: 1.12, y: -2 }}
                         whileTap={{ scale: 0.94 }}
-                        animate={{
-                          scale: isActive ? 1.05 : 1
-                        }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 450,
-                          damping: 24
-                        }}
                         onMouseEnter={(e) => handleRailItemMouseEnter(group, item, e)}
                         onMouseLeave={handleRailItemMouseLeave}
-                        className={`group relative w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 overflow-hidden cursor-pointer ${
+                        className={`group relative w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 ease-out transform hover:scale-105 active:scale-95 overflow-hidden cursor-pointer ${
                           isActive
                             ? 'text-white shadow-lg shadow-blue-600/40 ring-2 ring-blue-400'
                             : isHoveredInSubmenu
@@ -644,12 +652,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           />
                         )}
 
-                        <Icon className={`relative z-10 w-5 h-5 transition-transform duration-200 group-hover:scale-115 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-cyan-300'}`} />
+                        <Icon className={`relative z-10 w-5 h-5 transition-transform duration-200 ease-out group-hover:scale-110 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-cyan-300'}`} />
 
                         {/* Notification Dot / Badge on icon */}
                         {item.badge && (
                           <span
-                            className={`absolute top-1 right-1 w-2.5 h-2.5 rounded-full ring-2 ring-[#070d21] z-20 transition-transform duration-200 group-hover:scale-125 ${
+                            className={`absolute top-1 right-1 w-2.5 h-2.5 rounded-full ring-2 ring-[#070d21] z-20 transition-transform duration-200 ease-out group-hover:scale-115 ${
                               item.badgeColor || 'bg-blue-500'
                             }`}
                           />
@@ -667,18 +675,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div key={group.id} className="space-y-1 rounded-xl p-1 bg-[#0a1128]/70 border border-[#16234b]">
               {/* Group Collapsible Button Header */}
               <motion.button
-                whileHover={{ scale: 1.015, x: 2 }}
+                id={`sidebar-group-header-${group.id}`}
                 whileTap={{ scale: 0.99 }}
-                transition={{ type: "spring", stiffness: 450, damping: 25 }}
                 onClick={() => toggleGroup(group.id)}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition-all duration-200 shadow-xs border cursor-pointer ${
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition-all duration-200 ease-out transform hover:scale-[1.015] active:scale-[0.99] shadow-xs border cursor-pointer ${
                   hasActiveChild
                     ? `${prominentBg} ring-2 ring-blue-400/50 shadow-md font-extrabold`
                     : `${prominentBg} opacity-90 hover:opacity-100 hover:shadow-md hover:border-blue-400/50`
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <GroupIcon className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${hasActiveChild ? 'text-cyan-300' : 'text-blue-200'}`} />
+                  <GroupIcon className={`w-3.5 h-3.5 transition-transform duration-200 ease-out group-hover:scale-110 ${hasActiveChild ? 'text-cyan-300' : 'text-blue-200'}`} />
                   <span className="truncate">{group.title}</span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -686,9 +693,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 ring-2 ring-cyan-400/40"></span>
                   )}
                   {isGroupCollapsed ? (
-                    <ChevronRight className="w-3 h-3 text-blue-200" />
+                    <ChevronRight className="w-3 h-3 text-blue-200 transition-transform duration-200 group-hover:translate-x-0.5" />
                   ) : (
-                    <ChevronDown className="w-3 h-3 text-blue-200" />
+                    <ChevronDown className="w-3 h-3 text-blue-200 transition-transform duration-200 group-hover:translate-y-0.5" />
                   )}
                 </div>
               </motion.button>
@@ -702,20 +709,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     return (
                       <motion.button
                         key={item.id}
+                        id={`sidebar-nav-${item.id}`}
                         onClick={() => handleSelectTab(item.id)}
-                        whileHover={{ x: 6, scale: 1.015 }}
-                        whileTap={{ scale: 0.97 }}
-                        animate={{
-                          x: isActive ? 4 : 0
-                        }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 450,
-                          damping: 26
-                        }}
-                        className={`w-full relative flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold overflow-hidden transition-colors duration-200 group cursor-pointer ${
+                        whileTap={{ scale: 0.98 }}
+                        className={`w-full relative flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold overflow-hidden transition-all duration-200 ease-out transform hover:scale-[1.02] active:scale-[0.98] group cursor-pointer ${
                           isActive
-                            ? 'text-white font-bold shadow-md ring-1 ring-blue-300/40'
+                            ? 'text-white font-bold shadow-md ring-1 ring-blue-300/40 translate-x-1'
                             : 'text-slate-200 hover:bg-[#15234f] hover:text-white hover:shadow-sm'
                         }`}
                       >
@@ -749,12 +748,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         )}
 
                         <div className="relative z-10 flex items-center gap-2 min-w-0">
-                          <Icon className={`w-3.5 h-3.5 shrink-0 transition-all duration-200 group-hover:scale-115 group-hover:rotate-[-4deg] ${isActive ? 'text-white' : 'text-blue-300 group-hover:text-cyan-300'}`} />
-                          <span className="truncate transition-transform duration-200 group-hover:translate-x-0.5">{item.label}</span>
+                          <Icon className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ease-out group-hover:scale-110 ${isActive ? 'text-white' : 'text-blue-300 group-hover:text-cyan-300'}`} />
+                          <span className="truncate transition-transform duration-200 ease-out group-hover:translate-x-0.5">{item.label}</span>
                         </div>
                         {item.badge && (
                           <span
-                            className={`relative z-10 text-[9px] px-1.5 py-0.5 rounded-full font-bold text-white shrink-0 ml-1 shadow-xs transition-transform duration-200 group-hover:scale-110 ${
+                            className={`relative z-10 text-[9px] px-1.5 py-0.5 rounded-full font-bold text-white shrink-0 ml-1 shadow-xs transition-transform duration-200 ease-out group-hover:scale-105 ${
                               item.badgeColor || 'bg-blue-600'
                             }`}
                           >
@@ -809,16 +808,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               return (
                 <motion.button
                   key={subItem.id}
+                  id={`sidebar-flyout-nav-${subItem.id}`}
                   type="button"
                   onClick={() => handleSelectTab(subItem.id)}
-                  whileHover={{ x: 5, scale: 1.015 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 450,
-                    damping: 26
-                  }}
-                  className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-all duration-200 cursor-pointer group ${
+                  whileTap={{ scale: 0.98 }}
+                  className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-all duration-200 ease-out transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer group ${
                     isCurrentActive
                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md font-bold ring-1 ring-cyan-400/40'
                       : isFocused
@@ -828,7 +822,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div
-                      className={`p-1.5 rounded-lg transition-all duration-200 shrink-0 group-hover:scale-110 group-hover:rotate-[-4deg] ${
+                      className={`p-1.5 rounded-lg transition-all duration-200 ease-out shrink-0 group-hover:scale-110 ${
                         isCurrentActive
                           ? 'bg-white/20 text-white'
                           : 'bg-[#101b3e] text-blue-300 group-hover:bg-[#1c2e63] group-hover:text-cyan-300 group-hover:shadow-sm'
@@ -838,7 +832,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-semibold truncate transition-transform duration-200 group-hover:translate-x-0.5">
+                        <span className="text-xs font-semibold truncate transition-transform duration-200 ease-out group-hover:translate-x-0.5">
                           {subItem.label}
                         </span>
                         {isCurrentActive && (
@@ -862,14 +856,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <div className="flex items-center gap-1 shrink-0">
                     {subItem.badge && (
                       <span
-                        className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ml-2 shrink-0 transition-transform duration-200 group-hover:scale-110 ${
+                        className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ml-2 shrink-0 transition-transform duration-200 ease-out group-hover:scale-105 ${
                           subItem.badgeColor || 'bg-blue-600'
                         }`}
                       >
                         {subItem.badge}
                       </span>
                     )}
-                    <ChevronRight className="w-3.5 h-3.5 text-blue-400/40 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+                    <ChevronRight className="w-3.5 h-3.5 text-blue-400/40 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200 ease-out" />
                   </div>
                 </motion.button>
               );
@@ -902,6 +896,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <div className="text-[9px] text-slate-300 leading-tight font-medium">
               Leads ➔ Quotes ➔ BOQ ➔ Procurement ➔ GL Vouchers ➔ HR Payroll
+            </div>
+            <div className="pt-2 mt-2 border-t border-[#1d2f62] flex items-center justify-between text-[8.5px] text-slate-400">
+              <span className="flex items-center gap-1 font-semibold text-slate-300">
+                <JSAlphaSoftLogo size="xs" variant="icon" isDarkTheme={true} iconSize={12} />
+                &copy; {new Date().getFullYear()} JS AlphaSoft Pvt. Ltd.
+              </span>
+              <span className="text-[7.5px] font-mono text-blue-300/80">All Rights Reserved</span>
             </div>
           </div>
         </div>

@@ -19,9 +19,11 @@ import { insforge } from '../lib/insforge';
 
 interface InsForgeFileUploadProps {
   bucketName?: string;
+  bucket?: string;
   attachments?: FileAttachment[];
   onAttachmentsChange?: (attachments: FileAttachment[]) => void;
   recordTitle?: string;
+  description?: string;
   maxFiles?: number;
   maxSizeMB?: number;
   accept?: string;
@@ -29,15 +31,18 @@ interface InsForgeFileUploadProps {
 }
 
 export const InsForgeFileUpload: React.FC<InsForgeFileUploadProps> = ({
-  bucketName = 'attachments',
+  bucketName: propBucketName,
+  bucket,
   attachments = [],
   onAttachmentsChange,
   recordTitle = 'Record',
+  description,
   maxFiles = 10,
   maxSizeMB = 25,
   accept = 'image/*,.pdf,.doc,.docx,.xls,.xlsx,.dwg',
   className = ''
 }) => {
+  const bucketName = bucket || propBucketName || 'attachments';
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);

@@ -35,6 +35,7 @@ export const SalesPerformanceView: React.FC<SalesPerformanceViewProps> = ({
   const totalQuota = salesReps.reduce((s, r) => s + r.monthlyQuota, 0);
   const totalAchieved = salesReps.reduce((s, r) => s + r.achievedSalesMonth, 0);
   const totalCommission = salesReps.reduce((s, r) => s + r.calculatedCommission, 0);
+  const totalPipeline = salesReps.reduce((s, r) => s + (r.activePipelineValue || 0), 0);
   const overallAchievementPct = totalQuota > 0 ? ((totalAchieved / totalQuota) * 100).toFixed(2) : '0.00';
 
   const handleUpdateQuotaSubmit = () => {
@@ -63,10 +64,47 @@ export const SalesPerformanceView: React.FC<SalesPerformanceViewProps> = ({
             Individual quota tracking, gross-margin bonus multipliers, and commission calculations for HVAC sales engineers.
           </p>
         </div>
+
+        {/* Quick Cross-Module Data Navigation */}
+        {onNavigate && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mr-1">Direct Module Jump:</span>
+            <button
+              onClick={() => onNavigate('quotes')}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition-colors cursor-pointer"
+            >
+              Quotes Register
+            </button>
+            <button
+              onClick={() => onNavigate('crm')}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer"
+            >
+              CRM Leads &amp; Surveys
+            </button>
+            <button
+              onClick={() => onNavigate('projects')}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800 hover:bg-cyan-100 transition-colors cursor-pointer"
+            >
+              BOQ Projects
+            </button>
+            <button
+              onClick={() => onNavigate('finance')}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 transition-colors cursor-pointer"
+            >
+              Finance Ledger
+            </button>
+            <button
+              onClick={() => onNavigate('hr')}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 transition-colors cursor-pointer"
+            >
+              HRMS Team
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Top Metrics Cards - Clickable Landing to Datasources */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
         {/* Card 1: Monthly Target Quotas */}
         <div
           onClick={() => onNavigate?.('quotes')}
@@ -141,7 +179,44 @@ export const SalesPerformanceView: React.FC<SalesPerformanceViewProps> = ({
           </div>
         </div>
 
-        {/* Card 3: Total Commission Pool */}
+        {/* Card 3: Active HVAC Pipeline */}
+        <div
+          onClick={() => onNavigate?.('crm')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate?.('crm');
+            }
+          }}
+          title="Click to view CRM Active Inquiries, Leads & Site Surveys"
+          className="p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-cyan-400 dark:hover:border-cyan-500 rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] cursor-pointer transition-all duration-200 min-w-0 group select-none flex flex-col justify-between"
+        >
+          <div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate block">Active HVAC Pipeline</span>
+              <div className="p-2 rounded-xl bg-cyan-50 dark:bg-cyan-950 text-cyan-600 dark:text-cyan-400 border border-cyan-100 dark:border-cyan-900 group-hover:scale-110 transition-transform">
+                <Briefcase className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-xl sm:text-2xl font-bold text-cyan-600 dark:text-cyan-400 mt-2 font-mono group-hover:translate-x-0.5 transition-transform">
+              ₹{(totalPipeline / 100000).toFixed(2)} Lakhs
+            </div>
+            <div className="text-[11px] text-cyan-700 dark:text-cyan-300 mt-1 font-medium truncate">
+              Active weighted commercial deals
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+            <span className="text-slate-500 dark:text-slate-400">Lead Pipeline</span>
+            <span className="font-semibold text-cyan-600 dark:text-cyan-400 flex items-center gap-1 group-hover:underline">
+              <span>View CRM Pipeline</span>
+              <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+            </span>
+          </div>
+        </div>
+
+        {/* Card 4: Total Commission Pool */}
         <div
           onClick={() => onNavigate?.('finance')}
           role="button"
@@ -153,7 +228,7 @@ export const SalesPerformanceView: React.FC<SalesPerformanceViewProps> = ({
             }
           }}
           title="Click to view Commission Ledger, Payroll & General Ledger"
-          className="p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-purple-400 dark:hover:border-purple-500 rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] cursor-pointer transition-all duration-200 min-w-0 sm:col-span-2 lg:col-span-1 group select-none flex flex-col justify-between"
+          className="p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-purple-400 dark:hover:border-purple-500 rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] cursor-pointer transition-all duration-200 min-w-0 group select-none flex flex-col justify-between"
         >
           <div>
             <div className="flex items-center justify-between gap-2">
@@ -162,10 +237,10 @@ export const SalesPerformanceView: React.FC<SalesPerformanceViewProps> = ({
                 <DollarSign className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-2 font-mono group-hover:translate-x-0.5 transition-transform">
+            <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400 mt-2 font-mono group-hover:translate-x-0.5 transition-transform">
               ₹{totalCommission.toLocaleString()}
             </div>
-            <div className="text-[11px] text-blue-700 dark:text-blue-400 mt-1 font-medium truncate">
+            <div className="text-[11px] text-purple-700 dark:text-purple-400 mt-1 font-medium truncate">
               Base rate + high-margin bonus incentive
             </div>
           </div>
@@ -236,10 +311,29 @@ export const SalesPerformanceView: React.FC<SalesPerformanceViewProps> = ({
                 </button>
               </div>
 
-              {/* Quota Progress */}
-              <div className="space-y-1.5">
+              {/* Quota Progress Tile */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNavigate?.('quotes');
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onNavigate?.('quotes');
+                  }
+                }}
+                title={`Click to view Target Quotations for ${rep.name}`}
+                className="space-y-1.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/80 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all cursor-pointer group/prog select-none"
+              >
                 <div className="flex justify-between text-xs">
-                  <span className="text-slate-500 dark:text-slate-400 font-medium">Monthly Target Progress</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-medium group-hover/prog:text-blue-600 dark:group-hover/prog:text-blue-400 transition-colors flex items-center gap-1">
+                    <span>Monthly Target Progress</span>
+                    <ArrowUpRight className="w-3 h-3 opacity-0 group-hover/prog:opacity-100 transition-opacity" />
+                  </span>
                   <span className={`font-bold font-mono ${isTargetMet ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-blue-400'}`}>
                     {achievementPct}%
                   </span>
@@ -252,23 +346,106 @@ export const SalesPerformanceView: React.FC<SalesPerformanceViewProps> = ({
                 </div>
               </div>
 
-              {/* Stats Box */}
-              <div className="grid grid-cols-2 gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
-                <div>
-                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase">Monthly Quota</div>
-                  <div className="font-bold text-slate-900 dark:text-slate-100 font-mono">₹{(rep.monthlyQuota / 100000).toFixed(1)} L</div>
+              {/* Stats Box - 4 Clickable Mini-Tiles */}
+              <div className="grid grid-cols-2 gap-2 p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+                {/* Mini-Tile 1: Monthly Quota */}
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNavigate?.('quotes');
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onNavigate?.('quotes');
+                    }
+                  }}
+                  title={`Click to view Quotes register & target for ${rep.name}`}
+                  className="p-2 rounded-lg bg-white/70 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xs transition-all cursor-pointer group/stat"
+                >
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase flex items-center justify-between">
+                    <span>Monthly Quota</span>
+                    <ArrowUpRight className="w-2.5 h-2.5 opacity-0 group-hover/stat:opacity-100 text-blue-500 transition-opacity" />
+                  </div>
+                  <div className="font-bold text-slate-900 dark:text-slate-100 font-mono mt-0.5">₹{(rep.monthlyQuota / 100000).toFixed(1)} L</div>
                 </div>
-                <div>
-                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase">Achieved Sales</div>
-                  <div className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">₹{(rep.achievedSalesMonth / 100000).toFixed(1)} L</div>
+
+                {/* Mini-Tile 2: Achieved Sales */}
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNavigate?.('quotes');
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onNavigate?.('quotes');
+                    }
+                  }}
+                  title={`Click to view Realized Sales & Won contracts for ${rep.name}`}
+                  className="p-2 rounded-lg bg-white/70 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 hover:border-emerald-400 dark:hover:border-emerald-500 hover:shadow-xs transition-all cursor-pointer group/stat"
+                >
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase flex items-center justify-between">
+                    <span>Achieved Sales</span>
+                    <ArrowUpRight className="w-2.5 h-2.5 opacity-0 group-hover/stat:opacity-100 text-emerald-500 transition-opacity" />
+                  </div>
+                  <div className="font-bold text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">₹{(rep.achievedSalesMonth / 100000).toFixed(1)} L</div>
                 </div>
-                <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
-                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase">Commission Rate</div>
-                  <div className="font-bold text-slate-900 dark:text-slate-100">{rep.baseCommissionPct}% base</div>
+
+                {/* Mini-Tile 3: Commission Rate */}
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNavigate?.('finance');
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onNavigate?.('finance');
+                    }
+                  }}
+                  title="Click to view Commission Rules in Finance & Accounts"
+                  className="p-2 rounded-lg bg-white/70 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-xs transition-all cursor-pointer group/stat"
+                >
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase flex items-center justify-between">
+                    <span>Commission Rate</span>
+                    <ArrowUpRight className="w-2.5 h-2.5 opacity-0 group-hover/stat:opacity-100 text-purple-500 transition-opacity" />
+                  </div>
+                  <div className="font-bold text-slate-900 dark:text-slate-100 mt-0.5">{rep.baseCommissionPct}% base</div>
                 </div>
-                <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
-                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase">Commission Earned</div>
-                  <div className="font-bold text-blue-600 dark:text-blue-400 font-mono">₹{rep.calculatedCommission.toLocaleString()}</div>
+
+                {/* Mini-Tile 4: Commission Earned */}
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNavigate?.('finance');
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onNavigate?.('finance');
+                    }
+                  }}
+                  title={`Click to view Commission Ledger & Payout for ${rep.name}`}
+                  className="p-2 rounded-lg bg-white/70 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-xs transition-all cursor-pointer group/stat"
+                >
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase flex items-center justify-between">
+                    <span>Commission Earned</span>
+                    <ArrowUpRight className="w-2.5 h-2.5 opacity-0 group-hover/stat:opacity-100 text-blue-500 transition-opacity" />
+                  </div>
+                  <div className="font-bold text-blue-600 dark:text-blue-400 font-mono mt-0.5">₹{rep.calculatedCommission.toLocaleString()}</div>
                 </div>
               </div>
 
@@ -279,7 +456,10 @@ export const SalesPerformanceView: React.FC<SalesPerformanceViewProps> = ({
                     e.stopPropagation();
                     onNavigate?.('quotes');
                   }}
-                  className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  role="button"
+                  tabIndex={0}
+                  title={`Click to view closed HVAC contracts for ${rep.name}`}
+                  className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer p-1 -m-1 rounded-md"
                 >
                   <span>{rep.wonDealsCount} Closed HVAC Deals</span>
                   <ArrowUpRight className="w-3 h-3" />
@@ -289,7 +469,10 @@ export const SalesPerformanceView: React.FC<SalesPerformanceViewProps> = ({
                     e.stopPropagation();
                     onNavigate?.('crm');
                   }}
-                  className="text-emerald-700 dark:text-emerald-400 font-bold font-mono hover:underline flex items-center gap-1 cursor-pointer"
+                  role="button"
+                  tabIndex={0}
+                  title={`Click to view CRM pipeline leads for ${rep.name}`}
+                  className="text-emerald-700 dark:text-emerald-400 font-bold font-mono hover:underline flex items-center gap-1 cursor-pointer p-1 -m-1 rounded-md"
                 >
                   <span>₹{(rep.activePipelineValue / 100000).toFixed(1)} L In Pipeline</span>
                   <ArrowUpRight className="w-3 h-3" />

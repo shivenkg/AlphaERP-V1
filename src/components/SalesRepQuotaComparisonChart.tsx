@@ -299,16 +299,16 @@ export const SalesRepQuotaComparisonChart: React.FC<SalesRepQuotaComparisonChart
         </div>
 
         <div
-          onClick={() => onNavigate?.('sales')}
+          onClick={() => onNavigate?.('quotes')}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              onNavigate?.('sales');
+              onNavigate?.('quotes');
             }
           }}
-          title="Click to view Sales Team Quota Distribution"
+          title="Click to view Awarded Quotes & Deals Won across team"
           className="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-900 border border-transparent hover:border-indigo-300 dark:hover:border-indigo-700 cursor-pointer transition-all duration-200 hover:shadow-xs group select-none"
         >
           <div className="flex items-center justify-between">

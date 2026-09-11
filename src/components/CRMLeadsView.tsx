@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users,
   Plus,
@@ -22,13 +22,20 @@ import {
   Flame,
   UserCheck,
   Download,
-  Paperclip
+  Paperclip,
+  Info,
+  Table as TableIcon
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Lead, LeadStatus, LeadSource, SalesRep, Quote, UserProfile } from '../types';
 import { CommunicationService } from '../services/whatsappEmailService';
 import { storageService } from '../services/storageService';
-import { MultiSelectFilterDropdown, MultiSelectOption } from './common';
+import {
+  MultiSelectFilterDropdown,
+  MultiSelectOption,
+  TableMetadataTooltip,
+  LeadMetadataTooltipContent
+} from './common';
 import { exportTableToCSV } from '../utils/tableExportHelper';
 
 interface CRMLeadsViewProps {
@@ -76,6 +83,19 @@ export const CRMLeadsView: React.FC<CRMLeadsViewProps> = ({
   const [selectedReps, setSelectedReps] = useState<string[]>([]);
   const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
   const [personalViewOnly, setPersonalViewOnly] = useState<boolean>(false);
+  const [displayDensity, setDisplayDensityState] = useState<'compact' | 'spacious'>(() => storageService.getDisplayDensity());
+
+  useEffect(() => {
+    const unsubscribe = storageService.subscribe(() => {
+      setDisplayDensityState(storageService.getDisplayDensity());
+    });
+    return unsubscribe;
+  }, []);
+
+  const handleDensityToggle = (density: 'compact' | 'spacious') => {
+    storageService.setDisplayDensity(density);
+    setDisplayDensityState(density);
+  };
 
   // Active user for personal view
   const activeUser = currentUser || storageService.getCurrentUser();
@@ -607,6 +627,51 @@ export const CRMLeadsView: React.FC<CRMLeadsViewProps> = ({
       ) : (
         /* LIST VIEW */
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+          {/* Table Header Controls: Density Toggle & Tooltip Tip */}
+          <div className="px-4 py-2.5 bg-slate-50/90 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2 text-slate-600">
+              <div className="p-1 rounded-md bg-blue-100 text-blue-700">
+                <Info className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-[11px] font-medium">
+                Hover over any <strong className="text-slate-900">Lead #</strong> or <strong className="text-slate-900">Company Name</strong> to view extended commercial & engineering metadata, site contacts, and instant actions.
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[11px] text-slate-500 font-semibold flex items-center gap-1">
+                <TableIcon className="w-3.5 h-3.5 text-indigo-500" />
+                Density:
+              </span>
+              <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 text-[10px] font-bold shadow-xs">
+                <button
+                  id="btn-density-compact-crm"
+                  onClick={() => handleDensityToggle('compact')}
+                  className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                    displayDensity === 'compact'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                  title="Enable Compact Density Mode (dense rows, ideal for reviewing high-volume leads)"
+                >
+                  Compact
+                </button>
+                <button
+                  id="btn-density-spacious-crm"
+                  onClick={() => handleDensityToggle('spacious')}
+                  className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                    displayDensity === 'spacious'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                  title="Enable Spacious Density Mode"
+                >
+                  Spacious
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] border-b border-slate-200">
@@ -631,20 +696,56 @@ export const CRMLeadsView: React.FC<CRMLeadsViewProps> = ({
                       onClick={() => onSelectLeadDetail(lead)}
                       className="hover:bg-slate-50/70 cursor-pointer transition-colors"
                     >
-                      <td className="py-3.5 px-4 font-mono font-bold text-blue-600">{lead.leadNumber}</td>
+                      <td className="py-3.5 px-4 font-mono font-bold text-blue-600">
+                        <TableMetadataTooltip
+                          content={
+                            <LeadMetadataTooltipContent
+                              lead={lead}
+                              onAdvanceStage={(l) => handleAdvanceNextStage(l, { stopPropagation: () => {} } as any)}
+                              onWhatsApp={(l) => handleQuickWhatsApp(l, { stopPropagation: () => {} } as any)}
+                              onEmail={(l) => handleQuickEmail(l, { stopPropagation: () => {} } as any)}
+                              onViewDetail={() => onSelectLeadDetail(lead)}
+                              onAward={() => onAwardLead(lead)}
+                            />
+                          }
+                        >
+                          <span className="hover:underline flex items-center gap-1">
+                            {lead.leadNumber}
+                            <Info className="w-2.5 h-2.5 text-blue-400 opacity-60" />
+                          </span>
+                        </TableMetadataTooltip>
+                      </td>
                       <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-slate-900">{lead.companyName}</span>
-                          {lead.attachments && lead.attachments.length > 0 && (
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[9px] font-bold" title={`${lead.attachments.length} attachment(s)`}>
-                              <Paperclip className="w-2.5 h-2.5 text-blue-600" />
-                              {lead.attachments.length}
+                        <TableMetadataTooltip
+                          content={
+                            <LeadMetadataTooltipContent
+                              lead={lead}
+                              onAdvanceStage={(l) => handleAdvanceNextStage(l, { stopPropagation: () => {} } as any)}
+                              onWhatsApp={(l) => handleQuickWhatsApp(l, { stopPropagation: () => {} } as any)}
+                              onEmail={(l) => handleQuickEmail(l, { stopPropagation: () => {} } as any)}
+                              onViewDetail={() => onSelectLeadDetail(lead)}
+                              onAward={() => onAwardLead(lead)}
+                            />
+                          }
+                        >
+                          <div className="flex items-center gap-1.5 group/cell">
+                            <span className="font-bold text-slate-900 group-hover/cell:text-blue-600 transition-colors">
+                              {lead.companyName}
                             </span>
-                          )}
-                        </div>
-                        <div className="text-[11px] text-slate-500">
-                          {lead.clientName} • {lead.city}
-                        </div>
+                            <span className="p-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 opacity-50 group-hover/cell:opacity-100 transition-opacity" title="Extended item metadata">
+                              <Info className="w-2.5 h-2.5" />
+                            </span>
+                            {lead.attachments && lead.attachments.length > 0 && (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[9px] font-bold" title={`${lead.attachments.length} attachment(s)`}>
+                                <Paperclip className="w-2.5 h-2.5 text-blue-600" />
+                                {lead.attachments.length}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-slate-500">
+                            {lead.clientName} • {lead.city}
+                          </div>
+                        </TableMetadataTooltip>
                       </td>
                       <td className="py-3.5 px-4 text-slate-700 font-medium">{lead.hvacType}</td>
                       <td className="py-3.5 px-4 text-slate-800 font-semibold">{lead.estimatedCapacityTR} TR</td>

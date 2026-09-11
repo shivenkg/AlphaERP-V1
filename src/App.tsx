@@ -43,6 +43,7 @@ import { AuthModalOrPage } from './components/AuthModalOrPage';
 import { NewLeadModal } from './components/NewLeadModal';
 import { NewQuoteModal } from './components/NewQuoteModal';
 import { LeadDetailModal } from './components/LeadDetailModal';
+import { CompanyCopyrightFooter } from './components/common/CompanyCopyrightFooter';
 import { LocalBackupNotification } from './components/LocalBackupNotification';
 import { CreatePRModal } from './components/CreatePRModal';
 import { NewExpenseModal } from './components/NewExpenseModal';
@@ -837,6 +838,9 @@ export function App() {
               />
             )}
             </Suspense>
+
+            {/* Global Corporate Copyright Disclaimer on behalf of JS AlphaSoft Pvt. Ltd. with Logo */}
+            <CompanyCopyrightFooter onNavigate={setActiveTab} />
           </div>
         </main>
       </div>

@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'motion/react';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft,
   ChevronRight,
@@ -23,7 +23,9 @@ import {
   History,
   Building2,
   Compass,
-  Search
+  Search,
+  Pin,
+  PinOff
 } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -326,81 +328,128 @@ export const BreadcrumbNav: React.FC<BreadcrumbNavProps> = ({
   const GroupIcon = currentPath.groupIcon;
   const PageIcon = currentPath.pageIcon;
 
-  return (
-    <nav
-      aria-label="Breadcrumb"
-      className={`bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 text-xs transition-colors duration-200 shadow-2xs z-20 ${className}`}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2 max-w-7xl mx-auto w-full">
-        {/* Left: Breadcrumb Items Trail */}
-        <ol className="flex items-center flex-wrap gap-1 sm:gap-1.5 min-w-0 text-slate-500 dark:text-slate-400">
-          {/* Back Action Button */}
-          {canGoBack && onBack && (
-            <li className="inline-flex items-center mr-1">
-              <button
-                id="btn-breadcrumb-back"
-                type="button"
-                onClick={onBack}
-                className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 border border-slate-200/90 dark:border-slate-700/90 shadow-2xs hover:shadow-xs transition-all font-bold text-xs shrink-0 cursor-pointer"
-                title="Go back to previous screen (Backspace or Alt+Left)"
-              >
-                <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-150 group-hover:-translate-x-0.5 text-slate-500 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
-                <span>Back</span>
-              </button>
-            </li>
-          )}
+  // Auto-hide and Pin state: default is auto-hide (isPinned: false)
+  const [isHovered, setIsHovered] = useState(false);
+  const [isPinned, setIsPinned] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('alphaerp_breadcrumb_pinned');
+      return saved === 'true';
+    } catch {
+      return false;
+    }
+  });
 
-          {/* Level 1: Root / Home */}
-          <li className="inline-flex items-center">
+  const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = () => {
+    if (leaveTimeoutRef.current) {
+      clearTimeout(leaveTimeoutRef.current);
+      leaveTimeoutRef.current = null;
+    }
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (leaveTimeoutRef.current) {
+      clearTimeout(leaveTimeoutRef.current);
+    }
+    leaveTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 220);
+  };
+
+  const togglePin = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setIsPinned((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('alphaerp_breadcrumb_pinned', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (leaveTimeoutRef.current) {
+        clearTimeout(leaveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const navContent = (
+    <div className="flex flex-wrap items-center justify-between gap-2 max-w-7xl mx-auto w-full">
+      {/* Left: Breadcrumb Items Trail */}
+      <ol className="flex items-center flex-wrap gap-1 sm:gap-1.5 min-w-0 text-slate-500 dark:text-slate-400">
+        {/* Back Action Button */}
+        {canGoBack && onBack && (
+          <li className="inline-flex items-center mr-1">
             <button
-              onClick={() => setActiveTab('dashboard')}
-              className="group inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all font-semibold"
-              title="Return to Main ERP Dashboard"
+              id="btn-breadcrumb-back"
+              type="button"
+              onClick={onBack}
+              className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 border border-slate-200/90 dark:border-slate-700/90 shadow-2xs hover:shadow-xs transition-all font-bold text-xs shrink-0 cursor-pointer"
+              title="Go back to previous screen (Backspace or Alt+Left)"
             >
-              <Home className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
-              <span className="font-bold tracking-tight">AlphaERP</span>
+              <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-150 group-hover:-translate-x-0.5 text-slate-500 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+              <span>Back</span>
             </button>
           </li>
+        )}
 
-          {/* Separator 1 */}
-          <li className="text-slate-300 dark:text-slate-600 shrink-0 select-none">
-            <ChevronRight className="w-3.5 h-3.5" />
-          </li>
+        {/* Level 1: Root / Home */}
+        <li className="inline-flex items-center">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className="group inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all font-semibold cursor-pointer"
+            title="Return to Main ERP Dashboard"
+          >
+            <Home className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
+            <span className="font-bold tracking-tight">AlphaERP</span>
+          </button>
+        </li>
 
-          {/* Level 2: Module Group */}
-          <li className="inline-flex items-center">
-            <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-slate-600 dark:text-slate-300 bg-white/70 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70 font-medium">
-              <GroupIcon className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
-              <span className="truncate max-w-[160px] sm:max-w-none">{currentPath.groupName}</span>
-            </div>
-          </li>
+        {/* Separator 1 */}
+        <li className="text-slate-300 dark:text-slate-600 shrink-0 select-none">
+          <ChevronRight className="w-3.5 h-3.5" />
+        </li>
 
-          {/* Separator 2 */}
-          <li className="text-slate-300 dark:text-slate-600 shrink-0 select-none">
-            <ChevronRight className="w-3.5 h-3.5" />
-          </li>
+        {/* Level 2: Module Group */}
+        <li className="inline-flex items-center">
+          <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-slate-600 dark:text-slate-300 bg-white/70 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70 font-medium">
+            <GroupIcon className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
+            <span className="truncate max-w-[160px] sm:max-w-none">{currentPath.groupName}</span>
+          </div>
+        </li>
 
-          {/* Level 3: Active Page / Tab (Highlighted) */}
-          <li className="inline-flex items-center min-w-0" aria-current="page">
-            <motion.div
-              key={currentPath.tabId}
-              initial={{ opacity: 0, x: -4 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.2 }}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-800/80 shadow-2xs"
-            >
-              <PageIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-              <span className="truncate max-w-[200px] sm:max-w-none">{currentPath.pageTitle}</span>
-              {currentPath.badge && (
-                <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-bold border shrink-0 hidden sm:inline ${currentPath.badgeColor}`}>
-                  {currentPath.badge}
-                </span>
-              )}
-            </motion.div>
-          </li>
-        </ol>
+        {/* Separator 2 */}
+        <li className="text-slate-300 dark:text-slate-600 shrink-0 select-none">
+          <ChevronRight className="w-3.5 h-3.5" />
+        </li>
 
-        {/* Right: Sibling Navigation Pills for Fast Context Switching */}
+        {/* Level 3: Active Page / Tab (Highlighted) */}
+        <li className="inline-flex items-center min-w-0" aria-current="page">
+          <motion.div
+            key={currentPath.tabId}
+            initial={{ opacity: 0, x: -4 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2 }}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-800/80 shadow-2xs"
+          >
+            <PageIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span className="truncate max-w-[200px] sm:max-w-none">{currentPath.pageTitle}</span>
+            {currentPath.badge && (
+              <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-bold border shrink-0 hidden sm:inline ${currentPath.badgeColor}`}>
+                {currentPath.badge}
+              </span>
+            )}
+          </motion.div>
+        </li>
+      </ol>
+
+      {/* Right Controls: Sibling Quick Jump & Pin / Auto-hide Toggle */}
+      <div className="flex items-center gap-2">
+        {/* Sibling Navigation Pills for Fast Context Switching */}
         {currentPath.siblings && currentPath.siblings.length > 1 && (
           <div className="hidden md:flex items-center gap-1 text-[11px]">
             <span className="text-slate-400 dark:text-slate-500 font-medium mr-1 text-[10px] uppercase tracking-wider">
@@ -413,7 +462,7 @@ export const BreadcrumbNav: React.FC<BreadcrumbNavProps> = ({
                   <button
                     key={sibling.id}
                     onClick={() => setActiveTab(sibling.id)}
-                    className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
+                    className={`px-2 py-0.5 rounded-md font-semibold transition-all cursor-pointer ${
                       isCurrent
                         ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-2xs font-bold'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800'
@@ -426,7 +475,92 @@ export const BreadcrumbNav: React.FC<BreadcrumbNavProps> = ({
             </div>
           </div>
         )}
+
+        {/* Pin / Auto-hide Toggle Button */}
+        <button
+          id="btn-breadcrumb-pin-toggle"
+          type="button"
+          onClick={togglePin}
+          className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+            isPinned
+              ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 shadow-2xs'
+              : 'bg-white/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 border-slate-200 dark:border-slate-700 hover:border-blue-300'
+          }`}
+          title={
+            isPinned
+              ? 'Bar is pinned permanently. Click to enable Auto-hide (reveals on mouse hover).'
+              : 'Auto-hide enabled (reveals on mouse hover). Click to pin permanently.'
+          }
+        >
+          {isPinned ? (
+            <>
+              <Pin className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span className="hidden sm:inline">Pinned</span>
+            </>
+          ) : (
+            <>
+              <PinOff className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Auto-hide</span>
+            </>
+          )}
+        </button>
       </div>
-    </nav>
+    </div>
+  );
+
+  // If permanently pinned, render in-flow like standard layout
+  if (isPinned) {
+    return (
+      <nav
+        aria-label="Breadcrumb"
+        className={`bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 text-xs transition-colors duration-200 shadow-2xs z-20 ${className}`}
+      >
+        {navContent}
+      </nav>
+    );
+  }
+
+  // Auto-hide mode: collapsed trigger zone by default, reveals on mouse hover
+  return (
+    <div
+      id="breadcrumb-autohide-wrapper"
+      className="relative z-30 w-full group/autohide select-none"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* Sleek, subtle hover trigger handle when collapsed */}
+      <div
+        id="breadcrumb-autohide-trigger"
+        onClick={() => setIsHovered(true)}
+        className="h-2 hover:h-2.5 w-full bg-slate-200/40 dark:bg-slate-800/40 hover:bg-blue-500/20 transition-all duration-200 cursor-pointer flex items-center justify-center relative"
+        title="Breadcrumb Navigation & Quick Jump (Hover to reveal)"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsHovered(true);
+          }
+        }}
+      >
+        <div className="h-1 w-12 rounded-full bg-slate-300 dark:bg-slate-600 group-hover/autohide:bg-blue-500 group-hover/autohide:w-20 transition-all duration-200" />
+      </div>
+
+      {/* Floating Animated Breadcrumb Bar (Revealed on Hover) */}
+      <AnimatePresence>
+        {isHovered && (
+          <motion.nav
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.16, ease: 'easeOut' }}
+            aria-label="Breadcrumb"
+            className={`absolute top-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800/90 px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 text-xs shadow-lg z-30 ${className}`}
+          >
+            {navContent}
+          </motion.nav>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
