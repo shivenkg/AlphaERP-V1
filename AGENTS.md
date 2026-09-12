@@ -5,7 +5,8 @@ alwaysApply: true
 ---
 
 # AlphaERP — AI Agent & Developer Architecture Guidelines
-### Enterprise HVAC Techno-Commercial, BOQ Engineering, Multi-Tier Procurement & Multi-Cloud Backend
+
+## Enterprise HVAC Techno-Commercial, BOQ Engineering, Multi-Tier Procurement & Multi-Cloud Backend
 
 **Target Repository:** `AlphaERP-V1`  
 **Live Production Applet:** [https://hvacbiz.insforge.site/#dashboard](https://hvacbiz.insforge.site/#dashboard) (Custom InsForge Domain) | [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
@@ -97,6 +98,7 @@ export const insforge = createClient({
 ### 3.2 Critical InsForge Implementation Rules
 
 - **Array Insert Rule**: All database inserts **MUST** use array format:
+
   ```typescript
   // CORRECT
   const { data, error } = await insforge.database
@@ -106,6 +108,7 @@ export const insforge = createClient({
   // INCORRECT - WILL FAIL
   // .insert({ project_code: 'PRJ-2026-001' })
   ```
+
 - **Error Handling**: All SDK methods return a `{ data, error }` tuple. Always check `if (error)` before proceeding.
 - **User Association**: Reference users via `auth.users(id)` and use `auth.uid()` in Row Level Security (RLS) policies.
 - **Storage Operations**: When uploading files, always persist both the returned `url` and `key`.
@@ -153,7 +156,7 @@ flowchart TD
 ## 5. REST & WebSocket API Endpoints
 
 | Method | Endpoint | Description | Key Parameters |
-|---|---|---|---|
+| :--- | :--- | :--- | :--- |
 | `GET` | `/api/health` | Service health, model status & DB config | None |
 | `POST` | `/api/procurement/reorder-alert-email` | Dispatches low-stock email alerts | `recipients`, `itemsSummary`, `smtpConfig` |
 | `POST` | `/api/email/test-connection` | Validates SMTP connection and sends test email | `host`, `port`, `username`, `password`, `testRecipient` |
@@ -170,7 +173,7 @@ flowchart TD
 
 ## 6. Directory Layout & Module Responsibilities
 
-```
+```text
 AlphaERP-V1/
 ├── api/index.ts                         # Vercel Serverless Function adapter
 ├── server/
@@ -200,7 +203,9 @@ AlphaERP-V1/
 │       ├── ProcurementPRPOView.tsx      # PR/PO lifecycle & approvals
 │       ├── InventoryWarehouseView.tsx   # Warehouse inventory & bin locations
 │       ├── PredictiveInventoryReorderPanel.tsx # Safety-stock alerts & email dispatch
-│       ├── WorkOrdersView.tsx           # Field commissioning tickets
+│       ├── ServicesAMCView.tsx          # AMC contract builder, breakdown tickets, equipment registry & telemetry
+│       ├── ServiceScheduleView.tsx      # PPM calendar, technician routing & field dispatch
+│       ├── WorkOrdersView.tsx           # Field commissioning tickets & testing checklists
 │       ├── FinancePaymentsView.tsx      # Milestone invoices & receipts
 │       ├── FinanceView.tsx              # GAAP double-entry ledger
 │       ├── HRView.tsx                   # 12-module HRMS suite
@@ -218,10 +223,13 @@ AlphaERP-V1/
 Before submitting changes, ensure you execute:
 
 ```bash
-# 1. Type-checking and static analysis
+# 1. Type-checking and static analysis (0 errors expected)
 npm run lint
 
-# 2. Build verification for all targets (Vite SPA + Serverless + Standalone Server)
+# 2. End-to-End Enterprise UAT Test Suite (17 Use Cases, 65 Steps - 100% Passing)
+npm run test:uat
+
+# 3. Build verification for all targets (Vite SPA + Serverless + Standalone Server)
 npm run build
 ```
 

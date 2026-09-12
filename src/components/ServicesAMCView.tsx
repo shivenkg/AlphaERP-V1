@@ -47,7 +47,13 @@ import {
   Wifi,
   WifiOff,
   Cpu,
-  Receipt
+  Receipt,
+  History,
+  CalendarCheck,
+  UserCheck,
+  Gauge,
+  Thermometer,
+  CheckSquare
 } from 'lucide-react';
 import {
   AmcContract,
@@ -125,6 +131,25 @@ export const ServicesAMCView: React.FC<ServicesAMCViewProps> = ({
   const [isMobileCockpitOpen, setIsMobileCockpitOpen] = useState(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [selectedInvoiceTicket, setSelectedInvoiceTicket] = useState<BreakdownTicket | null>(null);
+
+  // Equipment Maintenance Logs Sub-Tab & Modal State
+  const [selectedEquipmentForLog, setSelectedEquipmentForLog] = useState<{
+    equipment: ServiceEquipmentItem;
+    contract: AmcContract;
+    assignedTechnician: string;
+    technicianPhone?: string;
+  } | null>(null);
+  const [isEquipmentLogModalOpen, setIsEquipmentLogModalOpen] = useState(false);
+  const [equipmentContractFilter, setEquipmentContractFilter] = useState<string>('ALL');
+  const [equipmentTypeFilter, setEquipmentTypeFilter] = useState<string>('ALL');
+  const [equipmentUrgencyFilter, setEquipmentUrgencyFilter] = useState<string>('ALL');
+  const [newLogFindings, setNewLogFindings] = useState('');
+  const [newLogNextPpmDate, setNewLogNextPpmDate] = useState('');
+  const [newLogCondition, setNewLogCondition] = useState<'Excellent' | 'Good' | 'Requires Attention'>('Good');
+  const [newLogSuctionPressure, setNewLogSuctionPressure] = useState('118 PSI');
+  const [newLogDischargePressure, setNewLogDischargePressure] = useState('385 PSI');
+  const [newLogDeltaT, setNewLogDeltaT] = useState('1.8 °C');
+  const [isLogSuccessToast, setIsLogSuccessToast] = useState(false);
 
   // Mobile Cockpit Field Tech Active State
   const [activeJobTimer, setActiveJobTimer] = useState<number>(0);
@@ -219,6 +244,8 @@ export const ServicesAMCView: React.FC<ServicesAMCViewProps> = ({
 
   // Sample Technician Van / Truck Stock
   const [truckStocks, setTruckStocks] = useState<TruckStockItem[]>([
+    { id: 'ts-0', technicianName: 'Vikram Sundaram', vanNumber: 'MH-03-SV-7721', sku: 'R410A-CYL', itemName: 'R410A Refrigerant Cylinder (10kg)', qty: 3, unit: 'Cyl', reorderAlert: 1 },
+    { id: 'ts-0b', technicianName: 'Vikram Sundaram', vanNumber: 'MH-03-SV-7721', sku: 'DA-OIL-FLT-88', itemName: 'Daikin OEM Oil Filter Element', qty: 2, unit: 'Nos', reorderAlert: 1 },
     { id: 'ts-1', technicianName: 'Dinesh Sawant', vanNumber: 'MH-02-CW-4491', sku: 'R410A-CYL', itemName: 'R410A Refrigerant Cylinder (10kg)', qty: 2, unit: 'Cyl', reorderAlert: 1 },
     { id: 'ts-2', technicianName: 'Dinesh Sawant', vanNumber: 'MH-02-CW-4491', sku: 'FLT-SW-DK', itemName: 'Daikin OEM Float Switch Kit', qty: 3, unit: 'Nos', reorderAlert: 1 },
     { id: 'ts-3', technicianName: 'Dinesh Sawant', vanNumber: 'MH-02-CW-4491', sku: 'CAP-DUAL-50', itemName: 'Dual Run Capacitor 50/5 MFD 440V', qty: 4, unit: 'Nos', reorderAlert: 2 },
@@ -231,6 +258,30 @@ export const ServicesAMCView: React.FC<ServicesAMCViewProps> = ({
 
   // Technicians Dispatch Fleet Status
   const technicianFleet = useMemo(() => [
+    {
+      name: 'Vikram Sundaram',
+      phone: '+91 99014 44521',
+      status: 'On Site',
+      statusColor: 'bg-emerald-500',
+      currentJob: 'PPM-2026-001 (Apollo Medcity Super Specialty)',
+      location: 'Vashi Sector 15 Central Plant (GPS Active)',
+      eta: 'On Site (Live Telemetry Logging)',
+      activeTickets: 2,
+      completedToday: 3,
+      rating: 4.95
+    },
+    {
+      name: 'Rajesh Varma',
+      phone: '+91 98201 55678',
+      status: 'Supervising',
+      statusColor: 'bg-rose-500',
+      currentJob: 'Service Fleet Command & SLA Dispatch Hub',
+      location: 'HQ Services Command Center',
+      eta: 'Command Active',
+      activeTickets: 5,
+      completedToday: 8,
+      rating: 5.0
+    },
     {
       name: 'Dinesh Sawant',
       phone: '+91 98332 99812',
@@ -346,40 +397,95 @@ export const ServicesAMCView: React.FC<ServicesAMCViewProps> = ({
     });
   }, [breakdownTickets, searchQuery, statusFilter, selectedTechFilter]);
 
-  // All registered equipment assets across contracts
+  // All registered equipment assets across AMC contracts with maintenance schedules & technician assignment
   const allEquipmentAssets = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const list: {
       equipment: ServiceEquipmentItem;
+      contract: AmcContract;
       contractNumber: string;
       clientName: string;
       siteAddress: string;
       contractType: string;
+      assignedTechnician: string;
+      technicianPhone?: string;
+      serviceFrequency: string;
+      nextPpmDate: string;
+      lastServiceDate: string;
+      daysUntilService: number;
+      urgencyStatus: 'overdue' | 'due_soon' | 'scheduled';
+      ppmHistory: PpmScheduleVisit[];
+      breakdownHistory: BreakdownTicket[];
     }[] = [];
 
     amcContracts.forEach((c) => {
       (c.equipmentList || []).forEach((eq) => {
+        const nextDateStr = eq.nextPpmDate || c.endDate;
+        const nextDate = new Date(nextDateStr);
+        const diffTime = nextDate.getTime() - today.getTime();
+        const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        let urgency: 'overdue' | 'due_soon' | 'scheduled' = 'scheduled';
+        if (daysUntil < 0) {
+          urgency = 'overdue';
+        } else if (daysUntil <= 30) {
+          urgency = 'due_soon';
+        }
+
+        const linkedPpms = ppmVisits.filter(
+          (p) => p.contractNumber === c.contractNumber || p.contractId === c.id
+        );
+        const linkedBreakdowns = breakdownTickets.filter(
+          (b) => b.contractNumber === c.contractNumber || b.contractId === c.id
+        );
+
         list.push({
           equipment: eq,
+          contract: c,
           contractNumber: c.contractNumber,
           clientName: c.clientName,
           siteAddress: c.siteAddress,
-          contractType: c.contractType
+          contractType: c.contractType,
+          assignedTechnician: c.assignedLeadTechnician,
+          technicianPhone: c.technicianPhone,
+          serviceFrequency: c.serviceFrequency,
+          nextPpmDate: nextDateStr,
+          lastServiceDate: eq.lastServiceDate || c.startDate,
+          daysUntilService: daysUntil,
+          urgencyStatus: urgency,
+          ppmHistory: linkedPpms,
+          breakdownHistory: linkedBreakdowns
         });
       });
     });
 
     const query = searchQuery.trim().toLowerCase();
     return list.filter((item) => {
-      if (!query) return true;
-      return (
+      const matchesSearch =
+        !query ||
         item.equipment.tagNumber.toLowerCase().includes(query) ||
         item.equipment.equipmentType.toLowerCase().includes(query) ||
         item.equipment.brand.toLowerCase().includes(query) ||
         item.equipment.modelNumber.toLowerCase().includes(query) ||
-        item.clientName.toLowerCase().includes(query)
-      );
+        (item.equipment.serialNumber && item.equipment.serialNumber.toLowerCase().includes(query)) ||
+        item.clientName.toLowerCase().includes(query) ||
+        item.contractNumber.toLowerCase().includes(query) ||
+        item.assignedTechnician.toLowerCase().includes(query);
+
+      const matchesContract =
+        equipmentContractFilter === 'ALL' || item.contractNumber === equipmentContractFilter;
+
+      const matchesType =
+        equipmentTypeFilter === 'ALL' || item.contract.systemType.includes(equipmentTypeFilter) || item.equipment.equipmentType.includes(equipmentTypeFilter);
+
+      const matchesUrgency =
+        equipmentUrgencyFilter === 'ALL' || item.urgencyStatus === equipmentUrgencyFilter;
+
+      return matchesSearch && matchesContract && matchesType && matchesUrgency;
     });
-  }, [amcContracts, searchQuery]);
+  }, [amcContracts, ppmVisits, breakdownTickets, searchQuery, equipmentContractFilter, equipmentTypeFilter, equipmentUrgencyFilter]);
 
   // Error States for Modals
   const [contractFormError, setContractFormError] = useState<string | null>(null);
@@ -1216,71 +1322,547 @@ export const ServicesAMCView: React.FC<ServicesAMCViewProps> = ({
         </div>
       )}
 
-      {/* 8. SubTab 5: Equipment Asset Registry */}
+      {/* 8. SubTab 5: Equipment Maintenance Logs & Health Hub */}
       {activeSubTab === 'assets' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">HVAC Plant & Asset Registry</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">All registered Chillers, VRV/VRF outdoor units, AHUs & PACs under maintenance.</p>
+        <div className="space-y-4">
+          {/* Top KPI Strip for Equipment Maintenance */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Total Monitored Equipment
+              </div>
+              <div className="text-xl font-black text-slate-900 dark:text-slate-100 mt-1">
+                {allEquipmentAssets.length} Assets
+              </div>
+              <div className="text-[10px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">
+                Across {amcContracts.length} AMC Contracts
+              </div>
             </div>
-            <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-bold">
-              {allEquipmentAssets.length} Assets Registered
-            </span>
+
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Services Due &lt; 30 Days
+              </div>
+              <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">
+                {allEquipmentAssets.filter(a => a.urgencyStatus === 'due_soon').length} Units
+              </div>
+              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-medium mt-0.5">
+                PPM Maintenance Scheduled
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Overdue / Action Needed
+              </div>
+              <div className="text-xl font-black text-rose-600 dark:text-rose-400 mt-1">
+                {allEquipmentAssets.filter(a => a.urgencyStatus === 'overdue' || a.equipment.condition === 'Requires Attention').length} Units
+              </div>
+              <div className="text-[10px] text-rose-600 dark:text-rose-400 font-medium mt-0.5">
+                Immediate Technician Dispatch
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Health Compliance Rate
+              </div>
+              <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                {Math.round((allEquipmentAssets.filter(a => a.equipment.condition !== 'Requires Attention').length / (allEquipmentAssets.length || 1)) * 100)}%
+              </div>
+              <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
+                Excellent / Good Status
+              </div>
+            </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
-                  <th className="py-3 px-3">Asset Tag</th>
-                  <th className="py-3 px-3">Equipment Type</th>
-                  <th className="py-3 px-3">Brand & Model</th>
-                  <th className="py-3 px-3">Capacity (TR)</th>
-                  <th className="py-3 px-3">Location Floor</th>
-                  <th className="py-3 px-3">Client & Contract</th>
-                  <th className="py-3 px-3">Health Condition</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {allEquipmentAssets.map(({ equipment, contractNumber, clientName }) => (
-                  <tr key={equipment.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3 px-3 font-mono font-bold text-blue-600 dark:text-blue-400">
-                      {equipment.tagNumber}
-                    </td>
-                    <td className="py-3 px-3 font-medium text-slate-800 dark:text-slate-200">
-                      {equipment.equipmentType}
-                    </td>
-                    <td className="py-3 px-3 text-slate-600 dark:text-slate-400">
-                      <strong>{equipment.brand}</strong> ({equipment.modelNumber})
-                    </td>
-                    <td className="py-3 px-3 font-bold text-slate-800 dark:text-slate-200">
-                      {equipment.capacityTR} TR
-                    </td>
-                    <td className="py-3 px-3 text-slate-600 dark:text-slate-400">
-                      {equipment.locationFloor}
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="font-semibold text-slate-900 dark:text-slate-100">{clientName}</div>
-                      <div className="text-[10px] text-slate-400 font-mono">{contractNumber}</div>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                          equipment.condition === 'Excellent'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : equipment.condition === 'Good'
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                            : 'bg-amber-50 text-amber-700 border border-amber-200'
-                        }`}
-                      >
-                        {equipment.condition}
-                      </span>
-                    </td>
-                  </tr>
+          {/* Filter Bar */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-semibold">
+                <Filter className="w-3.5 h-3.5" />
+                <span>Filters:</span>
+              </div>
+
+              {/* Filter by AMC Contract */}
+              <select
+                value={equipmentContractFilter}
+                onChange={(e) => setEquipmentContractFilter(e.target.value)}
+                className="bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+              >
+                <option value="ALL">All AMC Contracts</option>
+                {amcContracts.map((c) => (
+                  <option key={c.id} value={c.contractNumber}>
+                    {c.contractNumber} — {c.clientName}
+                  </option>
                 ))}
-              </tbody>
-            </table>
+              </select>
+
+              {/* Filter by Equipment System Type */}
+              <select
+                value={equipmentTypeFilter}
+                onChange={(e) => setEquipmentTypeFilter(e.target.value)}
+                className="bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+              >
+                <option value="ALL">All Equipment Types</option>
+                <option value="VRV">VRV / VRF Systems</option>
+                <option value="Chiller">Water Cooled Chillers</option>
+                <option value="Precision">Precision AC (PAC)</option>
+                <option value="AHU">Cleanroom AHU & Ducting</option>
+                <option value="Packaged">Packaged Rooftop DX</option>
+              </select>
+
+              {/* Filter by Service Urgency */}
+              <select
+                value={equipmentUrgencyFilter}
+                onChange={(e) => setEquipmentUrgencyFilter(e.target.value)}
+                className="bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+              >
+                <option value="ALL">All Service Timelines</option>
+                <option value="due_soon">Due Soon (&lt; 30 Days)</option>
+                <option value="overdue">Overdue Maintenance</option>
+                <option value="scheduled">Scheduled / Healthy</option>
+              </select>
+            </div>
+
+            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Showing <strong className="text-slate-900 dark:text-slate-100">{allEquipmentAssets.length}</strong> equipment maintenance records
+            </div>
+          </div>
+
+          {/* Equipment Maintenance Logs Table */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
+                    <th className="py-3 px-4">Equipment Tag & Model</th>
+                    <th className="py-3 px-3">Type & Capacity</th>
+                    <th className="py-3 px-3">Facility Location</th>
+                    <th className="py-3 px-3">AMC Contract & Client</th>
+                    <th className="py-3 px-3">Assigned Technician</th>
+                    <th className="py-3 px-3">Last Service</th>
+                    <th className="py-3 px-3">Next Service Due</th>
+                    <th className="py-3 px-3">Condition</th>
+                    <th className="py-3 px-4 text-right">Maintenance Logs</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {allEquipmentAssets.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="py-8 text-center text-slate-400 font-medium">
+                        No equipment maintenance logs matching criteria.
+                      </td>
+                    </tr>
+                  ) : (
+                    allEquipmentAssets.map((item) => {
+                      const {
+                        equipment,
+                        contract,
+                        contractNumber,
+                        clientName,
+                        assignedTechnician,
+                        technicianPhone,
+                        lastServiceDate,
+                        nextPpmDate,
+                        daysUntilService,
+                        urgencyStatus
+                      } = item;
+
+                      return (
+                        <tr
+                          key={equipment.id}
+                          className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group"
+                        >
+                          {/* Asset Tag & Brand */}
+                          <td className="py-3.5 px-4">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-900/60">
+                                {equipment.tagNumber}
+                              </span>
+                            </div>
+                            <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 mt-1">
+                              {equipment.brand} • {equipment.modelNumber}
+                            </div>
+                            {equipment.serialNumber && (
+                              <div className="text-[10px] text-slate-400 font-mono">
+                                S/N: {equipment.serialNumber}
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Equipment Type & Capacity */}
+                          <td className="py-3.5 px-3">
+                            <div className="font-medium text-slate-900 dark:text-slate-100">
+                              {equipment.equipmentType}
+                            </div>
+                            <div className="text-[11px] font-bold text-slate-600 dark:text-slate-400 mt-0.5">
+                              {equipment.capacityTR ? `${equipment.capacityTR} TR` : 'Capacity On File'}
+                            </div>
+                          </td>
+
+                          {/* Location Floor */}
+                          <td className="py-3.5 px-3 text-slate-600 dark:text-slate-300">
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                              <span>{equipment.locationFloor || 'Main Plant'}</span>
+                            </div>
+                          </td>
+
+                          {/* AMC Contract & Client */}
+                          <td className="py-3.5 px-3">
+                            <div className="font-semibold text-slate-900 dark:text-slate-100">
+                              {clientName}
+                            </div>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">
+                                {contractNumber}
+                              </span>
+                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                {contract.contractType}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Assigned Technician */}
+                          <td className="py-3.5 px-3">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-[10px]">
+                                {assignedTechnician.charAt(0)}
+                              </div>
+                              <div>
+                                <div className="font-bold text-slate-800 dark:text-slate-200">
+                                  {assignedTechnician}
+                                </div>
+                                {technicianPhone && (
+                                  <div className="text-[10px] text-slate-400 font-mono">
+                                    {technicianPhone}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Last Service Date */}
+                          <td className="py-3.5 px-3 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
+                            {lastServiceDate}
+                          </td>
+
+                          {/* Next Service Due Date & Countdown */}
+                          <td className="py-3.5 px-3">
+                            <div className="font-mono font-bold text-[11px] text-slate-900 dark:text-slate-100">
+                              {nextPpmDate}
+                            </div>
+                            <div className="mt-0.5">
+                              {urgencyStatus === 'overdue' ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
+                                  <AlertTriangle className="w-2.5 h-2.5" />
+                                  Overdue by {Math.abs(daysUntilService)}d
+                                </span>
+                              ) : urgencyStatus === 'due_soon' ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                                  <Clock className="w-2.5 h-2.5" />
+                                  Due in {daysUntilService}d
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500" />
+                                  In {daysUntilService}d
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Condition */}
+                          <td className="py-3.5 px-3">
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                                equipment.condition === 'Excellent'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
+                                  : equipment.condition === 'Good'
+                                  ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800'
+                                  : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 animate-pulse'
+                              }`}
+                            >
+                              {equipment.condition}
+                            </span>
+                          </td>
+
+                          {/* Action */}
+                          <td className="py-3.5 px-4 text-right">
+                            <button
+                              onClick={() => {
+                                setSelectedEquipmentForLog({
+                                  equipment,
+                                  contract,
+                                  assignedTechnician,
+                                  technicianPhone
+                                });
+                                setNewLogNextPpmDate(nextPpmDate);
+                                setNewLogCondition(equipment.condition as any || 'Good');
+                                setNewLogFindings('');
+                                setIsEquipmentLogModalOpen(true);
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-600 dark:hover:text-white border border-blue-200 dark:border-blue-800 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+                            >
+                              <History className="w-3.5 h-3.5" />
+                              <span>View Logs</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Complete Equipment Maintenance Log & Service History */}
+      {isEquipmentLogModalOpen && selectedEquipmentForLog && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-3xl max-h-[92vh] overflow-y-auto shadow-2xl p-6 space-y-6">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-500 text-white shadow-md">
+                  <Wrench className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-black text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-900">
+                      {selectedEquipmentForLog.equipment.tagNumber}
+                    </span>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                      {selectedEquipmentForLog.equipment.equipmentType}
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {selectedEquipmentForLog.equipment.brand} • {selectedEquipmentForLog.equipment.modelNumber} • {selectedEquipmentForLog.contract.clientName}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsEquipmentLogModalOpen(false)}
+                className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Equipment Quick Specs Bar */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-xs">
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Capacity</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">
+                  {selectedEquipmentForLog.equipment.capacityTR ? `${selectedEquipmentForLog.equipment.capacityTR} TR` : '10 TR Nominal'}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Location</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">
+                  {selectedEquipmentForLog.equipment.locationFloor || 'Main Plant Room'}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Assigned Engineer</span>
+                <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                  {selectedEquipmentForLog.assignedTechnician}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">AMC Contract</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
+                  {selectedEquipmentForLog.contract.contractNumber}
+                </span>
+              </div>
+            </div>
+
+            {/* Success Toast */}
+            {isLogSuccessToast && (
+              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-semibold flex items-center gap-2 animate-bounce">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Equipment Maintenance Log Entry Recorded Successfully!</span>
+              </div>
+            )}
+
+            {/* Section 1: Form to Add New Service Log Entry */}
+            <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/60 rounded-2xl p-4 space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-blue-950 dark:text-blue-200">
+                <Plus className="w-4 h-4 text-blue-600" />
+                <span>Log New Service / Preventive Inspection Checkup</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                    Suction Pressure (PSI)
+                  </label>
+                  <input
+                    type="text"
+                    value={newLogSuctionPressure}
+                    onChange={(e) => setNewLogSuctionPressure(e.target.value)}
+                    placeholder="e.g. 118 PSI"
+                    className="w-full bg-white dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                    Discharge Pressure (PSI)
+                  </label>
+                  <input
+                    type="text"
+                    value={newLogDischargePressure}
+                    onChange={(e) => setNewLogDischargePressure(e.target.value)}
+                    placeholder="e.g. 385 PSI"
+                    className="w-full bg-white dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                    Approach Temp Delta-T
+                  </label>
+                  <input
+                    type="text"
+                    value={newLogDeltaT}
+                    onChange={(e) => setNewLogDeltaT(e.target.value)}
+                    placeholder="e.g. 1.8 °C"
+                    className="w-full bg-white dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                    Next Scheduled PPM Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={newLogNextPpmDate}
+                    onChange={(e) => setNewLogNextPpmDate(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                    Equipment Condition Post-Inspection
+                  </label>
+                  <select
+                    value={newLogCondition}
+                    onChange={(e) => setNewLogCondition(e.target.value as any)}
+                    className="w-full bg-white dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-medium"
+                  >
+                    <option value="Excellent">Excellent (Optimal Operating Parameters)</option>
+                    <option value="Good">Good (Minor Wear / Acceptable)</option>
+                    <option value="Requires Attention">Requires Attention (Spares / Overhaul)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  Technician Inspection Notes & Findings
+                </label>
+                <textarea
+                  rows={2}
+                  value={newLogFindings}
+                  onChange={(e) => setNewLogFindings(e.target.value)}
+                  placeholder="e.g. Cleaned condenser coils with chemical wash, torqued electrical lugs, motor megger insulation 450 M-Ohm."
+                  className="w-full bg-white dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium placeholder-slate-400"
+                />
+              </div>
+
+              <div className="flex justify-end pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Update equipment in contract
+                    const updatedEquipmentList = (selectedEquipmentForLog.contract.equipmentList || []).map((eq) => {
+                      if (eq.id === selectedEquipmentForLog.equipment.id) {
+                        return {
+                          ...eq,
+                          condition: newLogCondition,
+                          lastServiceDate: new Date().toISOString().split('T')[0],
+                          nextPpmDate: newLogNextPpmDate || eq.nextPpmDate
+                        };
+                      }
+                      return eq;
+                    });
+
+                    storageService.updateAmcContract(selectedEquipmentForLog.contract.id, {
+                      equipmentList: updatedEquipmentList
+                    });
+
+                    setIsLogSuccessToast(true);
+                    setTimeout(() => {
+                      setIsLogSuccessToast(false);
+                      setIsEquipmentLogModalOpen(false);
+                    }, 1200);
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20 transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Save Maintenance Log Entry</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Section 2: Historical Maintenance Logs & Service Timeline */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+                <History className="w-4 h-4 text-slate-500" />
+                <span>Historical Maintenance Timeline & Checkup Logs</span>
+              </h4>
+
+              <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                {/* Seed Maintenance Entry 1 */}
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 rounded text-[10px] font-bold">
+                        PPM Checkup Completed
+                      </span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">
+                        Quarterly Planned Maintenance Visit
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {selectedEquipmentForLog.equipment.lastServiceDate || '2026-01-15'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                    High pressure chemical coil descaling, electrical contactor points torquing, suction {newLogSuctionPressure}, discharge {newLogDischargePressure}. Signed off by lead engineer {selectedEquipmentForLog.assignedTechnician}.
+                  </p>
+                </div>
+
+                {/* Seed Maintenance Entry 2 */}
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 rounded text-[10px] font-bold">
+                        Commissioning & Baseline Test
+                      </span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">
+                        Pre-AMC Asset Handover Inspection
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {selectedEquipmentForLog.contract.startDate}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                    Refrigerant R410A oil acid test clear, vibration delta 0.08 mm/s nominal, factory safety relief valve calibrated.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

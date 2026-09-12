@@ -107,7 +107,7 @@ export const APP_MODULES: AppModuleInfo[] = [
     category: 'services',
     categoryLabel: 'Services & AMC Operations',
     description: 'Annual Maintenance Contracts (AMC), PPM schedules, SLA compliance, equipment health, and emergency breakdown tickets.',
-    defaultRoles: ['executive', 'sales_manager', 'estimator', 'technician', 'warehouse']
+    defaultRoles: ['executive', 'sales_manager', 'estimator', 'technician', 'warehouse', 'service_manager']
   },
   {
     id: 'services_schedule',
@@ -116,7 +116,7 @@ export const APP_MODULES: AppModuleInfo[] = [
     category: 'services',
     categoryLabel: 'Services & AMC Operations',
     description: 'Technician dispatch, 4-point HVAC inspection checklists, preventive maintenance visits, and 24x7 emergency ticket resolution.',
-    defaultRoles: ['executive', 'sales_manager', 'estimator', 'technician', 'warehouse']
+    defaultRoles: ['executive', 'sales_manager', 'estimator', 'technician', 'warehouse', 'service_manager']
   },
   {
     id: 'workorders',
@@ -125,7 +125,7 @@ export const APP_MODULES: AppModuleInfo[] = [
     category: 'services',
     categoryLabel: 'Services & AMC Operations',
     description: 'Site installation tickets, HVAC testing checklists, technician dispatch, and handover certs.',
-    defaultRoles: ['executive', 'technician', 'warehouse']
+    defaultRoles: ['executive', 'technician', 'warehouse', 'service_manager']
   },
 
   // Supply Chain & Procurement
@@ -329,12 +329,30 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
   ],
   technician: [
     'search',
+    'dashboard',
     'services_amc',
     'services_schedule',
     'workorders',
     'projects',
     'inventory',
     'ess'
+  ],
+  service_manager: [
+    'search',
+    'dashboard',
+    'services_amc',
+    'services_schedule',
+    'workorders',
+    'crm',
+    'quotes',
+    'projects',
+    'cost_analysis',
+    'procurement',
+    'inventory',
+    'payments',
+    'masterdata',
+    'ess',
+    'audit'
   ]
 };
 
@@ -451,15 +469,31 @@ export const ROLE_DEFINITIONS: Record<UserRole, RoleMetadata> = {
   },
   technician: {
     id: 'technician',
-    name: 'Field HVAC Project Engineer',
+    name: 'Senior HVAC Field Service Engineer',
     department: 'Field Engineering & Commissioning',
     badge: 'Field Operations',
-    badgeColor: 'bg-slate-100 text-slate-800 border-slate-200',
-    description: 'Executes on-site HVAC installations, commissioning checklists, work order signoffs, and raises emergency PRs for site requirements.',
+    badgeColor: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+    description: 'Executes on-site HVAC maintenance checkups, 4-point PPM inspections, emergency breakdown resolution, and refrigerant pressure telemetry.',
     keyPermissions: [
       'Update Work Order Progress & Checklists',
-      'Capture Digital Commissioning Signoffs',
+      'Log Equipment Health & Refrigerant Pressure Readings',
+      'Resolve 24x7 Emergency Breakdown Tickets',
       'Raise On-Site Material Requisitions (PR)'
+    ]
+  },
+  service_manager: {
+    id: 'service_manager',
+    name: 'Service Operations Manager & AMC Head',
+    department: 'Services & Operations',
+    badge: 'Service Manager',
+    badgeColor: 'bg-rose-100 text-rose-800 border-rose-200',
+    description: 'Directs AMC contract execution, technician dispatch, SLA uptime adherence, equipment maintenance logs, and emergency ticket resolution.',
+    keyPermissions: [
+      'Manage AMC Contracts & Renewal Quotations',
+      'Schedule & Assign Preventive Maintenance (PPM) Visits',
+      'Dispatch Technicians for 24x7 Emergency Breakdowns',
+      'Track Equipment Health Logs & Refrigerant Telemetry',
+      'Review Service Realization & Maintenance Billing'
     ]
   }
 };
@@ -467,7 +501,7 @@ export const ROLE_DEFINITIONS: Record<UserRole, RoleMetadata> = {
 export const RBAC = {
   // PR Permissions
   canCreatePR: (role: UserRole): boolean => {
-    return ['executive', 'procurement', 'estimator', 'sales_manager', 'technician'].includes(role);
+    return ['executive', 'procurement', 'estimator', 'sales_manager', 'technician', 'service_manager'].includes(role);
   },
   canApprovePR: (role: UserRole): boolean => {
     return ['executive', 'procurement'].includes(role);

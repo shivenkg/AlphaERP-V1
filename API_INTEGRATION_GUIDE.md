@@ -1,5 +1,6 @@
 # AlphaERP: Complete Step-by-Step API Integration Guide
-### Enterprise HVAC Techno-Commercial, BOQ Verification, WhatsApp Automated Digest, Email/SMTP Alerts, MongoDB Cloud Sync & Gemini Live APIs
+
+## Enterprise HVAC Techno-Commercial, BOQ Verification, WhatsApp Automated Digest, Email/SMTP Alerts, MongoDB Cloud Sync & Gemini Live APIs
 
 **Document Version:** 3.5.0-Production  
 **Base Production URL:** `https://hvacbiz.vercel.app`  
@@ -74,9 +75,11 @@ X-Alpha-Client-Version: 3.5.0
 ### 3.1 System Health & Diagnostics
 
 #### `GET /api/health`
+
 Returns backend service health, AI model capability, and database connectivity.
 
 **Response `200 OK`:**
+
 ```json
 {
   "status": "ok",
@@ -92,9 +95,11 @@ Returns backend service health, AI model capability, and database connectivity.
 ### 3.2 Automated Procurement & Email Alert APIs
 
 #### `POST /api/procurement/reorder-alert-email`
+
 Sends an automated, itemized email alert to the procurement team whenever inventory falls below safety thresholds. Supports both dummy sandbox mode (Mailtrap/Ethereal) and live authenticated SMTP relays.
 
 **Request Payload:**
+
 ```json
 {
   "recipients": ["procurement@atmosaircon.com", "inventory@atmosaircon.com"],
@@ -126,6 +131,7 @@ Sends an automated, itemized email alert to the procurement team whenever invent
 ```
 
 **Response `200 OK` (Live SMTP):**
+
 ```json
 {
   "success": true,
@@ -139,6 +145,7 @@ Sends an automated, itemized email alert to the procurement team whenever invent
 ```
 
 **Response `200 OK` (Sandbox / Mock Mode):**
+
 ```json
 {
   "success": true,
@@ -154,9 +161,11 @@ Sends an automated, itemized email alert to the procurement team whenever invent
 ---
 
 #### `POST /api/email/test-connection`
+
 Verifies SMTP host credentials and triggers a test email dispatch.
 
 **Request Payload:**
+
 ```json
 {
   "host": "smtp.mailtrap.io",
@@ -173,6 +182,7 @@ Verifies SMTP host credentials and triggers a test email dispatch.
 ```
 
 **Response `200 OK`:**
+
 ```json
 {
   "success": true,
@@ -189,9 +199,11 @@ Verifies SMTP host credentials and triggers a test email dispatch.
 ### 3.3 MongoDB Atlas Cloud Synchronization APIs
 
 #### `GET /api/mongodb/status`
+
 Checks MongoDB Atlas cluster connectivity, ping latency, and collection statistics.
 
 **Response `200 OK`:**
+
 ```json
 {
   "configured": true,
@@ -210,12 +222,15 @@ Checks MongoDB Atlas cluster connectivity, ping latency, and collection statisti
 ```
 
 #### `POST /api/mongodb/test`
+
 Performs an active database ping to measure round-trip latency.
 
 #### `POST /api/mongodb/migrate`
+
 Transfers the complete local state payload into linked MongoDB collections.
 
 **Request Payload:**
+
 ```json
 {
   "payload": {
@@ -228,6 +243,7 @@ Transfers the complete local state payload into linked MongoDB collections.
 ```
 
 **Response `200 OK`:**
+
 ```json
 {
   "success": true,
@@ -242,12 +258,15 @@ Transfers the complete local state payload into linked MongoDB collections.
 ```
 
 #### `GET /api/mongodb/export`
+
 Exports a full snapshot backup of all collections from MongoDB Atlas.
 
 #### `GET /api/mongodb/projects` & `POST /api/mongodb/projects`
+
 Reads or bulk-saves HVAC project execution records in MongoDB Atlas.
 
 #### `POST /api/mongodb/project`
+
 Upserts a single project record by its unique `id` in MongoDB Atlas.
 
 ---
@@ -261,6 +280,7 @@ AlphaERP includes an ultra-low latency real-time voice assistant powered by Gemi
   - Upstream: Raw Linear PCM 16kHz, 16-bit Mono (Base64 encoded chunks).
   - Downstream: Raw Linear PCM 24kHz, 16-bit Mono (Base64 encoded chunks).
 - **Message Framing**:
+
   ```json
   // Client upstream audio frame
   { "audio": "<base64 PCM 16kHz chunk>" }
@@ -281,7 +301,7 @@ AlphaERP includes an ultra-low latency real-time voice assistant powered by Gemi
 
 Generates automated previous-day business metrics and dispatches via `https://wa.me`:
 
-```
+```text
 📊 *ALPHA HVAC ENTERPRISE — DAILY BUSINESS KPI DIGEST*
 📅 *Snapshot Date:* 10 Sep 2026
 
@@ -300,23 +320,40 @@ Generates automated previous-day business metrics and dispatches via `https://wa
 
 ---
 
-### 3.6 Google Sheets Bi-Directional Integration
+### 3.6 Google Sheets Multi-Tab Synchronization Engine
 
-Synchronizes 9 distinct sheets across Google Spreadsheets:
-- `Leads_Master`
-- `Quotations_Register`
-- `Projects_BOQ`
-- `Inventory_Warehouse`
-- `Purchase_Requisitions`
-- `Purchase_Orders`
-- `Goods_Receipt_Notes`
-- `Milestone_Invoices`
-- `HR_Employee_Master`
+Synchronizes full bi-directional collections across Google Spreadsheets:
+
+- `Leads_Master` & `Quotes_Register`
+- `Projects_BOQ` & `Work_Orders`
+- `Inventory_Warehouse` (SKUs, Locations, Safety Stocks)
+- `Purchase_Requisitions` & `Purchase_Orders`
+- `Goods_Receipt_Notes` & Vendor Inwarding
+- `Milestone_Invoices` & Payment Receipts
+- `HR_Employee_Master`, Payroll Cycles & Biometric Logs
+- `AMC_Service_Contracts` (Comprehensive & Non-Comprehensive)
+- `PPM_Maintenance_Visits` & 4-Point Telemetry Logs
+- `Breakdown_Emergency_Tickets` & Spare Parts Consumption
+- `Audit_Logs` (Immutable Ledger)
 
 ---
 
-## 4. Security & Rate Limiting
+### 3.7 AMC 30-Day Renewal Notification & Telemetry Logging Service
+
+#### Automated 30-Day AMC Expiry Scan
+
+The automated AMC Renewal Engine (`src/services/amcRenewalNotificationService.ts`) inspects active contracts daily. When a contract enters the 30-day expiry threshold:
+
+1. Calculates remaining days until expiry.
+2. Compiles covered equipment inventory and historical PPM visit compliance.
+3. Formats an itemized renewal estimate with standard revision index.
+4. Triggers `POST /api/procurement/reorder-alert-email` or dispatches via configured SMTP transporter to both client contact and the assigned `Service Operations Manager`.
+
+---
+
+## 4. Security, Rate Limiting & Enterprise Validation
 
 - **Rate Limits**: 120 req/min for general REST routes; 20 req/min for email alerts and AI endpoints.
 - **WebSocket Protection**: Maximum 5 concurrent WebSocket connections per IP address with automated heartbeat ping/pong cleanup.
 - **Payload Size**: Maximum 25MB JSON payload limit for database migrations and backup ingestion.
+- **UAT Verification**: 100% Passing automated test suite with 17 cases and 65 verification steps (`npm run test:uat`).

@@ -86,9 +86,10 @@ export function checkAmcRenewalAlerts(forceCheck: boolean = false, contractsList
         urgency = 'URGENT_15_DAYS';
       }
 
-      const eqSummary = (c.equipmentCovered || c.equipmentList || [])
+      const eqList = Array.isArray(c.equipmentList) ? c.equipmentList : [];
+      const eqSummary = eqList
         .map((eq: any) => `${eq.qty || 1}x ${eq.model || eq.equipmentType || eq.brand || 'HVAC'}`)
-        .join(', ') || 'HVAC Package';
+        .join(', ') || `${c.equipmentCount || 1}x HVAC Units`;
 
       expiringList.push({
         id: c.id,

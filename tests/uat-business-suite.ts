@@ -1540,6 +1540,193 @@ export async function executeAllUATTests() {
   );
 
   // --------------------------------------------------------------------------
+  // UAT-CASE-17: Service Operations Manager & Service Engineer Dual-Persona
+  // Lifecycle, Equipment Telemetry Logs, PPM Execution & Ticket Resolution
+  // --------------------------------------------------------------------------
+  await runTestCase(
+    'UAT-CASE-17',
+    'Service Operations Manager & Service Engineer Dual Persona Workflows & Telemetry Logs',
+    'Service Operations & Field Engineering',
+    async (step) => {
+      let serviceManagerUser: any;
+      let serviceEngineerUser: any;
+      let newAmcContract: any;
+      let newPpmVisit: any;
+      let newBreakdownTicket: any;
+
+      await step('17.1 Verify Service Manager & Service Engineer Profiles and RBAC Permissions', async () => {
+        const users = storageService.getUsers();
+        serviceManagerUser = users.find((u) => u.email === 'service.manager@company.com' || u.role === 'service_manager');
+        serviceEngineerUser = users.find((u) => u.email === 'service.engineer@company.com' || u.role === 'technician');
+
+        assert(serviceManagerUser !== undefined, 'Service Operations Manager (Rajesh Varma) profile must exist in system');
+        assert(serviceManagerUser.role === 'service_manager', 'Service Manager role must be service_manager');
+        assert(serviceManagerUser.department === 'Services & AMC', 'Service Manager department must be Services & AMC');
+
+        assert(serviceEngineerUser !== undefined, 'Service Engineer (Vikram Sundaram) profile must exist in system');
+        assert(serviceEngineerUser.role === 'technician', 'Service Engineer role must be technician');
+        assert(Boolean(serviceEngineerUser.department), 'Service Engineer department must be configured');
+      });
+
+      await step('17.2 Service Manager initializes Comprehensive AMC Contract & assigns Service Engineer', async () => {
+        newAmcContract = storageService.addAmcContract({
+          contractNumber: 'AMC-2026-MEDCITY-001',
+          clientName: 'Apollo Medcity Super Specialty Hospital',
+          companyName: 'Apollo Hospitals Enterprise Ltd',
+          siteAddress: 'Plot 12, Sector 15, Vashi, Navi Mumbai 400703',
+          contactPerson: 'Dr. Sudhir Nair (Director Facilities)',
+          contactPhone: '+91 98201 55678',
+          contactEmail: 'facilities.medcity@apollohospitals.com',
+          contractType: 'Comprehensive AMC',
+          systemType: 'Central Chillers & Cleanroom AHUs',
+          equipmentCount: 2,
+          startDate: '2026-04-01',
+          endDate: '2027-03-31',
+          billingFrequency: 'Quarterly',
+          annualContractValue: 1250000,
+          billedAmount: 312500,
+          receivedAmount: 312500,
+          serviceFrequency: 'Quarterly',
+          slaResponseHours: 4,
+          status: 'Active',
+          assignedLeadTechnician: 'Vikram Sundaram',
+          technicianPhone: '+91 99014 44521',
+          ppmVisitsCompleted: 0,
+          ppmVisitsTotal: 4,
+          notes: 'Comprehensive maintenance of 4x 500 TR Daikin Centrifugal Chillers, 16 AHUs, and primary/secondary chilled water pumps.',
+          createdAt: new Date().toISOString(),
+          equipmentList: [
+            {
+              id: 'EQ-MED-CHILL-01',
+              tagNumber: 'CHILL-500TR-01',
+              equipmentType: 'Water Cooled Centrifugal Chiller',
+              brand: 'Daikin',
+              modelNumber: 'WSC-087-500TR',
+              serialNumber: 'DK-WSC-2025-9912',
+              capacityTR: 500,
+              locationFloor: 'Basement Central Plant Room',
+              condition: 'Good',
+              lastServiceDate: '2026-06-15',
+              nextPpmDate: '2026-09-15'
+            },
+            {
+              id: 'EQ-MED-AHU-01',
+              tagNumber: 'AHU-OT-12K-01',
+              equipmentType: 'Double Skin Cleanroom AHU',
+              brand: 'Zeco Aircon',
+              modelNumber: 'AHU-DS-12000-HEPA',
+              serialNumber: 'AHU-OT-2025-0041',
+              capacityTR: 35,
+              locationFloor: '4th Floor OT Complex AHU Room',
+              condition: 'Good',
+              lastServiceDate: '2026-06-15',
+              nextPpmDate: '2026-09-15'
+            }
+          ]
+        });
+
+        assert(newAmcContract.id, 'AMC Contract ID must be generated');
+        assert(newAmcContract.annualContractValue === 1250000, 'ACV must be 1,250,000 INR');
+        assert(newAmcContract.equipmentList.length === 2, 'Must include 2 registered HVAC assets');
+      });
+
+      await step('17.3 Service Manager schedules Q3 PPM Visit for Service Engineer', async () => {
+        newPpmVisit = storageService.addPpmVisit({
+          contractId: newAmcContract.id,
+          contractNumber: newAmcContract.contractNumber,
+          clientName: newAmcContract.clientName,
+          siteAddress: newAmcContract.siteAddress,
+          scheduledDate: '2026-09-15',
+          assignedTechnician: 'Vikram Sundaram',
+          status: 'Scheduled',
+          quarter: 'Q3 (Jul-Sep)',
+          findingsNotes: 'Perform Q3 comprehensive chiller safety switch check and HEPA filter pressure drop validation.',
+          checklistSummary: [
+            { task: 'Compressor Suction/Discharge PSI & Oil Pressure Check', done: false },
+            { task: 'Evaporator/Condenser Delta-T Temperature Differential Log', done: false },
+            { task: 'Electrical Control Panel Terminal Tightening & Current Draw', done: false },
+            { task: 'Vibration Isolator & Noise Decibel Compliance Audit', done: false }
+          ]
+        });
+
+        assert(newPpmVisit.id, 'PPM Visit ID must be generated');
+        assert(newPpmVisit.status === 'Scheduled', 'Visit status must initially be Scheduled');
+        assert(newPpmVisit.assignedTechnician === 'Vikram Sundaram', 'Technician must be assigned');
+      });
+
+      await step('17.4 Service Engineer completes PPM Visit with Telemetry Readings & 4-Point Checklist', async () => {
+        // Engineer records physical on-site telemetry
+        storageService.updatePpmVisit(newPpmVisit.id, {
+          status: 'Completed',
+          completedDate: '2026-09-15',
+          findingsNotes: 'All 4 points verified. Suction pressure is steady at 46.5 PSI, Discharge pressure at 162.0 PSI. Evaporator Delta-T is 5.4°C (Design: 5.5°C). Cleaned condenser water strainers.',
+          checklistSummary: [
+            { task: 'Compressor Suction/Discharge PSI & Oil Pressure Check', done: true, notes: 'PASSED (Suction: 46.5 PSI, Discharge: 162.0 PSI)' },
+            { task: 'Evaporator/Condenser Delta-T Temperature Differential Log', done: true, notes: 'PASSED (Delta-T: 5.4°C)' },
+            { task: 'Electrical Control Panel Terminal Tightening & Current Draw', done: true, notes: 'PASSED (R: 218A, Y: 220A, B: 219A)' },
+            { task: 'Vibration Isolator & Noise Decibel Compliance Audit', done: true, notes: 'PASSED (71.2 dB within ASHRAE norm)' }
+          ],
+          customerSignatureName: 'Dr. Sudhir Nair',
+          customerRating: 5
+        });
+
+        const completedVisit = storageService.getPpmVisits().find((v) => v.id === newPpmVisit.id);
+        assert(completedVisit?.status === 'Completed', 'PPM Visit status must update to Completed');
+        assert(completedVisit?.completedDate === '2026-09-15', 'Completion date must be recorded');
+        assert(completedVisit?.checklistSummary.every((c) => c.done), 'All 4 inspection checklist items must be done');
+      });
+
+      await step('17.5 Service Manager logs Emergency Breakdown Ticket & Service Engineer resolves it', async () => {
+        newBreakdownTicket = storageService.addBreakdownTicket({
+          contractId: newAmcContract.id,
+          contractNumber: newAmcContract.contractNumber,
+          clientName: 'Apollo Medcity Super Specialty Hospital',
+          siteAddress: 'Plot 12, Sector 15, Vashi, Navi Mumbai 400703',
+          contactPhone: '+91 98201 55678',
+          reportedIssue: 'Chiller #1 tripped on high oil temperature alarm (68°C). Chilled water supply temp rose to 12.5°C.',
+          systemType: 'Centrifugal Chillers',
+          priority: 'Critical 24x7',
+          status: 'Work In Progress',
+          assignedTechnician: 'Vikram Sundaram'
+        });
+
+        assert(newBreakdownTicket.id, 'Breakdown ticket ID must be generated');
+        assert(newBreakdownTicket.priority === 'Critical 24x7', 'Emergency ticket must have Critical 24x7 priority');
+
+        // Service Engineer completes on-site troubleshooting
+        storageService.updateBreakdownTicket(newBreakdownTicket.id, {
+          status: 'Resolved',
+          resolvedAt: '2026-09-16T11:15:00Z',
+          resolutionNotes: 'Inspected oil cooling circuit solenoid valve. Replaced clogged inline oil filter element (Part: DA-OIL-FLT-88). Calibrated temperature sensor. Chiller restarted smoothly, oil temp stabilized at 48°C.',
+          sparesReplaced: [
+            { partName: 'Daikin Inline Oil Filter Element DA-OIL-FLT-88', qty: 1, cost: 8500, isCoveredUnderAmc: true }
+          ]
+        });
+
+        const resolvedTicket = storageService.getBreakdownTickets().find((t) => t.id === newBreakdownTicket.id);
+        assert(resolvedTicket?.status === 'Resolved', 'Ticket status must update to Resolved');
+        assert(resolvedTicket?.resolvedAt !== undefined, 'Resolution timestamp must be captured');
+      });
+
+      await step('17.6 Verify Audit Trail reflects both Service Manager and Service Engineer operations', async () => {
+        const auditLogs = storageService.getAuditLogs();
+        const amcLogs = auditLogs.filter((l) => 
+          l.entityType === 'AMC_CONTRACT' || 
+          l.entityType === 'PPM_VISIT' || 
+          l.entityType === 'SERVICE_TICKET' ||
+          l.entityType === 'BREAKDOWN_TICKET' ||
+          l.summary?.includes('AMC') ||
+          l.summary?.includes('PPM') ||
+          l.summary?.includes('Breakdown') ||
+          l.summary?.includes('Ticket')
+        );
+
+        assert(amcLogs.length >= 1, 'Audit log should record service lifecycle events');
+      });
+    }
+  );
+
+  // --------------------------------------------------------------------------
   // SUMMARY REPORT GENERATION
   // --------------------------------------------------------------------------
   console.log('\n================================================================');

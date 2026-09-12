@@ -1,7 +1,9 @@
 # Vercel Deployment Guide for AlphaERP
-### Full-Stack HVAC Enterprise Resource Planning on Vercel Serverless & Edge Network
 
-**Live Production Domain:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
+## Full-Stack HVAC Enterprise Resource Planning on Vercel Serverless & Edge Network
+
+**Live Production Mirror:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
+**Primary Custom InsForge Domain:** [https://hvacbiz.insforge.site](https://hvacbiz.insforge.site)  
 **Target Architecture:** React 19 Client SPA + Node.js 20 Express Serverless Functions  
 **Configuration File:** `vercel.json` | **Serverless Entrypoint:** `api/index.js`
 
@@ -37,6 +39,7 @@ flowchart TD
     end
 
     subgraph CloudPersistence["☁️ External Persistence & Microservices"]
+        InsForgeBaaS[("InsForge BaaS PostgreSQL (hvac-biz)")]
         MongoDB[("MongoDB Atlas Cloud Database (alphaerp)")]
         SMTP["SMTP Transporter (Gmail / SendGrid / Mailtrap)"]
         GeminiAPI["Google Gemini AI Platform"]
@@ -46,6 +49,7 @@ flowchart TD
     Router -- "/assets/* or SPA paths" --> StaticAssets
     Router -- "/api/*" --> APIRoute
     APIRoute --> Function
+    Function <--> InsForgeBaaS
     MongoRoutes <--> MongoDB
     ProcureRoute --> SMTP
     EmailTestRoute --> SMTP
@@ -72,6 +76,7 @@ flowchart TD
 ## Method 1: Continuous Deployment via GitHub (Recommended)
 
 ### Step 1: Push Repository to GitHub
+
 ```bash
 git init
 git add .
@@ -82,23 +87,29 @@ git push -u origin main
 ```
 
 ### Step 2: Import Project into Vercel
+
 1. Log in to [vercel.com](https://vercel.com).
 2. Click **"Add New..."** → **"Project"**.
 3. Select your GitHub repository from the list and click **"Import"**.
 
 ### Step 3: Configure Build & Output Settings
+
 Vercel automatically detects settings from `vercel.json`:
+
 - **Framework Preset**: Vite
 - **Build Command**: `npm run build`
 - **Output Directory**: `dist`
 - **Install Command**: `npm install`
 
 ### Step 4: Configure Environment Variables
+
 Under the **Environment Variables** section in the Vercel dashboard, add:
 
 | Variable Name | Required | Description | Example / Value |
-|---|:---:|---|---|
+| :--- | :---: | :--- | :--- |
 | `NODE_ENV` | Yes | Runtime environment | `production` |
+| `VITE_INSFORGE_URL` | Optional | InsForge BaaS API Endpoint | `https://as2hwz72.us-east.insforge.app` |
+| `VITE_INSFORGE_ANON_KEY` | Optional | InsForge BaaS Public Client Key | `your_anon_key` |
 | `GEMINI_API_KEY` | Optional | Google Gemini API Key for AI features | `AIzaSy...` |
 | `MONGODB_URI` | Optional | MongoDB Atlas Connection String | `mongodb+srv://user:pass@cluster.mongodb.net/alphaerp` |
 | `SMTP_HOST` | Optional | SMTP Mail Host (e.g. Mailtrap, SendGrid, Gmail) | `smtp.mailtrap.io` |
@@ -111,6 +122,7 @@ Under the **Environment Variables** section in the Vercel dashboard, add:
 > ⚠️ **MongoDB Atlas IP Whitelist Requirement**: In MongoDB Atlas (`cloud.mongodb.com`), navigate to **Network Access** and ensure **`0.0.0.0/0` (Allow access from anywhere)** is active so Vercel's dynamic serverless IP ranges can connect.
 
 ### Step 5: Deploy
+
 Click **"Deploy"**. Vercel will build the frontend assets, bundle serverless functions, and assign your live domain: `https://hvacbiz.vercel.app`.
 
 ---
@@ -127,9 +139,12 @@ npx vercel deploy --prod --token "$VERCEL_TOKEN" --yes
 ## 🔍 Verification & Health Check
 
 ```bash
-# Verify API Health
+# 1. Verify API Health
 curl -s https://hvacbiz.vercel.app/api/health | jq .
 
-# Verify MongoDB Cluster Status
+# 2. Verify MongoDB Cluster Status
 curl -s https://hvacbiz.vercel.app/api/mongodb/status | jq .
+
+# 3. Run Automated Enterprise UAT Test Suite (17 Cases, 65 Steps)
+npm run test:uat
 ```

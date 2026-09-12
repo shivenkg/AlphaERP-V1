@@ -100,11 +100,11 @@ export const INITIAL_USERS: UserProfile[] = [
   {
     id: 'usr-007',
     name: 'Vikram Sundaram',
-    email: 'vikram.s@company.com',
+    email: 'service.engineer@company.com',
     phone: '+91 99014 44521',
     role: 'technician',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
-    title: 'Lead Field HVAC Project Engineer',
+    title: 'Senior HVAC Field Service Engineer',
     department: 'Field Operations & Commissioning',
     status: 'active',
     createdAt: '2026-02-10T10:00:00Z'
@@ -120,6 +120,18 @@ export const INITIAL_USERS: UserProfile[] = [
     department: 'Field Operations',
     status: 'deactivated',
     createdAt: '2025-11-15T09:00:00Z'
+  },
+  {
+    id: 'usr-009',
+    name: 'Rajesh Varma',
+    email: 'service.manager@company.com',
+    phone: '+91 98201 55678',
+    role: 'service_manager',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    title: 'Service Operations Manager & AMC Head',
+    department: 'Services & AMC',
+    status: 'active',
+    createdAt: '2026-02-12T09:30:00Z'
   }
 ];
 
@@ -2048,12 +2060,12 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
     equipmentList: [
       {
         id: 'eq-001',
-        tagNumber: 'ODU-01',
-        equipmentType: 'VRV IV Outdoor Unit',
+        tagNumber: 'ODU-BKC-01',
+        equipmentType: 'VRV IV-X Outdoor Unit',
         brand: 'Daikin',
         modelNumber: 'RXYQ16UAY1',
         capacityTR: 16,
-        locationFloor: 'Terrace Level A',
+        locationFloor: 'Terrace Level A (North Wing)',
         serialNumber: 'DK-2024-8841',
         lastServiceDate: '2026-01-15',
         nextPpmDate: '2026-04-15',
@@ -2061,12 +2073,12 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
       },
       {
         id: 'eq-002',
-        tagNumber: 'ODU-02',
-        equipmentType: 'VRV IV Outdoor Unit',
+        tagNumber: 'ODU-BKC-02',
+        equipmentType: 'VRV IV-X Outdoor Unit',
         brand: 'Daikin',
         modelNumber: 'RXYQ16UAY1',
         capacityTR: 16,
-        locationFloor: 'Terrace Level A',
+        locationFloor: 'Terrace Level A (South Wing)',
         serialNumber: 'DK-2024-8842',
         lastServiceDate: '2026-01-15',
         nextPpmDate: '2026-04-15',
@@ -2074,16 +2086,29 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
       },
       {
         id: 'eq-003',
-        tagNumber: 'ODU-03',
-        equipmentType: 'VRV IV Outdoor Unit',
+        tagNumber: 'ODU-BKC-03',
+        equipmentType: 'VRV IV-X Outdoor Unit',
         brand: 'Daikin',
         modelNumber: 'RXYQ18UAY1',
         capacityTR: 18,
-        locationFloor: 'Terrace Level B',
+        locationFloor: 'Terrace Level B (Executive Suites)',
         serialNumber: 'DK-2024-8843',
         lastServiceDate: '2026-01-16',
         nextPpmDate: '2026-04-16',
         condition: 'Excellent'
+      },
+      {
+        id: 'eq-004',
+        tagNumber: 'IDU-CASSETTE-L8',
+        equipmentType: 'Round Flow 4-Way Ceiling Cassette',
+        brand: 'Daikin',
+        modelNumber: 'FXFQ63AVM',
+        capacityTR: 2,
+        locationFloor: 'Level 8 Boardroom',
+        serialNumber: 'DK-2024-1902',
+        lastServiceDate: '2026-01-15',
+        nextPpmDate: '2026-04-15',
+        condition: 'Requires Attention'
       }
     ],
     startDate: '2026-01-01',
@@ -2095,8 +2120,8 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
     serviceFrequency: 'Quarterly',
     slaResponseHours: 2,
     status: 'Active',
-    assignedLeadTechnician: 'Dinesh Sawant',
-    technicianPhone: '+91 98332 99812',
+    assignedLeadTechnician: 'Vikram Sundaram',
+    technicianPhone: '+91 98200 44112',
     ppmVisitsCompleted: 1,
     ppmVisitsTotal: 4,
     notes: '24x7 critical executive tower. Full OEM spare parts and compressor warranty included under Comprehensive AMC.',
@@ -2116,8 +2141,8 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
     equipmentCount: 3,
     equipmentList: [
       {
-        id: 'eq-004',
-        tagNumber: 'CHILLER-01',
+        id: 'eq-005',
+        tagNumber: 'CHILLER-LILAVATI-01',
         equipmentType: 'Centrifugal Water Cooled Chiller',
         brand: 'Trane',
         modelNumber: 'CVHE-350',
@@ -2125,12 +2150,12 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
         locationFloor: 'Basement Plant Room B2',
         serialNumber: 'TRN-2023-9901',
         lastServiceDate: '2026-02-05',
-        nextPpmDate: '2026-05-05',
+        nextPpmDate: '2026-03-25',
         condition: 'Excellent'
       },
       {
-        id: 'eq-005',
-        tagNumber: 'CHILLER-02',
+        id: 'eq-006',
+        tagNumber: 'CHILLER-LILAVATI-02',
         equipmentType: 'Centrifugal Water Cooled Chiller',
         brand: 'Trane',
         modelNumber: 'CVHE-350',
@@ -2138,8 +2163,21 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
         locationFloor: 'Basement Plant Room B2',
         serialNumber: 'TRN-2023-9902',
         lastServiceDate: '2026-02-05',
-        nextPpmDate: '2026-05-05',
+        nextPpmDate: '2026-03-25',
         condition: 'Good'
+      },
+      {
+        id: 'eq-007',
+        tagNumber: 'AHU-OT-SURGERY-3',
+        equipmentType: 'Hygienic Cleanroom Air Handling Unit (ISO Class 5)',
+        brand: 'Trane',
+        modelNumber: 'CLCP-4000CFM',
+        capacityTR: 15,
+        locationFloor: 'Level 3 OT Complex',
+        serialNumber: 'TRN-2024-4410',
+        lastServiceDate: '2026-02-20',
+        nextPpmDate: '2026-03-20',
+        condition: 'Requires Attention'
       }
     ],
     startDate: '2025-07-01',
@@ -2151,11 +2189,11 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
     serviceFrequency: 'Monthly',
     slaResponseHours: 1,
     status: 'Active',
-    assignedLeadTechnician: 'Suresh Gaikwad',
-    technicianPhone: '+91 98211 44556',
+    assignedLeadTechnician: 'Vikram Sundaram',
+    technicianPhone: '+91 98200 44112',
     ppmVisitsCompleted: 8,
     ppmVisitsTotal: 12,
-    notes: 'Critical hospital healthcare facility. Zero tolerance for plant tripping. 24/7 dedicated technician on-call.',
+    notes: 'Critical hospital healthcare facility. Zero tolerance for plant tripping. 24/7 dedicated technician on-call with 1-hour SLA.',
     createdAt: '2025-07-01T09:00:00Z'
   },
   {
@@ -2172,9 +2210,9 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
     equipmentCount: 8,
     equipmentList: [
       {
-        id: 'eq-006',
+        id: 'eq-008',
         tagNumber: 'PAC-SERVER-01',
-        equipmentType: 'Precision Air Conditioner (CRAC)',
+        equipmentType: 'Precision Air Conditioner (CRAC EC Fan)',
         brand: 'Stulz',
         modelNumber: 'CyberAir-30TR',
         capacityTR: 30,
@@ -2183,6 +2221,19 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
         lastServiceDate: '2026-02-20',
         nextPpmDate: '2026-04-20',
         condition: 'Excellent'
+      },
+      {
+        id: 'eq-009',
+        tagNumber: 'PAC-SERVER-02',
+        equipmentType: 'Precision Air Conditioner (CRAC EC Fan)',
+        brand: 'Stulz',
+        modelNumber: 'CyberAir-30TR',
+        capacityTR: 30,
+        locationFloor: 'Server Hall 1 (Level 2)',
+        serialNumber: 'STZ-2024-5512',
+        lastServiceDate: '2026-02-20',
+        nextPpmDate: '2026-04-20',
+        condition: 'Good'
       }
     ],
     startDate: '2025-11-01',
@@ -2194,8 +2245,8 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
     serviceFrequency: 'Bi-Monthly',
     slaResponseHours: 2,
     status: 'Active',
-    assignedLeadTechnician: 'Amit Patil',
-    technicianPhone: '+91 98199 88771',
+    assignedLeadTechnician: 'Vikram Sundaram',
+    technicianPhone: '+91 98200 44112',
     ppmVisitsCompleted: 2,
     ppmVisitsTotal: 6,
     notes: 'Strict Tier-IV temperature & humidity delta logging. Bi-monthly EC fan, filter and electrode boiler checks.',
@@ -2215,14 +2266,27 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
     equipmentCount: 24,
     equipmentList: [
       {
-        id: 'eq-007',
+        id: 'eq-010',
         tagNumber: 'ODU-TOWER-A',
-        equipmentType: 'VRF Side Discharge',
+        equipmentType: 'VRF Side Discharge Inverter',
         brand: 'Mitsubishi Electric',
         modelNumber: 'PUMY-P200',
         capacityTR: 8,
         locationFloor: 'Tower A Clubhouse',
         serialNumber: 'ME-2023-1102',
+        lastServiceDate: '2025-12-10',
+        nextPpmDate: '2026-03-10',
+        condition: 'Good'
+      },
+      {
+        id: 'eq-011',
+        tagNumber: 'ODU-TOWER-B',
+        equipmentType: 'VRF Side Discharge Inverter',
+        brand: 'Mitsubishi Electric',
+        modelNumber: 'PUMY-P200',
+        capacityTR: 8,
+        locationFloor: 'Tower B Clubhouse',
+        serialNumber: 'ME-2023-1103',
         lastServiceDate: '2025-12-10',
         nextPpmDate: '2026-03-10',
         condition: 'Good'
@@ -2237,8 +2301,8 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
     serviceFrequency: 'Quarterly',
     slaResponseHours: 4,
     status: 'Pending Renewal',
-    assignedLeadTechnician: 'Dinesh Sawant',
-    technicianPhone: '+91 98332 99812',
+    assignedLeadTechnician: 'Vikram Sundaram',
+    technicianPhone: '+91 98200 44112',
     ppmVisitsCompleted: 4,
     ppmVisitsTotal: 4,
     notes: 'Contract expiring in under 3 weeks. Prepared 1-year renewal proposal with upgraded coil cleaning package.',
@@ -2258,7 +2322,7 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
     equipmentCount: 16,
     equipmentList: [
       {
-        id: 'eq-008',
+        id: 'eq-012',
         tagNumber: 'AHU-CLEANROOM-01',
         equipmentType: 'Double Skin Thermal Break AHU (H14 HEPA)',
         brand: 'Carrier',
@@ -2301,7 +2365,7 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
     equipmentCount: 6,
     equipmentList: [
       {
-        id: 'eq-009',
+        id: 'eq-013',
         tagNumber: 'CHILLER-TAJ-01',
         equipmentType: 'Centrifugal Chiller Water Cooled',
         brand: 'York / Johnson Controls',
@@ -2329,6 +2393,92 @@ export const INITIAL_AMC_CONTRACTS: AmcContract[] = [
     ppmVisitsTotal: 12,
     notes: '5-Star hospitality luxury comfort standards. Acoustic decibel isolation and 100% fresh air treated unit certification.',
     createdAt: '2025-09-01T09:00:00Z'
+  },
+  {
+    id: 'amc-007',
+    contractNumber: 'AMC-2026-007',
+    clientName: 'Jio World Convention & Shopping Centre',
+    companyName: 'Reliance Commercial Land & Infrastructure',
+    siteAddress: 'G-Block, Bandra Kurla Complex, Mumbai, MH 400051',
+    contactPerson: 'Mehul Mehta (Chief Project Engineer)',
+    contactPhone: '+91 98201 77665',
+    contactEmail: 'mehul.m@jioworldcenter.com',
+    contractType: 'Comprehensive',
+    systemType: 'Packaged AC / Ductable',
+    equipmentCount: 10,
+    equipmentList: [
+      {
+        id: 'eq-014',
+        tagNumber: 'PACKAGED-DX-01',
+        equipmentType: 'Rooftop Packaged Air Conditioner',
+        brand: 'Voltas Limited (Tata Enterprise)',
+        modelNumber: 'V-PAC-50TR',
+        capacityTR: 50,
+        locationFloor: 'Exhibition Hall Roof Level 3',
+        serialNumber: 'VOL-2023-9118',
+        lastServiceDate: '2026-01-05',
+        nextPpmDate: '2026-04-05',
+        condition: 'Good'
+      }
+    ],
+    startDate: '2025-04-06',
+    endDate: '2026-04-05',
+    billingFrequency: 'Quarterly',
+    annualContractValue: 4600000,
+    billedAmount: 4600000,
+    receivedAmount: 4600000,
+    serviceFrequency: 'Quarterly',
+    slaResponseHours: 2,
+    status: 'Pending Renewal',
+    assignedLeadTechnician: 'Vikram Sundaram',
+    technicianPhone: '+91 98200 44112',
+    ppmVisitsCompleted: 4,
+    ppmVisitsTotal: 4,
+    notes: 'Exhibition mega-venue contract expiring in under 4 weeks. High footfall CO2 monitoring & damper actuator overhaul included in renewal quote.',
+    createdAt: '2025-04-06T10:00:00Z'
+  },
+  {
+    id: 'amc-008',
+    contractNumber: 'AMC-2026-008',
+    clientName: 'Chhatrapati Shivaji Maharaj Airport (CSMIA T2)',
+    companyName: 'Mumbai International Airport Limited (MIAL)',
+    siteAddress: 'Terminal 2 VIP Concourse & Terminal Pier 4, Andheri East, Mumbai, MH 400099',
+    contactPerson: 'Cdr. R. K. Nair (Head of Terminal Engineering)',
+    contactPhone: '+91 98200 88991',
+    contactEmail: 'terminal.engg@csmiat2.com',
+    contractType: 'Comprehensive',
+    systemType: 'Cleanroom AHU & Ducting',
+    equipmentCount: 14,
+    equipmentList: [
+      {
+        id: 'eq-015',
+        tagNumber: 'AHU-VIP-LOUNGE-01',
+        equipmentType: 'Double Skin Thermal Break AHU with UVGI',
+        brand: 'Zeco Aircon / Daikin',
+        modelNumber: 'ZAHU-8500CFM',
+        capacityTR: 35,
+        locationFloor: 'T2 Level 4 VIP Departure Lounge',
+        serialNumber: 'ZEC-2024-3329',
+        lastServiceDate: '2026-02-15',
+        nextPpmDate: '2026-05-15',
+        condition: 'Excellent'
+      }
+    ],
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    billingFrequency: 'Quarterly',
+    annualContractValue: 5400000,
+    billedAmount: 1350000,
+    receivedAmount: 1350000,
+    serviceFrequency: 'Monthly',
+    slaResponseHours: 1,
+    status: 'Active',
+    assignedLeadTechnician: 'Vikram Sundaram',
+    technicianPhone: '+91 98200 44112',
+    ppmVisitsCompleted: 2,
+    ppmVisitsTotal: 12,
+    notes: 'High-security aviation critical facility. Biometric access cleared. Monthly UVGI lamp irradiance & smoke exhaust damper testing mandatory.',
+    createdAt: '2026-01-01T07:30:00Z'
   }
 ];
 
@@ -2343,15 +2493,15 @@ export const INITIAL_PPM_VISITS: PpmScheduleVisit[] = [
     scheduledDate: '2026-04-15',
     quarter: 'Q2 (Apr-Jun)',
     status: 'Scheduled',
-    assignedTechnician: 'Dinesh Sawant',
+    assignedTechnician: 'Vikram Sundaram',
     checklistSummary: [
-      { task: 'Clean & high-pressure wash condenser coils', done: false },
-      { task: 'Inspect compressor suction / discharge pressure (R410A)', done: false },
-      { task: 'Check electrical terminal torquing & contractor contact points', done: false },
+      { task: 'Clean & high-pressure wash condenser coils (biodegradable chemical)', done: false },
+      { task: 'Inspect compressor suction / discharge pressure (R410A) & subcooling', done: false },
+      { task: 'Check electrical terminal torquing & magnetic contactor contact points', done: false },
       { task: 'Clean indoor unit air filters and drain pan descaling', done: false },
-      { task: 'Verify thermostat setpoints and error log scan', done: false }
+      { task: 'Verify thermostat setpoints, sensor calibration & error log scan', done: false }
     ],
-    findingsNotes: 'Scheduled Q2 preventive maintenance maintenance visit.'
+    findingsNotes: 'Scheduled Q2 comprehensive preventive maintenance visit for 12 VRV IV-X Outdoor units.'
   },
   {
     id: 'ppm-002',
@@ -2362,16 +2512,16 @@ export const INITIAL_PPM_VISITS: PpmScheduleVisit[] = [
     siteAddress: 'A-791, Bandra Reclamation, Bandra West, Mumbai',
     scheduledDate: '2026-03-25',
     quarter: 'Q1 (Jan-Mar)',
-    status: 'Scheduled',
-    assignedTechnician: 'Suresh Gaikwad',
+    status: 'In Progress',
+    assignedTechnician: 'Vikram Sundaram',
     checklistSummary: [
-      { task: 'Oil pressure and viscosity analysis on Centrifugal Compressor #1 & #2', done: false },
-      { task: 'Check condenser water approach temperature and cooling tower delta-T', done: false },
-      { task: 'Megger test compressor motor windings insulation resistance', done: false },
-      { task: 'Calibrate chilled water inlet/outlet RTD sensors', done: false },
+      { task: 'Oil pressure, viscosity and acidity analysis on Centrifugal Compressor #1 & #2', done: true, notes: 'Oil level nominal, 0.4 bar delta P' },
+      { task: 'Check condenser water approach temperature and cooling tower delta-T', done: true, notes: 'Approach temp 1.8°C - within optimal threshold' },
+      { task: 'Megger test compressor motor windings insulation resistance (500V DC)', done: false },
+      { task: 'Calibrate chilled water inlet/outlet RTD temperature sensors', done: false },
       { task: 'Test emergency safety relief valves & high-pressure cutouts', done: false }
     ],
-    findingsNotes: 'Monthly hospital chiller routine health checkup.'
+    findingsNotes: 'Monthly hospital centrifugal chiller routine health checkup in progress by Lead Engineer Vikram Sundaram.'
   },
   {
     id: 'ppm-003',
@@ -2384,13 +2534,13 @@ export const INITIAL_PPM_VISITS: PpmScheduleVisit[] = [
     completedDate: '2026-01-15',
     quarter: 'Q1 (Jan-Mar)',
     status: 'Completed',
-    assignedTechnician: 'Dinesh Sawant',
+    assignedTechnician: 'Vikram Sundaram',
     checklistSummary: [
       { task: 'Clean & high-pressure wash condenser coils', done: true, notes: 'Terrace A & B washed with biodegradable chemical' },
       { task: 'Inspect compressor suction / discharge pressure (R410A)', done: true, notes: 'Suction 118 PSI, Discharge 385 PSI - Nominal' },
-      { task: 'Check electrical terminal torquing & contractor contact points', done: true, notes: 'Tightened loose lugs on ODU-02' },
-      { task: 'Clean indoor unit air filters and drain pan descaling', done: true, notes: '72 indoor filters cleaned' },
-      { task: 'Verify thermostat setpoints and error log scan', done: true, notes: 'No active fault codes' }
+      { task: 'Check electrical terminal torquing & contractor contact points', done: true, notes: 'Tightened loose lugs on ODU-BKC-02' },
+      { task: 'Clean indoor unit air filters and drain pan descaling', done: true, notes: '72 indoor cassette filters cleaned and sanitized' },
+      { task: 'Verify thermostat setpoints and error log scan', done: true, notes: 'No active fault codes detected' }
     ],
     findingsNotes: 'All 12 VRV ODUs running smoothly. Customer signed job sheet with 5/5 satisfaction.',
     customerSignatureName: 'Sanjay Deshmukh',
@@ -2409,12 +2559,71 @@ export const INITIAL_PPM_VISITS: PpmScheduleVisit[] = [
     assignedTechnician: 'Amit Patil',
     checklistSummary: [
       { task: 'DOP / PAO aerosol integrity test for Terminal H14 HEPA Filters', done: false },
-      { task: 'Measure air changes per hour (ACPH) and laminar air velocity', done: false },
+      { task: 'Measure air changes per hour (ACPH) and laminar air velocity (0.45 m/s)', done: false },
       { task: 'Check differential pressure magnehelic gauges across pre/micro/HEPA stages', done: false },
       { task: 'Inspect VFD modulation on supply and return air blowers', done: false },
       { task: 'UVGI disinfection lamp irradiance test in AHU coil chamber', done: false }
     ],
     findingsNotes: 'Scheduled sterile formulation cleanroom quarterly audit.'
+  },
+  {
+    id: 'ppm-005',
+    visitNumber: 'PPM-2026-015',
+    contractId: 'amc-003',
+    contractNumber: 'AMC-2026-003',
+    clientName: 'CyberCity Hyperscale Data Center',
+    siteAddress: 'MIDC TTC Industrial Area, Airoli, Navi Mumbai',
+    scheduledDate: '2026-04-20',
+    quarter: 'Q2 (Apr-Jun)',
+    status: 'Scheduled',
+    assignedTechnician: 'Vikram Sundaram',
+    checklistSummary: [
+      { task: 'Inspect EC plug fan static pressure and bearing vibration', done: false },
+      { task: 'Descaling & flush electrode steam boiler humidifier cylinder', done: false },
+      { task: 'Verify dual refrigeration circuit R410A superheat and subcooling', done: false },
+      { task: 'BMS Modbus communication latency & alarm matrix verification', done: false },
+      { task: 'Clean microchannel condenser coils with low-pressure fin comb', done: false }
+    ],
+    findingsNotes: 'Bi-monthly Precision CRAC unit preventative maintenance for Tier-IV Server Halls.'
+  },
+  {
+    id: 'ppm-006',
+    visitNumber: 'PPM-2026-016',
+    contractId: 'amc-004',
+    contractNumber: 'AMC-2026-004',
+    clientName: 'Oberoi Grand Luxury Residences',
+    siteAddress: 'Off Western Express Highway, Borivali East, Mumbai',
+    scheduledDate: '2026-03-10',
+    quarter: 'Q1 (Jan-Mar)',
+    status: 'Overdue',
+    assignedTechnician: 'Vikram Sundaram',
+    checklistSummary: [
+      { task: 'Clean VRF side-discharge condenser fin surface', done: false },
+      { task: 'Inspect inverter compressor PCB heatsink thermal paste', done: false },
+      { task: 'Check condensate drain gravity slope & flush with anti-algae tablet', done: false },
+      { task: 'Verify wireless remote controllers and central touch manager', done: false }
+    ],
+    findingsNotes: 'PPM visit overdue by 2 days due to resident clubhouse painting. Rescheduled for immediate site execution.'
+  },
+  {
+    id: 'ppm-007',
+    visitNumber: 'PPM-2026-017',
+    contractId: 'amc-008',
+    contractNumber: 'AMC-2026-008',
+    clientName: 'Chhatrapati Shivaji Maharaj Airport (CSMIA T2)',
+    siteAddress: 'Terminal 2 VIP Concourse, Andheri East, Mumbai',
+    scheduledDate: '2026-05-15',
+    quarter: 'Q2 (Apr-Jun)',
+    status: 'Scheduled',
+    assignedTechnician: 'Vikram Sundaram',
+    checklistSummary: [
+      { task: 'UVGI C-Band germicidal lamp irradiance intensity test (> 1000 µW/cm²)', done: false },
+      { task: 'Inspect Belimo motorized smoke & fire damper actuators fail-safe tripping', done: false },
+      { task: 'Dynamic balancing and belt tension check on DIDW supply centrifugal blower', done: false },
+      { task: 'Chilled water 2-way modulating valve stroke calibration (0-10V)', done: false },
+      { task: 'Clean MERV-13 pre-filters and differential pressure switch check', done: false }
+    ],
+    findingsNotes: 'Aviation terminal VIP concourse quarterly air quality and IAQ certification visit.'
   }
 ];
 
@@ -2427,13 +2636,13 @@ export const INITIAL_BREAKDOWN_TICKETS: BreakdownTicket[] = [
     clientName: 'One BKC Corporate Center',
     siteAddress: 'Plot C-66, G-Block, BKC, Level 8 Executive Boardroom',
     contactPhone: '+91 98201 55432',
-    reportedIssue: 'Indoor Cassette Unit flashing Error Code "A3" (Drain water level error) and water dripping on false ceiling.',
+    reportedIssue: 'Indoor Cassette Unit flashing Error Code "A3" (Drain water level error) and water dripping on boardroom table.',
     systemType: 'VRV / VRF Systems',
     priority: 'Critical 24x7',
     status: 'Work In Progress',
     reportedAt: '2026-03-12T08:15:00Z',
-    assignedTechnician: 'Dinesh Sawant',
-    resolutionNotes: 'Technician reached site. Drain pump intake choked with sludge; unclogged drain line and replacing miniature float switch.',
+    assignedTechnician: 'Vikram Sundaram',
+    resolutionNotes: 'Technician reached site within 20 mins. Drain pump intake choked with sludge; unclogged drain line and replacing miniature float switch.',
     sparesReplaced: [
       { partName: 'Drain Float Switch Daikin OEM', qty: 1, cost: 1850, isCoveredUnderAmc: true }
     ],
@@ -2474,8 +2683,8 @@ export const INITIAL_BREAKDOWN_TICKETS: BreakdownTicket[] = [
     priority: 'Medium',
     status: 'Resolved',
     reportedAt: '2026-03-08T09:00:00Z',
-    assignedTechnician: 'Dinesh Sawant',
-    resolutionNotes: 'Flare nut flare leakage detected on suction line. Re-flared connection, nitrogen pressure tested at 450 PSI, vacuumed and topped up 2.4 kg R410A refrigerant.',
+    assignedTechnician: 'Vikram Sundaram',
+    resolutionNotes: 'Flare nut leakage detected on suction line. Re-flared connection, nitrogen pressure tested at 450 PSI, vacuumed and topped up 2.4 kg R410A refrigerant.',
     sparesReplaced: [
       { partName: 'R410A Refrigerant Gas (Per kg)', qty: 2.4, cost: 3600, isCoveredUnderAmc: false }
     ],
@@ -2499,6 +2708,45 @@ export const INITIAL_BREAKDOWN_TICKETS: BreakdownTicket[] = [
     resolutionNotes: 'Technician dispatched with dynamic laser alignment tool and condenser tube brushing kit.',
     sparesReplaced: [],
     billableAmount: 0
+  },
+  {
+    id: 'tkt-005',
+    ticketNumber: 'SRV-2026-083',
+    contractId: 'amc-002',
+    contractNumber: 'AMC-2026-002',
+    clientName: 'Lilavati Hospital & Research Centre',
+    siteAddress: 'Level 3 OT Complex, OT Suite #3',
+    contactPhone: '+91 98190 22345',
+    reportedIssue: 'Operation Theater OT-3 AHU supply fan belt snapped during pre-op preparation. Positive pressure cascading lost.',
+    systemType: 'Cleanroom AHU & Ducting',
+    priority: 'Critical 24x7',
+    status: 'Work In Progress',
+    reportedAt: '2026-03-12T09:45:00Z',
+    assignedTechnician: 'Vikram Sundaram',
+    resolutionNotes: 'Emergency hospital ticket. Lead Engineer Vikram Sundaram arrived on site. Replacing heavy-duty raw edge cogged V-Belts (SPC-2800) and checking pulley alignment.',
+    sparesReplaced: [
+      { partName: 'Fenner Heavy Duty Cogged V-Belt SPC-2800 (Set of 3)', qty: 1, cost: 4200, isCoveredUnderAmc: true }
+    ],
+    billableAmount: 0
+  },
+  {
+    id: 'tkt-006',
+    ticketNumber: 'SRV-2026-084',
+    contractId: 'amc-007',
+    contractNumber: 'AMC-2026-007',
+    clientName: 'Jio World Convention & Shopping Centre',
+    siteAddress: 'Exhibition Hall 2 Roof Level 3',
+    contactPhone: '+91 98201 77665',
+    reportedIssue: '50TR Packaged Unit compressor tripping on High Pressure (HP) cutout error.',
+    systemType: 'Packaged AC / Ductable',
+    priority: 'High',
+    status: 'Open',
+    reportedAt: '2026-03-12T10:15:00Z',
+    assignedTechnician: 'Vikram Sundaram',
+    resolutionNotes: 'Assigned to Vikram Sundaram. Condenser cooling fan motor contactor failure suspected.',
+    sparesReplaced: [],
+    billableAmount: 0
   }
 ];
+
 

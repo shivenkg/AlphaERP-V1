@@ -1,18 +1,21 @@
 # AlphaERP: Complete Enterprise Deployment Manual
-### Production Deployment for Vercel Serverless, Google Cloud Run, Docker Containers, Ubuntu Linux, Systemd, PM2 & Nginx
+
+## Production Deployment for InsForge BaaS, Vercel Serverless, Google Cloud Run, Docker Containers, Ubuntu Linux, Systemd, PM2 & Nginx
 
 **Document Version:** 3.5.0-Production  
-**Applet URL:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
-**Ingress Host & Port:** `0.0.0.0:3000` (Dedicated Server) | Vercel Serverless Edge
+**Primary Custom Domain:** [https://hvacbiz.insforge.site](https://hvacbiz.insforge.site)  
+**Vercel Production Mirror:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
+**Ingress Host & Port:** `0.0.0.0:3000` (Dedicated Server) | Vercel Serverless Edge | InsForge Edge
 
 ---
 
 ## 1. System Requirements & Architecture Topology
 
 AlphaERP is engineered as an enterprise-grade, full-stack HVAC operations platform:
+
 - **Frontend / Client**: React 19 + TypeScript + Vite 6 + Tailwind CSS v4 + Lucide Icons + Motion
 - **Backend / API**: Node.js 20+ / Express with TypeScript bundling via esbuild
-- **Persistence Options**: MongoDB Atlas (Cloud NoSQL), PostgreSQL 14+ (Relational), or browser IndexedDB cache
+- **Persistence Options**: InsForge BaaS (PostgreSQL 14+), MongoDB Atlas (Cloud NoSQL), or browser IndexedDB cache
 - **Ingress Port**: Hardcoded to **Port 3000** (Host: `0.0.0.0`) for container compatibility and reverse proxies.
 
 ```mermaid
@@ -23,30 +26,35 @@ flowchart TD
     end
 
     subgraph IngressGateway["🛡️ Ingress Gateway & Edge Network"]
-        VercelCDN["Vercel Edge Global CDN"]
+        InsForgeEdge["InsForge BaaS Edge (hvacbiz.insforge.site)"]
+        VercelCDN["Vercel Edge Global CDN (hvacbiz.vercel.app)"]
         NginxProxy["Nginx Reverse Proxy / Load Balancer"]
         Certbot["Let's Encrypt Automated SSL Renewal"]
         NginxProxy <--> Certbot
     end
 
     subgraph ExecutionLayer["⚙️ Runtime & Execution Options"]
+        InsForgeBaaS["InsForge BaaS PostgreSQL + Storage Engine"]
         VercelFunc["Vercel Serverless Execution (api/index.js)"]
         DockerContainer["Docker Container (dist/server.cjs)"]
         PM2Service["Ubuntu PM2 Systemd Daemon (Port 3000)"]
     end
 
     subgraph PersistentBackend["☁️ Persistent Storage & AI Services"]
+        InsForgeDB[("InsForge BaaS PostgreSQL 14+")]
         MongoCluster[("MongoDB Atlas Cloud Database")]
         GoogleSheets["Google Sheets 9-Tab Real-time Engine"]
         SMTPHost["SMTP Mailer (Production / Mailtrap Sandbox)"]
         GeminiVoice["Gemini Live Duplex WebSocket Engine"]
     end
 
+    WebUsers --> InsForgeEdge --> InsForgeBaaS
     WebUsers --> VercelCDN --> VercelFunc
     WebUsers --> NginxProxy
     WSUsers --> NginxProxy
     NginxProxy --> DockerContainer
     NginxProxy --> PM2Service
+    InsForgeBaaS <--> InsForgeDB
     VercelFunc <--> MongoCluster
     VercelFunc --> SMTPHost
     DockerContainer <--> MongoCluster
@@ -70,6 +78,12 @@ Declare all required variables in your runtime environment (or `.env` file):
 NODE_ENV=production
 PORT=3000
 HOST=0.0.0.0
+
+# ==============================================================================
+# INSFORGE BAAS POSTGRESQL & EDGE CONFIGURATION
+# ==============================================================================
+VITE_INSFORGE_URL=https://as2hwz72.us-east.insforge.app
+VITE_INSFORGE_ANON_KEY=your_insforge_anon_key
 
 # ==============================================================================
 # CLOUD DATABASE PERSISTENCE (MONGODB ATLAS)
@@ -106,12 +120,15 @@ VERCEL_PROJECT_ID=your_project_id
 AlphaERP is pre-configured with `vercel.json` and a serverless entrypoint in `api/index.js`.
 
 ### 3.1 Automated Production Build
+
 Running `npm run build` compiles:
+
 1. `dist/`: High-performance static React assets served via Vercel Edge CDN.
 2. `api/index.js`: Self-contained serverless bundle wrapping the Express API.
 3. `dist/server.cjs`: Standalone Node.js server bundle for container runtimes.
 
 ### 3.2 Deploy via Vercel CLI
+
 ```bash
 # 1. Standard production deploy
 npx vercel deploy --prod --yes
@@ -121,14 +138,32 @@ npx vercel deploy --prod --token "$VERCEL_TOKEN" --yes
 ```
 
 ### 3.3 Live Production Verification
+
 - Production Domain: `https://hvacbiz.vercel.app`
 - Health Endpoint: `https://hvacbiz.vercel.app/api/health`
 
 ---
 
-## 4. Deployment Option 2: Google Cloud Run & Docker Containers
+## 4. Deployment Option 2: InsForge Edge & Custom Domain
 
-### 4.1 Production Multi-Stage Dockerfile
+Deploy directly to InsForge hosting:
+
+```bash
+# 1. Build application bundles
+npm run build
+
+# 2. Deploy bundle via InsForge CLI
+npx @insforge/cli deployments deploy .
+```
+
+- Production Domain: `https://hvacbiz.insforge.site`
+- Backend BaaS Project: `hvac-biz` (`https://as2hwz72.us-east.insforge.app`)
+
+---
+
+## 5. Deployment Option 3: Google Cloud Run & Docker Containers
+
+### 5.1 Production Multi-Stage Dockerfile
 
 ```dockerfile
 # Stage 1: Build & Bundle
@@ -162,7 +197,8 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 CMD ["node", "dist/server.cjs"]
 ```
 
-### 4.2 Build and Deploy to Google Cloud Run
+### 5.2 Build and Deploy to Google Cloud Run
+
 ```bash
 # 1. Submit build to Google Artifact Registry
 gcloud builds submit --tag gcr.io/YOUR_GCP_PROJECT_ID/alpha-erp:latest
@@ -183,9 +219,10 @@ gcloud run deploy alpha-erp \
 
 ---
 
-## 5. Deployment Option 3: Ubuntu 24.04 / 22.04 LTS (Bare-Metal / VM)
+## 6. Deployment Option 4: Ubuntu 24.04 / 22.04 LTS (Bare-Metal / VM)
 
-### 5.1 System Setup & Node.js 20 LTS
+### 6.1 System Setup & Node.js 20 LTS
+
 ```bash
 sudo apt-get update -y && sudo apt-get upgrade -y
 sudo apt-get install -y curl wget git build-essential nginx certbot python3-certbot-nginx
@@ -195,7 +232,8 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
-### 5.2 Build & Run with PM2
+### 6.2 Build & Run with PM2
+
 ```bash
 cd /opt/alpha-erp
 npm ci
@@ -208,8 +246,10 @@ pm2 startup systemd
 pm2 save
 ```
 
-### 5.3 Nginx Reverse Proxy & SSL Configuration
+### 6.3 Nginx Reverse Proxy & SSL Configuration
+
 Create `/etc/nginx/sites-available/alpha-erp`:
+
 ```nginx
 server {
     listen 80;
@@ -233,6 +273,7 @@ server {
 ```
 
 Enable and activate Let's Encrypt SSL:
+
 ```bash
 sudo ln -sf /etc/nginx/sites-available/alpha-erp /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
@@ -241,7 +282,7 @@ sudo certbot --nginx -d erp.yourdomain.com --non-interactive --agree-tos -m admi
 
 ---
 
-## 6. Health Check & Deployment Verification
+## 7. Health Check & Deployment Verification
 
 ```bash
 # 1. Health & Environment Status Check
@@ -258,11 +299,14 @@ curl -X POST https://hvacbiz.vercel.app/api/procurement/reorder-alert-email \
 
 # 3. MongoDB Cluster Connection Test
 curl -s https://hvacbiz.vercel.app/api/mongodb/status | jq .
+
+# 4. Automated Enterprise UAT Test Suite (17 Use Cases, 65 Verification Steps)
+npm run test:uat
 ```
 
 ---
 
-## 7. Zero-Downtime Updates & Rollbacks
+## 8. Zero-Downtime Updates & Rollbacks
 
 ```bash
 cd /opt/alpha-erp

@@ -8,15 +8,16 @@ import {
   ChevronRight,
   ShieldCheck,
   User,
-  MapPin,
+  IndianRupee,
+  Layers,
   ArrowUpRight
 } from 'lucide-react';
-import { AMCContract, PPMVisit, BreakdownTicket } from '../../types';
+import { AmcContract, PpmScheduleVisit, BreakdownTicket } from '../../types';
 import { storageService } from '../../services/storageService';
 
 interface UpcomingServiceVisitsWidgetProps {
-  amcContracts?: AMCContract[];
-  ppmVisits?: PPMVisit[];
+  amcContracts?: AmcContract[];
+  ppmVisits?: PpmScheduleVisit[];
   breakdownTickets?: BreakdownTicket[];
   onNavigate: (tab: string) => void;
 }
@@ -37,7 +38,7 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
   const visits = useMemo(() => {
     return propVisits && propVisits.length > 0
       ? propVisits
-      : storageService.getPPMVisits();
+      : storageService.getPpmVisits();
   }, [propVisits]);
 
   const breakdowns = useMemo(() => {
@@ -46,52 +47,118 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
       : storageService.getBreakdownTickets();
   }, [propTickets]);
 
-  // Aggregate stats
-  const upcomingVisits = useMemo(() => {
-    return [...visits]
-      .filter((v) => v.status === 'scheduled' || v.status === 'in_progress')
-      .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime())
-      .slice(0, 4);
+  // Calculations for the 3 Core Required Summary Metrics
+  const activeContracts = useMemo(() => {
+    return contracts.filter((c) => c.status === 'Active' || (c.status as string) === 'active');
+  }, [contracts]);
+
+  const totalAmcRevenue = useMemo(() => {
+    return activeContracts.reduce((sum, c) => sum + (c.annualContractValue || 0), 0);
+  }, [activeContracts]);
+
+  const pendingVisits = useMemo(() => {
+    return visits.filter(
+      (v) =>
+        v.status === 'Scheduled' ||
+        v.status === 'In Progress' ||
+        (v.status as string) === 'scheduled' ||
+        (v.status as string) === 'in_progress'
+    );
   }, [visits]);
 
   const openBreakdowns = useMemo(() => {
-    return breakdowns.filter((b) => b.status === 'reported' || b.status === 'assigned' || b.status === 'in_progress');
+    return breakdowns.filter(
+      (b) =>
+        b.status === 'Open' ||
+        b.status === 'Dispatched' ||
+        b.status === 'Work In Progress' ||
+        (b.status as string) === 'reported' ||
+        (b.status as string) === 'assigned' ||
+        (b.status as string) === 'in_progress'
+    );
   }, [breakdowns]);
 
-  const activeAmcs = useMemo(() => {
-    return contracts.filter((c) => c.status === 'active');
-  }, [contracts]);
+  // Combined Pending Service Calls (Scheduled PPMs + Open Breakdowns)
+  const totalPendingServiceCalls = useMemo(() => {
+    return pendingVisits.length + openBreakdowns.length;
+  }, [pendingVisits, openBreakdowns]);
+
+  const totalEquipmentCovered = useMemo(() => {
+    return activeContracts.reduce((sum, c) => {
+      if (c.equipmentList && c.equipmentList.length > 0) {
+        return sum + c.equipmentList.length;
+      }
+      return sum + (c.equipmentCount || 1);
+    }, 0);
+  }, [activeContracts]);
+
+  // Sorting next upcoming PPM visits
+  const upcomingVisits = useMemo(() => {
+    return [...pendingVisits]
+      .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime())
+      .slice(0, 4);
+  }, [pendingVisits]);
+
+  const emergencyBreakdownsCount = useMemo(() => {
+    return openBreakdowns.filter(
+      (b) =>
+        b.priority === 'Critical 24x7' ||
+        b.priority === 'High' ||
+        (b.priority as string) === 'emergency' ||
+        (b.priority as string) === 'high'
+    ).length;
+  }, [openBreakdowns]);
+
+  // Format currency in Indian format
+  const formatINR = (amount: number) => {
+    if (amount >= 10000000) {
+      return `₹${(amount / 10000000).toFixed(2)} Cr`;
+    }
+    if (amount >= 100000) {
+      return `₹${(amount / 100000).toFixed(2)} Lakhs`;
+    }
+    return `₹${Math.round(amount).toLocaleString('en-IN')}`;
+  };
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
+      case 'Critical 24x7':
       case 'emergency':
-        return 'bg-red-500/10 text-red-600 border-red-200 dark:border-red-900/50';
+        return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50';
+      case 'High':
       case 'high':
-        return 'bg-amber-500/10 text-amber-600 border-amber-200 dark:border-amber-900/50';
+        return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/50';
+      case 'Medium':
       case 'medium':
-        return 'bg-blue-500/10 text-blue-600 border-blue-200 dark:border-blue-900/50';
+        return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50';
       default:
-        return 'bg-slate-500/10 text-slate-600 border-slate-200 dark:border-slate-800';
+        return 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800';
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'Completed':
       case 'completed':
-        return 'bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-900/50';
+        return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50';
+      case 'In Progress':
+      case 'Work In Progress':
       case 'in_progress':
-        return 'bg-blue-500/10 text-blue-600 border-blue-200 dark:border-blue-900/50';
+      case 'Dispatched':
+        return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50';
+      case 'Scheduled':
+      case 'Open':
       case 'scheduled':
-        return 'bg-indigo-500/10 text-indigo-600 border-indigo-200 dark:border-indigo-900/50';
+        return 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/50';
       default:
-        return 'bg-slate-500/10 text-slate-600 border-slate-200 dark:border-slate-800';
+        return 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800';
     }
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900 shrink-0">
             <CalendarClock className="w-5 h-5" />
@@ -99,19 +166,19 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-wide uppercase">
-                Upcoming Service Visits & AMC Schedules
+                Service & AMC Operations Hub
               </h3>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                 Live Field Dispatch
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Preventive maintenance (PPM) visits, 4-point HVAC inspection checklists, and 24x7 emergency ticket response
+              Preventive maintenance (PPM) visits, individual equipment health logs, and 24x7 emergency ticket response
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        <div className="flex items-center gap-2 flex-wrap self-end sm:self-auto">
           <button
             onClick={() => onNavigate('services_schedule')}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
@@ -121,58 +188,123 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
           </button>
           <button
             onClick={() => onNavigate('services_amc')}
-            className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <span>AMC Hub</span>
+            <span>AMC Hub & Logs</span>
           </button>
         </div>
       </div>
 
-      {/* Metric Highlights */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
-          <div className="text-[11px] font-medium text-slate-500">Upcoming PPMs</div>
-          <div className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 font-mono mt-0.5">
-            {upcomingVisits.length}
+      {/* THREE CORE SUMMARY CARDS specifically requested for the Service & AMC Module */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Card 1: Active Contracts */}
+        <div
+          onClick={() => onNavigate('services_amc')}
+          className="relative overflow-hidden bg-gradient-to-br from-emerald-50/50 via-white to-slate-50 dark:from-emerald-950/20 dark:via-slate-900 dark:to-slate-800/60 p-4 sm:p-5 rounded-2xl border border-emerald-200/80 dark:border-emerald-900/50 shadow-xs hover:shadow-md transition-all cursor-pointer group"
+        >
+          <div className="flex items-center justify-between">
+            <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/80">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform">
+              <span>View All</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-[10px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">
-            Scheduled next
+          <div className="mt-3">
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Active AMC Contracts
+            </div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 font-mono mt-1">
+              {activeContracts.length}{' '}
+              <span className="text-xs font-normal text-slate-500 font-sans">Contracts</span>
+            </div>
+          </div>
+          <div className="mt-2.5 pt-2.5 border-t border-emerald-100 dark:border-emerald-950/60 flex items-center justify-between text-xs">
+            <span className="text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1">
+              <Layers className="w-3.5 h-3.5 text-emerald-500" />
+              {totalEquipmentCovered} HVAC Units Covered
+            </span>
+            <span className="text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-100/80 dark:bg-emerald-900/60 px-2 py-0.5 rounded-md text-[10px]">
+              99.8% SLA Uptime
+            </span>
           </div>
         </div>
 
-        <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
-          <div className="text-[11px] font-medium text-slate-500">Open Breakdowns</div>
-          <div className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 font-mono mt-0.5">
-            {openBreakdowns.length}
+        {/* Card 2: Pending Service Calls */}
+        <div
+          onClick={() => onNavigate('services_schedule')}
+          className="relative overflow-hidden bg-gradient-to-br from-amber-50/50 via-white to-slate-50 dark:from-amber-950/20 dark:via-slate-900 dark:to-slate-800/60 p-4 sm:p-5 rounded-2xl border border-amber-200/80 dark:border-amber-900/50 shadow-xs hover:shadow-md transition-all cursor-pointer group"
+        >
+          <div className="flex items-center justify-between">
+            <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/80">
+              <Wrench className="w-5 h-5" />
+            </div>
+            <div className="flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 group-hover:translate-x-0.5 transition-transform">
+              <span>Dispatch Board</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-[10px] text-red-600 dark:text-red-400 font-medium mt-0.5">
-            {openBreakdowns.filter(b => b.priority === 'emergency').length} Emergency
+          <div className="mt-3">
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Pending Service Calls
+            </div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 font-mono mt-1">
+              {totalPendingServiceCalls}{' '}
+              <span className="text-xs font-normal text-slate-500 font-sans">Calls in Queue</span>
+            </div>
+          </div>
+          <div className="mt-2.5 pt-2.5 border-t border-amber-100 dark:border-amber-950/60 flex items-center justify-between text-xs">
+            <span className="text-slate-600 dark:text-slate-400 font-medium">
+              {pendingVisits.length} PPMs • {openBreakdowns.length} Breakdowns
+            </span>
+            {emergencyBreakdownsCount > 0 ? (
+              <span className="text-red-700 dark:text-red-300 font-bold bg-red-100/80 dark:bg-red-900/60 px-2 py-0.5 rounded-md text-[10px] animate-pulse">
+                {emergencyBreakdownsCount} Critical Emergency
+              </span>
+            ) : (
+              <span className="text-slate-500 font-medium text-[10px]">
+                Normal Dispatch
+              </span>
+            )}
           </div>
         </div>
 
-        <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
-          <div className="text-[11px] font-medium text-slate-500">Active AMC Contracts</div>
-          <div className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 font-mono mt-0.5">
-            {activeAmcs.length}
+        {/* Card 3: Total Revenue from AMCs */}
+        <div
+          onClick={() => onNavigate('services_amc')}
+          className="relative overflow-hidden bg-gradient-to-br from-blue-50/50 via-white to-slate-50 dark:from-blue-950/20 dark:via-slate-900 dark:to-slate-800/60 p-4 sm:p-5 rounded-2xl border border-blue-200/80 dark:border-blue-900/50 shadow-xs hover:shadow-md transition-all cursor-pointer group"
+        >
+          <div className="flex items-center justify-between">
+            <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/80">
+              <IndianRupee className="w-5 h-5" />
+            </div>
+            <div className="flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
+              <span>Financials</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
-            Covered sites
+          <div className="mt-3">
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Total Revenue from AMCs
+            </div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-blue-600 dark:text-blue-400 font-mono mt-1">
+              {formatINR(totalAmcRevenue)}
+            </div>
           </div>
-        </div>
-
-        <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
-          <div className="text-[11px] font-medium text-slate-500">Field Engineers</div>
-          <div className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 font-mono mt-0.5">
-            4
-          </div>
-          <div className="text-[10px] text-slate-500 font-medium mt-0.5">
-            On-call active
+          <div className="mt-2.5 pt-2.5 border-t border-blue-100 dark:border-blue-950/60 flex items-center justify-between text-xs">
+            <span className="text-slate-600 dark:text-slate-400 font-medium">
+              Annual Recurring Value (ACV)
+            </span>
+            <span className="text-blue-700 dark:text-blue-300 font-bold bg-blue-100/80 dark:bg-blue-900/60 px-2 py-0.5 rounded-md text-[10px]">
+              Recurring ARR
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Two Column Layout: Upcoming Visits vs Emergency Breakdowns */}
+      {/* Two Column Layout: Next Scheduled PPM Visits vs Emergency Breakdowns */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-1">
         {/* Left: Upcoming PPM Visits */}
         <div className="space-y-2.5">
@@ -191,8 +323,8 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
               </div>
             ) : (
               upcomingVisits.map((visit) => {
-                const contract = contracts.find((c) => c.id === visit.amcId);
-                const hasChecklist = visit.checklist && Object.values(visit.checklist).some((v) => v === true);
+                const contract = contracts.find((c) => c.id === visit.contractId);
+                const hasChecklist = visit.checklistSummary && visit.checklistSummary.some((v) => v.done === true);
 
                 return (
                   <div
@@ -209,7 +341,7 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
                             {visit.clientName}
                           </span>
                           <span className={`px-2 py-0.2 rounded-full text-[10px] font-bold border ${getStatusBadge(visit.status)}`}>
-                            {visit.status.replace('_', ' ').toUpperCase()}
+                            {visit.status.toUpperCase()}
                           </span>
                         </div>
                         <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
@@ -220,14 +352,14 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
                           <span>•</span>
                           <span className="flex items-center gap-1">
                             <User className="w-3 h-3 text-slate-400" />
-                            {visit.technicianName}
+                            {visit.assignedTechnician}
                           </span>
                         </div>
                       </div>
 
                       <div className="text-right shrink-0">
                         <div className="text-[10px] font-medium text-slate-500">
-                          {contract?.equipmentType || 'HVAC System'}
+                          {contract?.systemType || 'HVAC System'}
                         </div>
                         <div className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 flex items-center justify-end gap-1 mt-0.5">
                           {hasChecklist ? (
@@ -236,7 +368,7 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
                               Checklist
                             </span>
                           ) : (
-                            <span>PPM #{visit.visitNumber}</span>
+                            <span>Visit #{visit.visitNumber}</span>
                           )}
                         </div>
                       </div>
@@ -290,10 +422,10 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
 
                     <div className="text-right shrink-0">
                       <div className="text-[10px] text-slate-500 font-mono">
-                        {ticket.reportedDate}
+                        {ticket.reportedAt ? ticket.reportedAt.split('T')[0] : ''}
                       </div>
                       <div className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 mt-0.5">
-                        {ticket.technicianName}
+                        {ticket.assignedTechnician}
                       </div>
                     </div>
                   </div>

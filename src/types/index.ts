@@ -5,7 +5,8 @@ export type UserRole =
   | 'procurement'
   | 'warehouse'
   | 'finance'
-  | 'technician';
+  | 'technician'
+  | 'service_manager';
 
 export interface UserProfile {
   id: string;
@@ -221,8 +222,10 @@ export interface AmcContract {
   contactPhone: string;
   contactEmail: string;
   contractType: AmcContractType;
+  planType?: string;
   systemType: string;
   equipmentCount: number;
+  equipmentCovered?: number;
   equipmentList: ServiceEquipmentItem[];
   startDate: string;
   endDate: string;
@@ -241,6 +244,9 @@ export interface AmcContract {
   createdAt: string;
 }
 
+export type AMCContract = AmcContract;
+export type PPMVisit = PpmScheduleVisit;
+
 export interface PpmChecklistItem {
   task: string;
   done: boolean;
@@ -256,11 +262,12 @@ export interface PpmScheduleVisit {
   siteAddress: string;
   scheduledDate: string;
   completedDate?: string;
-  quarter: string;
+  quarter?: string;
   status: 'Scheduled' | 'In Progress' | 'Completed' | 'Overdue' | 'Rescheduled';
   assignedTechnician: string;
   checklistSummary: PpmChecklistItem[];
   findingsNotes?: string;
+  technicianRemarks?: string;
   customerSignatureName?: string;
   customerRating?: number;
 }

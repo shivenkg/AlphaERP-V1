@@ -419,6 +419,22 @@ class StorageService {
       save(STORAGE_KEYS.SHEETS_CONFIG, this.sheetsConfig);
     }
 
+    // Ensure all standard initial users exist in this.users
+    let usersUpdated = false;
+    INITIAL_USERS.forEach((initUser) => {
+      const idx = this.users.findIndex((u) => u.id === initUser.id || u.email.toLowerCase() === initUser.email.toLowerCase());
+      if (idx === -1) {
+        this.users.push(initUser);
+        usersUpdated = true;
+      } else if (this.users[idx].role !== initUser.role || this.users[idx].email !== initUser.email) {
+        this.users[idx] = { ...this.users[idx], ...initUser };
+        usersUpdated = true;
+      }
+    });
+    if (usersUpdated) {
+      save(STORAGE_KEYS.USERS, this.users);
+    }
+
     // Auto-seed / merge any new initial data items for rich experience
     if (this.journalVouchers.length < INITIAL_JOURNAL_VOUCHERS.length) {
       this.journalVouchers = INITIAL_JOURNAL_VOUCHERS;
@@ -447,6 +463,20 @@ class StorageService {
     if (this.attendanceRecords.length < INITIAL_ATTENDANCE.length) {
       this.attendanceRecords = INITIAL_ATTENDANCE;
       save(STORAGE_KEYS.ATTENDANCE, this.attendanceRecords);
+    }
+
+    // Auto-seed Services & AMC Module data
+    if (this.amcContracts.length < INITIAL_AMC_CONTRACTS.length) {
+      this.amcContracts = INITIAL_AMC_CONTRACTS;
+      save(STORAGE_KEYS.AMC_CONTRACTS, this.amcContracts);
+    }
+    if (this.ppmVisits.length < INITIAL_PPM_VISITS.length) {
+      this.ppmVisits = INITIAL_PPM_VISITS;
+      save(STORAGE_KEYS.PPM_VISITS, this.ppmVisits);
+    }
+    if (this.breakdownTickets.length < INITIAL_BREAKDOWN_TICKETS.length) {
+      this.breakdownTickets = INITIAL_BREAKDOWN_TICKETS;
+      save(STORAGE_KEYS.BREAKDOWN_TICKETS, this.breakdownTickets);
     }
 
     // Ensure number series are populated
@@ -522,15 +552,37 @@ class StorageService {
     this.notify();
   }
 
-  public addNotification(title: string, message: string, type: AppNotification['type'], linkTab?: string) {
+  public addNotification(
+    titleOrObj: string | { title: string; message: string; type: AppNotification['type']; linkTab?: string },
+    message?: string,
+    type?: AppNotification['type'],
+    linkTab?: string
+  ) {
+    let titleStr: string = '';
+    let messageStr: string = '';
+    let typeVal: AppNotification['type'] = 'info';
+    let linkTabVal: string | undefined;
+
+    if (typeof titleOrObj === 'object' && titleOrObj !== null) {
+      titleStr = titleOrObj.title;
+      messageStr = titleOrObj.message;
+      typeVal = titleOrObj.type;
+      linkTabVal = titleOrObj.linkTab;
+    } else if (typeof titleOrObj === 'string') {
+      titleStr = titleOrObj;
+      messageStr = message || '';
+      typeVal = type || 'info';
+      linkTabVal = linkTab;
+    }
+
     const notif: AppNotification = {
       id: `notif-${Date.now()}`,
-      title,
-      message,
-      type,
+      title: titleStr,
+      message: messageStr,
+      type: typeVal,
       timestamp: new Date().toISOString(),
       read: false,
-      linkTab
+      linkTab: linkTabVal
     };
     this.notifications = [notif, ...this.notifications];
     save(STORAGE_KEYS.NOTIFICATIONS, this.notifications);
@@ -622,6 +674,7 @@ class StorageService {
   }): UserProfile {
     const defaultAvatars: Record<UserRole, string> = {
       executive: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      service_manager: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       procurement: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
       sales_manager: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
       estimator: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
@@ -633,14 +686,14 @@ class StorageService {
     if (userData.email) {
       const emailCheck = validateEmail(userData.email);
       if (!emailCheck.isValid) {
-        throw new Error(emailCheck.error || 'Invalid email format.');
+        throw new Error(emailCheck.message || emailCheck.error || 'Invalid email format.');
       }
     }
 
     if (userData.phone && userData.phone.trim() && userData.phone.trim() !== '+91' && userData.phone.trim() !== '+91 ') {
       const phoneCheck = validateMobile(userData.phone);
       if (!phoneCheck.isValid) {
-        throw new Error(phoneCheck.error || 'Invalid mobile number format.');
+        throw new Error(phoneCheck.message || phoneCheck.error || 'Invalid mobile number format.');
       }
     }
 
@@ -727,6 +780,7 @@ class StorageService {
   public setUserRole(role: UserRole) {
     const roleTitles: Record<UserRole, string> = {
       executive: 'Managing Director & Operations Head',
+      service_manager: 'Service Operations Manager & AMC Head',
       sales_manager: 'HVAC Regional Sales Manager',
       estimator: 'Chief MEP & HVAC Estimator',
       procurement: 'Head of Procurement & Supply Chain',
@@ -761,14 +815,14 @@ class StorageService {
     if (leadData.email) {
       const emailCheck = validateEmail(leadData.email);
       if (!emailCheck.isValid) {
-        throw new Error(emailCheck.error || 'Invalid lead email format.');
+        throw new Error(emailCheck.message || emailCheck.error || 'Invalid lead email format.');
       }
     }
 
     if (leadData.phone) {
       const phoneCheck = validateMobile(leadData.phone);
       if (!phoneCheck.isValid) {
-        throw new Error(phoneCheck.error || 'Invalid lead mobile number.');
+        throw new Error(phoneCheck.message || phoneCheck.error || 'Invalid lead mobile number.');
       }
     }
 
@@ -1857,21 +1911,21 @@ class StorageService {
     if (contract.contactEmail) {
       const emailCheck = validateEmail(contract.contactEmail);
       if (!emailCheck.isValid) {
-        throw new Error(emailCheck.error || 'Invalid contact email format for AMC contract.');
+        throw new Error(emailCheck.message || emailCheck.error || 'Invalid contact email format for AMC contract.');
       }
     }
 
     if (contract.contactPhone) {
       const phoneCheck = validateMobile(contract.contactPhone);
       if (!phoneCheck.isValid) {
-        throw new Error(phoneCheck.error || 'Invalid contact phone for AMC contract.');
+        throw new Error(phoneCheck.message || phoneCheck.error || 'Invalid contact phone for AMC contract.');
       }
     }
 
     if (contract.startDate && contract.endDate) {
       const rangeCheck = validateDateRange(contract.startDate, contract.endDate, 'Contract Start Date', 'Contract End Date');
       if (!rangeCheck.isValid) {
-        throw new Error(rangeCheck.error || 'Invalid contract date range.');
+        throw new Error(rangeCheck.message || rangeCheck.error || 'Invalid contract date range.');
       }
     }
 
@@ -1932,7 +1986,7 @@ class StorageService {
     if (ticket.contactPhone) {
       const phoneCheck = validateMobile(ticket.contactPhone);
       if (!phoneCheck.isValid) {
-        throw new Error(phoneCheck.error || 'Invalid contact phone for breakdown ticket.');
+        throw new Error(phoneCheck.message || phoneCheck.error || 'Invalid contact phone for breakdown ticket.');
       }
     }
 
@@ -3440,6 +3494,14 @@ class StorageService {
     save(STORAGE_KEYS.PAYROLL_MONTHS, this.payrollMonths);
     save(STORAGE_KEYS.RESIGNATIONS, this.resignationRecords);
 
+    // Services & AMC
+    this.amcContracts = INITIAL_AMC_CONTRACTS;
+    this.ppmVisits = INITIAL_PPM_VISITS;
+    this.breakdownTickets = INITIAL_BREAKDOWN_TICKETS;
+    save(STORAGE_KEYS.AMC_CONTRACTS, this.amcContracts);
+    save(STORAGE_KEYS.PPM_VISITS, this.ppmVisits);
+    save(STORAGE_KEYS.BREAKDOWN_TICKETS, this.breakdownTickets);
+
     this.notify();
   }
 
@@ -3879,7 +3941,7 @@ class StorageService {
     if (data.email) {
       const emailCheck = validateEmail(data.email);
       if (!emailCheck.isValid) {
-        throw new Error(emailCheck.error || 'Invalid employee email format.');
+        throw new Error(emailCheck.message || emailCheck.error || 'Invalid employee email format.');
       }
     }
 
@@ -3887,7 +3949,7 @@ class StorageService {
     if (rawPhone && rawPhone.trim() && rawPhone.trim() !== '+91' && rawPhone.trim() !== '+91 ') {
       const phoneCheck = validateMobile(rawPhone);
       if (!phoneCheck.isValid) {
-        throw new Error(phoneCheck.error || 'Invalid employee mobile number.');
+        throw new Error(phoneCheck.message || phoneCheck.error || 'Invalid employee mobile number.');
       }
     }
 
@@ -3895,7 +3957,7 @@ class StorageService {
     if (rawDob) {
       const dobCheck = validateDateOfBirth(rawDob, 18);
       if (!dobCheck.isValid) {
-        throw new Error(dobCheck.error || 'Invalid date of birth.');
+        throw new Error(dobCheck.message || dobCheck.error || 'Invalid date of birth.');
       }
     }
 

@@ -342,7 +342,8 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                 <option value="estimator">MEP / HVAC Estimator</option>
                 <option value="warehouse">Warehouse Superintendent</option>
                 <option value="finance">Finance Controller</option>
-                <option value="technician">Field Project Engineer</option>
+                <option value="technician">Field Service Engineer</option>
+                <option value="service_manager">Service Operations Manager</option>
               </select>
 
               <select
@@ -705,7 +706,8 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                   <option value="estimator">MEP / HVAC Estimator (Creates Quotes & BOQ, Raises PR)</option>
                   <option value="warehouse">Warehouse / Inventory Head (Stock, GRN Inwarding)</option>
                   <option value="finance">Finance Controller (Invoicing & Settlement)</option>
-                  <option value="technician">Field HVAC Project Engineer (Work Orders & Site PRs)</option>
+                  <option value="technician">Field HVAC Service Engineer (PPM Checklists & Breakdown Tickets)</option>
+                  <option value="service_manager">Service Operations Manager (AMC Contracts, Fleet & SLA Dispatch)</option>
                   <option value="executive">Executive / Managing Director (Super Admin - All Rights)</option>
                 </select>
               </div>
@@ -812,7 +814,8 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                   <option value="estimator">MEP / HVAC Estimator</option>
                   <option value="warehouse">Warehouse Superintendent</option>
                   <option value="finance">Finance Controller</option>
-                  <option value="technician">Field HVAC Project Engineer</option>
+                  <option value="technician">Field HVAC Service Engineer</option>
+                  <option value="service_manager">Service Operations Manager</option>
                 </select>
               </div>
 

@@ -1,5 +1,6 @@
 # Comprehensive Architecture & Technical Project Document (AlphaERP)
-### Enterprise HVAC Techno-Commercial, BOQ Engineering, Multi-Tier Procurement, Predictive Stock Indents, GAAP Accounting & Multi-Cloud Platform
+
+## Enterprise HVAC Techno-Commercial, BOQ Engineering, Multi-Tier Procurement, Predictive Stock Indents, GAAP Accounting & Multi-Cloud Platform
 
 **Project Name:** AlphaERP / HVAC-Sync Pro (Commercial HVAC & MEP Enterprise Lifecycle Platform)  
 **Version:** 3.5.0-Production  
@@ -110,7 +111,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'executive' | 'procurement' | 'estimator' | 'sales_manager' | 'warehouse_manager' | 'finance' | 'technician';
+  role: 'executive' | 'procurement' | 'estimator' | 'sales_manager' | 'warehouse_manager' | 'finance' | 'service_manager' | 'technician';
   department: string;
   status: 'Active' | 'Inactive';
   phone?: string;
@@ -248,6 +249,54 @@ export interface GoodsReceiptNote {
     rejectedQuantity: number;
   }[];
 }
+
+// 7. Services & Annual Maintenance Contracts (AMC)
+export interface ServiceContract {
+  id: string;
+  contractNumber: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  siteAddress: string;
+  contractType: 'Comprehensive' | 'Non-Comprehensive' | 'Semi-Comprehensive';
+  startDate: string;
+  endDate: string;
+  annualValue: number;
+  status: 'Active' | 'Under Review' | 'Expired' | 'Renewed';
+  equipmentCovered: CustomerEquipment[];
+  ppmFrequency: 'Monthly' | 'Bi-Monthly' | 'Quarterly' | 'Half-Yearly';
+  assignedManager: string;
+}
+
+export interface PpmScheduleVisit {
+  id: string;
+  contractId: string;
+  visitNumber: number;
+  scheduledDate: string;
+  assignedEngineer: string;
+  status: 'Scheduled' | 'In Progress' | 'Completed' | 'Overdue';
+  completedDate?: string;
+  telemetryLogs?: {
+    suctionPressurePsi: number;
+    dischargePressurePsi: number;
+    temperatureDeltaC: number;
+    motorCurrentAmps: number;
+  };
+  technicianNotes?: string;
+}
+
+export interface BreakdownTicket {
+  id: string;
+  ticketNumber: string;
+  clientName: string;
+  equipmentTag: string;
+  reportedIssue: string;
+  priority: 'Critical 24x7' | 'High' | 'Medium' | 'Low';
+  status: 'Open' | 'Dispatched' | 'Work In Progress' | 'Resolved' | 'Closed';
+  assignedTechnician: string;
+  sparesConsumed: { sku: string; name: string; quantity: number; unitCost: number }[];
+  resolutionNotes?: string;
+}
 ```
 
 ---
@@ -327,25 +376,44 @@ flowchart TD
     G --> H["Credit: Accounts Receivable (Clearing Outstanding)"]
 ```
 
+### Flow 6: HVAC Services, AMC Contracts, PPM Telemetry & Emergency Breakdown Lifecycle
+
+```mermaid
+flowchart TD
+    A["Commissioned Project Handover to Services"] --> B["Service Operations Manager Drafts AMC Contract (Comprehensive / Non-Comprehensive)"]
+    B --> C["Generate Periodic Planned Maintenance (PPM) Calendar (Quarterly / Bi-Monthly)"]
+    C --> D["Dispatch PPM Work to Field Service Engineer Mobile Applet"]
+    D --> E["Service Engineer Captures 4-Point Telemetry: Suction/Discharge PSI, Delta T, Motor Amps"]
+    E --> F["Complete PPM Checklist & Sign Off Site Visit"]
+    G["Emergency Breakdown Reported (24x7 Priority)"] --> H["Immediate Service Manager Dispatch & SLA Escalation"]
+    H --> I["Field Engineer Dispatched with Truck Van Inventory Spares"]
+    I --> J["Replace Defective Spares & Consume Van Stock Inventory"]
+    J --> K["Instant On-Site Breakdown Invoicing & Client Signoff"]
+    B --> L["Automated 30-Day Contract Expiry & Renewal Email Dispatch via Nodemailer"]
+```
+
 ---
 
 ## 5. Role-Based Access Control (RBAC) Matrix
 
-| Module / Operation | Executive / MD | Sales Manager | HVAC Estimator | Procurement | Warehouse | Finance | Lead Engineer |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Executive Management Dashboard** | Full | View | View | View | View | View | View |
-| **CRM Leads & Site Survey** | Full | Full | View | View | No | View | No |
-| **Quotation & Margin Engine** | Full | Full | Full | View | No | View | No |
-| **Project Milestones & Gantt** | Full | View | View | View | View | View | Full |
-| **BOQ Stock Shortage Reconciliation**| Full | View | Full | View | View | View | View |
-| **Raise Purchase Requisition (PR)**| Full | No | Full | Full | Full | No | No |
-| **Issue Purchase Order (PO)** | Full | No | No | Full | No | No | No |
-| **Goods Receipt Note (GRN) Inwarding**| Full | No | No | No | Full | No | No |
-| **Field Work Orders & Signoff** | Full | No | No | No | No | No | Full |
-| **Milestone Invoicing & GST** | Full | View | No | View | No | Full | No |
-| **GAAP Double-Entry Ledger** | Full | No | No | No | No | Full | No |
-| **HRMS & Payroll Administration** | Full | Team View| Self | Self | Self | Payroll Full | Self |
-| **Admin SMTP & MongoDB Config** | Full | No | No | No | No | No | No |
+| Module / Operation | Executive / MD | Sales Manager | HVAC Estimator | Procurement | Warehouse | Finance | Service Operations Manager | Lead / Field Engineer |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Executive Management Dashboard** | Full | View | View | View | View | View | View | View |
+| **CRM Leads & Site Survey** | Full | Full | View | View | No | View | View (Client Info) | No |
+| **Quotation & Margin Engine** | Full | Full | Full | View | No | View | View (Specs) | No |
+| **Project Milestones & Gantt** | Full | View | View | View | View | View | View (Sites) | Full (Site Tasks) |
+| **BOQ Stock Shortage Reconciliation** | Full | View | Full | View | View | View | View | View |
+| **Raise Purchase Requisition (PR)** | Full | No | Full | Full | Full | No | Full (Spares PR) | No |
+| **Issue Purchase Order (PO)** | Full | No | No | Full | No | No | No | No |
+| **Goods Receipt Note (GRN) Inwarding** | Full | No | No | No | Full | No | No | No |
+| **Services & AMC Contracts** | Full | View | View | View | View | View | Full (Manage AMC/SLA) | View (Active) |
+| **PPM Scheduling & Fleet Dispatch** | Full | No | No | No | View (Van Stock) | No | Full (Roster & Routing) | View & Execute |
+| **Breakdown Tickets & Telemetry** | Full | No | No | No | View (Spares) | No | Full (Escalate & Close) | Full (Log Telemetry) |
+| **Field Work Orders & Signoff** | Full | No | No | No | No | No | Full & Dispatch | Full & Sign |
+| **Milestone Invoicing & GST** | Full | View | No | View | No | Full | View (AMC Billing) | No |
+| **GAAP Double-Entry Ledger** | Full | No | No | No | No | Full | No | No |
+| **HRMS & Payroll Administration** | Full | Team View | Self | Self | Self | Payroll Full | Team View | Self |
+| **Admin SMTP & MongoDB Config** | Full | No | No | No | No | No | No | No |
 
 ---
 
@@ -373,3 +441,31 @@ flowchart TD
 - **ISHRAE Standards**: Commercial cooling design standards in tropical operating conditions.
 - **Ind AS 115 / GAAP**: Milestone-based revenue recognition from customer contracts.
 - **Indian GST Law**: Complete support for B2B tax invoices with SAC/HSN codes and 18% GST split.
+
+---
+
+## 8. Enterprise UAT Test Verification Matrix (17 Use Cases, 65 Steps)
+
+AlphaERP is validated with a 100% passing automated business test suite:
+
+```bash
+npm run test:uat
+```
+
+- **UAT-01**: Commercial HVAC Lead Lifecycle & Opportunity Pipeline
+- **UAT-02**: Detailed Multi-Category BOQ & HVAC Pricing Engine
+- **UAT-03**: Quote Awarding, Contract Conversion & Project BOQ Initialization
+- **UAT-04**: Site Work Orders Execution & Progress Tracking
+- **UAT-05**: Procurement Lifecycle: Requisition, Management Approval & Purchase Order
+- **UAT-06**: Goods Receipt Note (GRN) Processing & Real-Time Inventory Stock Control
+- **UAT-07**: Milestone Tax Invoicing, GST Breakdown & Accounts Receivable (AR)
+- **UAT-08**: HR Employee Lifecycle, Biometric Attendance & Payroll Processing
+- **UAT-09**: Role-Based Access Control (RBAC) & Module Security Enforcement
+- **UAT-10**: Multi-Database Resilience, MongoDB Atlas Sync & Audit Integrity
+- **UAT-11**: Project Cost Variance & Margin Erosion Analysis
+- **UAT-12**: HVAC Engineering UOM Conversions & Project Completion Billing
+- **UAT-13**: HVAC Services & Annual Maintenance Contract (AMC) & PPM Schedule Lifecycle
+- **UAT-14**: Emergency Breakdown Ticket Dispatch, Spares Consumption & On-Site Invoicing
+- **UAT-15**: Application-Wide Data Sanity, Mobile Digit Constraints, Email RFC, Date Limits & Gov IDs
+- **UAT-16**: AMC Contracts, Google Sheets Sync, 30-Day Renewal Email Alerts & PPM Scheduling
+- **UAT-17**: Service Operations Manager & Service Engineer Dual Persona Workflows & Telemetry Logs

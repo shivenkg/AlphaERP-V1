@@ -1,9 +1,11 @@
 # AlphaERP: Complete Step-by-Step Implementation & Deployment Guide
-### Enterprise HVAC Techno-Commercial, BOQ Engineering, Multi-Tier Procurement, Email/SMTP Alerts, GAAP Accounting & Multi-Cloud Suite
+
+## Enterprise HVAC Techno-Commercial, BOQ Engineering, Multi-Tier Procurement, Email/SMTP Alerts, GAAP Accounting & Multi-Cloud Suite
 
 **Document Version:** 3.5.0-Production  
-**Applet URL:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
-**Target Environment:** Vercel Serverless / Ubuntu 24.04-22.04 LTS / Docker & Google Cloud Run
+**Custom Production Domain:** [https://hvacbiz.insforge.site](https://hvacbiz.insforge.site)  
+**Vercel Production Mirror:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
+**Target Environments:** InsForge BaaS Edge / Vercel Serverless / Ubuntu 24.04-22.04 LTS / Docker & Google Cloud Run
 
 ---
 
@@ -16,27 +18,33 @@ flowchart TD
     end
 
     subgraph IngressGateway["🌐 Ingress & Edge Layer"]
+        InsForgeEdge["InsForge BaaS Edge (hvacbiz.insforge.site)"]
         CDN["Vercel Edge Global CDN / Nginx Proxy"]
         SSL["Let's Encrypt SSL / Vercel TLS 1.3"]
         CDN --> SSL
     end
 
     subgraph ComputeLayer["⚙️ Compute & Application Runtime"]
+        InsForgeBaaS["InsForge PostgreSQL & Edge Functions"]
         Serverless["Vercel Serverless Function (api/index.js)"]
         Container["Containerized Dedicated Server (dist/server.cjs - Port 3000)"]
     end
 
     subgraph PersistenceCloud["☁️ Persistence & Integrations"]
+        InsForgeDB[("InsForge BaaS PostgreSQL 14+")]
         MongoDB[("MongoDB Atlas Cloud (alphaerp)")]
         GoogleSheets["Google Sheets Enterprise Synchronizer"]
         SMTP["SMTP Transporter (Gmail / SendGrid / Mailtrap Sandbox)"]
         GeminiLive["Google Gemini Live AI Engine (/live)"]
     end
 
+    Browser <-->|HTTPS REST| InsForgeEdge
     Browser <-->|HTTPS REST| CDN
     Browser <-->|WSS Duplex Audio| Container
+    InsForgeEdge --> InsForgeBaaS
     SSL --> Serverless
     SSL --> Container
+    InsForgeBaaS <--> InsForgeDB
     Serverless <--> MongoDB
     Serverless --> SMTP
     Container <--> MongoDB
@@ -49,14 +57,17 @@ flowchart TD
 
 ## 2. Supported Deployment Platforms
 
-AlphaERP supports three standard deployment pathways:
+AlphaERP supports four standard deployment pathways:
 
-1. **Vercel Serverless (Recommended for Instant Scalability & Zero Ops)**
-   - Pre-configured with `vercel.json` and `api/index.js`.
+1. **InsForge BaaS Hosting & Edge Delivery (Primary Custom Domain)**
+   - Deployed with `npx @insforge/cli deployments deploy .` to `https://hvacbiz.insforge.site`.
+   - Native integration with PostgreSQL 14+, Row-Level-Security, and high-performance CDN edge routing.
+2. **Vercel Serverless (Instant Scalability & Zero Ops Mirror)**
+   - Pre-configured with `vercel.json` and `api/index.js` deployed to `https://hvacbiz.vercel.app`.
    - Global Edge CDN for React 19 static assets and on-demand serverless functions for REST routes.
-2. **Ubuntu Linux 24.04 / 22.04 LTS (Bare-Metal or Cloud VM)**
+3. **Ubuntu Linux 24.04 / 22.04 LTS (Bare-Metal or Cloud VM)**
    - Full-stack Node.js 20 deployment managed via PM2 or Systemd behind an Nginx reverse proxy with automated Let's Encrypt SSL.
-3. **Docker & Google Cloud Run (Containerized Microservices)**
+4. **Docker & Google Cloud Run (Containerized Microservices)**
    - Multi-stage Alpine container image listening on port 3000 with support for duplex WebSockets (`/live`).
 
 ---
@@ -64,12 +75,14 @@ AlphaERP supports three standard deployment pathways:
 ## 3. Ubuntu Linux Step-by-Step Implementation
 
 ### Step 3.1: Package Update & Prerequisites Installation
+
 ```bash
 sudo apt-get update -y && sudo apt-get upgrade -y
 sudo apt-get install -y curl wget git build-essential nginx certbot python3-certbot-nginx ufw
 ```
 
 ### Step 3.2: Install Node.js 20 LTS
+
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
@@ -78,6 +91,7 @@ npm -v    # Expected: v10.x.x
 ```
 
 ### Step 3.3: Clone Repository & Install Dependencies
+
 ```bash
 cd /opt
 sudo git clone https://github.com/YOUR_REPO/alpha-erp.git
@@ -87,12 +101,18 @@ npm install
 ```
 
 ### Step 3.4: Configure Environment Variables
+
 Create `/opt/alpha-erp/.env`:
+
 ```env
 # Runtime Configuration
 PORT=3000
 NODE_ENV=production
 HOST=0.0.0.0
+
+# InsForge BaaS PostgreSQL Credentials
+VITE_INSFORGE_URL=https://as2hwz72.us-east.insforge.app
+VITE_INSFORGE_ANON_KEY=your_insforge_anon_key
 
 # MongoDB Atlas Database
 MONGODB_URI=mongodb+srv://shivenk_db_user:<password>@cluster0.5gbrhfg.mongodb.net/alphaerp?retryWrites=true&w=majority
@@ -110,15 +130,19 @@ PROCUREMENT_ALERT_EMAIL=procurement@yourcompany.com
 ```
 
 ### Step 3.5: Build the Application
+
 ```bash
 npm run build
 ```
+
 This build script executes:
+
 1. `vite build`: Compiles optimized React 19 SPA into `dist/`.
 2. `esbuild server.ts`: Compiles dedicated Node server into `dist/server.cjs`.
 3. `esbuild server/api-entry.ts`: Compiles serverless function into `api/index.js`.
 
 ### Step 3.6: Process Management with PM2
+
 ```bash
 sudo npm install -g pm2
 pm2 start dist/server.cjs --name "alpha-erp" --env production
@@ -127,7 +151,9 @@ pm2 save
 ```
 
 ### Step 3.7: Configure Nginx Reverse Proxy
+
 Create `/etc/nginx/sites-available/alpha-erp`:
+
 ```nginx
 server {
     listen 80;
@@ -151,6 +177,7 @@ server {
 ```
 
 Enable site configuration and issue SSL certificate:
+
 ```bash
 sudo ln -sf /etc/nginx/sites-available/alpha-erp /etc/nginx/sites-enabled/
 sudo nginx -t
@@ -197,6 +224,7 @@ CMD ["node", "dist/server.cjs"]
 ```
 
 ### Step 4.2: Build and Deploy to Google Cloud Run
+
 ```bash
 # 1. Build and push container to Google Artifact Registry
 gcloud builds submit --tag gcr.io/YOUR_GCP_PROJECT_ID/alpha-erp:latest
@@ -234,10 +262,12 @@ flowchart LR
 ```
 
 ### Testing the Email Connection
+
 1. In the application, navigate to **Admin Settings > Email & Alerts Configuration**.
 2. Select your provider (Gmail Workspace, SendGrid, Amazon SES, or Mailtrap Sandbox).
 3. Click **"Test Connection"** to verify hostname, port, and authentication credentials.
 4. Alternatively, test via curl:
+
    ```bash
    curl -X POST https://hvacbiz.vercel.app/api/email/test-connection \
      -H "Content-Type: application/json" \
@@ -255,11 +285,13 @@ flowchart LR
 ## 6. Verification & Health Monitoring
 
 ### Health Check Endpoint
+
 ```bash
 curl -i https://hvacbiz.vercel.app/api/health
 ```
 
 Expected Response:
+
 ```json
 {
   "status": "ok",
@@ -271,8 +303,16 @@ Expected Response:
 ```
 
 ### MongoDB Database Health Ping
+
 ```bash
 curl -i https://hvacbiz.vercel.app/api/mongodb/status
+```
+
+### Automated Enterprise UAT Test Suite
+
+```bash
+# Run all 17 automated end-to-end enterprise use cases (65 steps)
+npm run test:uat
 ```
 
 ---

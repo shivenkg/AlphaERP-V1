@@ -41,8 +41,12 @@ interface ServiceScheduleViewProps {
   amcContracts?: AmcContract[];
   ppmVisits?: PpmScheduleVisit[];
   breakdownTickets?: BreakdownTicket[];
+  clients?: any[];
+  projects?: any[];
+  inventory?: any[];
   currentRole?: UserRole;
   onNavigateToAmc?: () => void;
+  onNavigateToAMC?: () => void;
   onOpenSheetsModal?: () => void;
 }
 
@@ -83,7 +87,7 @@ export const ServiceScheduleView: React.FC<ServiceScheduleViewProps> = ({
   const [breakdownPhone, setBreakdownPhone] = useState('+91 ');
   const [breakdownIssue, setBreakdownIssue] = useState('');
   const [breakdownSystem, setBreakdownSystem] = useState('VRV / VRF Systems');
-  const [breakdownPriority, setBreakdownPriority] = useState<BreakdownTicket['priority']>('Urgent');
+  const [breakdownPriority, setBreakdownPriority] = useState<BreakdownTicket['priority']>('Critical 24x7');
   const [breakdownTechnician, setBreakdownTechnician] = useState('Dinesh Sawant');
   const [breakdownError, setBreakdownError] = useState<string | null>(null);
 
@@ -91,8 +95,10 @@ export const ServiceScheduleView: React.FC<ServiceScheduleViewProps> = ({
   const [isSendingRenewalAlert, setIsSendingRenewalAlert] = useState(false);
   const [renewalAlertResult, setRenewalAlertResult] = useState<string | null>(null);
 
-  // List of HVAC Field Technicians
+  // List of HVAC Field Technicians & Service Operations Team
   const techniciansList = [
+    { name: 'Vikram Sundaram', role: 'Senior HVAC Field Service Engineer', phone: '+91 99014 44521', rating: 4.95, activeSites: 5 },
+    { name: 'Rajesh Varma', role: 'Service Operations Manager & AMC Head', phone: '+91 98201 55678', rating: 5.0, activeSites: 8 },
     { name: 'Imran Khan', role: 'Lead HVAC Specialist', phone: '+91 98201 44556', rating: 4.9, activeSites: 4 },
     { name: 'Dinesh Sawant', role: 'Senior Field Engineer', phone: '+91 98112 33490', rating: 4.8, activeSites: 3 },
     { name: 'Suresh More', role: 'Chiller & VRV Technician', phone: '+91 98765 11223', rating: 4.7, activeSites: 2 },
@@ -180,6 +186,7 @@ export const ServiceScheduleView: React.FC<ServiceScheduleViewProps> = ({
         siteAddress: contract.siteAddress,
         scheduledDate,
         assignedTechnician,
+        quarter: `Q${Math.floor(new Date(scheduledDate).getMonth() / 3) + 1} 2026`,
         status: 'Scheduled',
         checklistSummary: [
           { task: 'Clean / replace primary & secondary air filters', done: false },

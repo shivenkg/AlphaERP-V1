@@ -328,6 +328,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   const roleLabels: Record<UserRole, { title: string; badge: string; color: string }> = {
     executive: { title: 'Executive / Managing Director', badge: 'Admin & Signoff', color: 'bg-indigo-900 text-indigo-200' },
+    service_manager: { title: 'Service Operations Manager', badge: 'AMC & Field SLA', color: 'bg-rose-900 text-rose-200' },
     sales_manager: { title: 'Sales Manager', badge: 'CRM & Quotas', color: 'bg-emerald-900 text-emerald-200' },
     estimator: { title: 'MEP / HVAC Estimator', badge: 'BOQ & Quotes', color: 'bg-amber-900 text-amber-200' },
     procurement: { title: 'Procurement Officer', badge: 'PR & PO Workflow', color: 'bg-blue-900 text-blue-200' },

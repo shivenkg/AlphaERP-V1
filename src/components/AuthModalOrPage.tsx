@@ -15,7 +15,9 @@ import {
   RefreshCw,
   ChevronRight,
   Globe,
-  KeyRound
+  KeyRound,
+  Wrench,
+  Zap
 } from 'lucide-react';
 import { UserRole, UserProfile } from '../types';
 import { storageService } from '../services/storageService';
@@ -60,6 +62,20 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
   // Pre-configured Demo Accounts
   const demoAccounts: { role: UserRole; name: string; email: string; desc: string; badgeColor: string }[] = [
     {
+      role: 'technician',
+      name: 'Vikram Sundaram',
+      email: 'service.engineer@company.com',
+      desc: 'Senior HVAC Service Engineer • PPM Checklists & Breakdowns',
+      badgeColor: 'bg-cyan-600 text-white'
+    },
+    {
+      role: 'service_manager',
+      name: 'Rajesh Varma',
+      email: 'service.manager@company.com',
+      desc: 'Service Operations Manager • AMC Hub, Fleet & SLA Dispatch',
+      badgeColor: 'bg-rose-600 text-white'
+    },
+    {
       role: 'executive',
       name: 'Shivender Kumar',
       email: 'shiven.k@gmail.com',
@@ -100,13 +116,6 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
       email: 'ananya.roy@company.com',
       desc: 'Financial Controller • Billing, Tax Invoices & NEFT',
       badgeColor: 'bg-purple-600 text-white'
-    },
-    {
-      role: 'technician',
-      name: 'Vikram Sundaram',
-      email: 'vikram.s@company.com',
-      desc: 'Field Commissioning Engineer • Work Orders',
-      badgeColor: 'bg-slate-700 text-white'
     }
   ];
 
@@ -320,17 +329,39 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
 
   return (
     <div className="w-full max-w-5xl mx-auto py-4 px-3 sm:px-6">
-      {/* InsForge Backend Status Header */}
-      <div className="mb-4 p-3 rounded-2xl bg-slate-900 text-white flex items-center justify-between border border-slate-800 shadow-md">
+      {/* InsForge Backend Status Header & Quick Service Role Switchers */}
+      <div className="mb-4 p-3.5 rounded-2xl bg-slate-900 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border border-slate-800 shadow-md">
         <div className="flex items-center gap-2.5">
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-xs font-semibold text-slate-300">
             Backend: <strong className="text-white">InsForge PostgreSQL</strong> (<span className="text-emerald-400 font-mono text-[11px]">as2hwz72.us-east</span>)
           </span>
+          <span className="hidden sm:inline-block text-slate-600">|</span>
+          <div className="hidden sm:flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+            <span>RLS Protected</span>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
-          <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-          <span>RLS & JWT Auth Protected</span>
+
+        {/* Quick UAT Service Persona Action Buttons */}
+        <div className="flex items-center flex-wrap gap-2 w-full md:w-auto">
+          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider hidden lg:inline">Quick UAT Login:</span>
+          <button
+            type="button"
+            onClick={() => handleQuickDemoLogin(demoAccounts.find(d => d.role === 'technician')!)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-all cursor-pointer shadow-xs"
+          >
+            <Zap className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Service Engineer</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleQuickDemoLogin(demoAccounts.find(d => d.role === 'service_manager')!)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-bold transition-all cursor-pointer shadow-xs"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-rose-400" />
+            <span>Service Manager</span>
+          </button>
         </div>
       </div>
 
@@ -418,6 +449,60 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
               <div className="mb-5 p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-medium flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>{successMessage}</span>
+              </div>
+            )}
+
+            {/* 1-Click Fast Login: Service Engineer */}
+            {authMode === 'signin' && (
+              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-cyan-950 to-blue-950 text-white border border-cyan-500/40 shadow-xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-28 h-28 bg-cyan-500/15 rounded-full blur-2xl pointer-events-none group-hover:bg-cyan-500/25 transition-all" />
+                <div className="flex items-start justify-between gap-3 relative z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center shrink-0 shadow-inner">
+                      <Wrench className="w-5 h-5 text-cyan-400 animate-pulse" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-black tracking-wide text-cyan-300 uppercase">
+                          ⚡ 1-Click Login
+                        </span>
+                        <span className="text-[10px] bg-cyan-400/20 text-cyan-200 border border-cyan-400/30 font-bold px-2 py-0.5 rounded-full">
+                          Service Engineer
+                        </span>
+                      </div>
+                      <div className="text-sm font-bold text-white mt-0.5">
+                        Vikram Sundaram
+                      </div>
+                      <div className="text-[11px] text-cyan-100/75 mt-0.5">
+                        AMC Contracts • PPM Schedule • 4-Point Checklist & Tickets
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-3 border-t border-cyan-500/20 flex items-center justify-between gap-2 relative z-10">
+                  <span className="text-[11px] text-slate-300 font-medium hidden sm:inline">
+                    Direct access to field operations & service suite
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const tech = demoAccounts.find((d) => d.role === 'technician') || {
+                        email: 'vikram.s@company.com',
+                        role: 'technician',
+                        name: 'Vikram Sundaram',
+                        desc: 'HVAC Service & Field Engineer',
+                        badgeColor: 'bg-cyan-600 text-white'
+                      };
+                      handleQuickDemoLogin(tech);
+                    }}
+                    disabled={isLoading}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl text-xs font-black shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all cursor-pointer transform active:scale-95"
+                  >
+                    <Zap className="w-3.5 h-3.5 fill-current text-yellow-300" />
+                    <span>Log In as Service Engineer</span>
+                  </button>
+                </div>
               </div>
             )}
 
@@ -593,12 +678,13 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
                       className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="executive">Executive / Super Admin</option>
+                      <option value="service_manager">Service Operations Manager</option>
+                      <option value="technician">Field Commissioning & Service Engineer</option>
                       <option value="sales_manager">Sales Head / Business Manager</option>
                       <option value="estimator">Chief MEP & HVAC Estimator</option>
                       <option value="procurement">Purchase & Procurement Head</option>
                       <option value="warehouse">Warehouse & Stock Controller</option>
                       <option value="finance">Financial Controller & Accounts</option>
-                      <option value="technician">Field Commissioning Engineer</option>
                     </select>
                   </div>
 
@@ -712,28 +798,50 @@ export const AuthModalOrPage: React.FC<AuthModalOrPageProps> = ({
             </p>
 
             <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
-              {demoAccounts.map((acc) => (
-                <div
-                  key={acc.email}
-                  onClick={() => handleQuickDemoLogin(acc)}
-                  className="p-3 rounded-2xl border border-slate-200/80 hover:border-blue-400 bg-slate-50/50 hover:bg-blue-50/40 transition-all cursor-pointer group flex items-center justify-between gap-3"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${acc.badgeColor}`}>
-                        {acc.role.toUpperCase()}
-                      </span>
-                      <span className="text-xs font-bold text-slate-900 group-hover:text-blue-700 truncate">
-                        {acc.name}
-                      </span>
+              {demoAccounts.map((acc) => {
+                const isTech = acc.role === 'technician';
+                return (
+                  <div
+                    key={acc.email}
+                    onClick={() => handleQuickDemoLogin(acc)}
+                    className={`p-3 rounded-2xl border transition-all cursor-pointer group flex items-center justify-between gap-3 ${
+                      isTech
+                        ? 'border-cyan-400/80 bg-cyan-50/60 hover:bg-cyan-100/70 shadow-xs'
+                        : 'border-slate-200/80 hover:border-blue-400 bg-slate-50/50 hover:bg-blue-50/40'
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${acc.badgeColor}`}>
+                          {acc.role.toUpperCase()}
+                        </span>
+                        {isTech && (
+                          <span className="text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded bg-cyan-600 text-white flex items-center gap-0.5">
+                            <Zap className="w-2.5 h-2.5 fill-current" />
+                            1-Click
+                          </span>
+                        )}
+                        <span className="text-xs font-bold text-slate-900 group-hover:text-blue-700 truncate">
+                          {acc.name}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 truncate mt-0.5">{acc.email}</div>
+                      <div className="text-[10px] text-slate-400 truncate mt-0.5">{acc.desc}</div>
                     </div>
-                    <div className="text-[11px] text-slate-500 truncate mt-0.5">{acc.email}</div>
-                    <div className="text-[10px] text-slate-400 truncate mt-0.5">{acc.desc}</div>
-                  </div>
 
-                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0" />
-                </div>
-              ))}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {isTech ? (
+                        <span className="text-[11px] font-bold text-cyan-700 group-hover:underline flex items-center gap-1">
+                          <span>Log In</span>
+                          <ArrowRight className="w-3.5 h-3.5 text-cyan-600 group-hover:translate-x-0.5 transition-all" />
+                        </span>
+                      ) : (
+                        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Admin Customization Highlight Box */}

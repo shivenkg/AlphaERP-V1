@@ -14,6 +14,7 @@
 export interface ValidationResult {
   isValid: boolean;
   message?: string;
+  error?: string;
 }
 
 export interface PhoneValidationResult extends ValidationResult {
@@ -250,22 +251,29 @@ export function validateDateOfBirth(
 /**
  * Validates Date Range (e.g. Contract Start Date vs End Date, Quote Validity):
  */
-export function validateDateRange(startDateStr: string, endDateStr: string, label: string = 'Contract'): ValidationResult {
+export function validateDateRange(
+  startDateStr: string,
+  endDateStr: string,
+  label: string = 'Contract',
+  _endLabel?: string
+): ValidationResult {
   if (!startDateStr || !endDateStr) {
-    return { isValid: false, message: 'Both start and end dates are required.' };
+    return { isValid: false, message: 'Both start and end dates are required.', error: 'Both start and end dates are required.' };
   }
 
   const start = new Date(startDateStr);
   const end = new Date(endDateStr);
 
   if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-    return { isValid: false, message: 'Invalid date range provided.' };
+    return { isValid: false, message: 'Invalid date range provided.', error: 'Invalid date range provided.' };
   }
 
   if (end.getTime() < start.getTime()) {
+    const errorMsg = `${label} end date cannot be earlier than start date.`;
     return {
       isValid: false,
-      message: `${label} end date cannot be earlier than start date.`
+      message: errorMsg,
+      error: errorMsg
     };
   }
 
