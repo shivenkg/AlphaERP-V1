@@ -414,7 +414,7 @@ export async function notifyAmcRenewals(
       return result;
     }
   } catch (err) {
-    console.warn('Backend email relay offline, using resilient client-side sandbox simulator:', err);
+    console.warn('Backend email relay offline or running in test runtime, using resilient client-side sandbox simulator:', (err as any)?.message || err);
   }
 
   // Resilient Sandbox Wrapper Fallback

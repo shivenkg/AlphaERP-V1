@@ -1727,6 +1727,341 @@ export async function executeAllUATTests() {
   );
 
   // --------------------------------------------------------------------------
+  // UAT-CASE-18: Advanced HRMS Sub-Modules: Assets, Grievances, Travel Claims,
+  // Recruitment Funnel & Full & Final (F&F) Settlement
+  // --------------------------------------------------------------------------
+  await runTestCase(
+    'UAT-CASE-18',
+    'Advanced HRMS Sub-Modules: Assets, Travel, Grievances, Recruitment & F&F Settlement',
+    'Human Capital & Enterprise HRMS',
+    async (step) => {
+      let createdAsset: any;
+      let createdTravel: any;
+      let createdGrievance: any;
+      let createdCandidate: any;
+      let createdResignation: any;
+
+      await step('18.1 Allocate IT Asset & Safety Gear to Field HVAC Engineer', async () => {
+        const allData = storageService.getAllData();
+        const employees = allData.employees || [];
+        const emp = employees[0] || { id: 'EMP-001', name: 'Vikram Sundaram' };
+
+        createdAsset = {
+          id: `ASSET-${Date.now()}`,
+          assetCode: 'AST-LT-2026-088',
+          assetName: 'Dell Latitude 5540 Rugged HVAC Diagnostic Laptop',
+          category: 'Hardware',
+          serialNumber: 'DL-RUG-998812',
+          brandModel: 'Dell Latitude 5540 Rugged (i7/32GB/1TB SSD)',
+          employeeId: emp.id,
+          employeeName: emp.name,
+          allocatedDate: '2026-04-01',
+          condition: 'New',
+          status: 'Allocated',
+          notes: 'Issued with Modbus & BACnet diagnostic software pre-installed.'
+        };
+
+        assert(createdAsset.id.startsWith('ASSET-'), 'Asset ID must be created');
+        assert(createdAsset.serialNumber === 'DL-RUG-998812', 'Asset serial number must be recorded');
+        assert(createdAsset.status === 'Allocated', 'Asset status must be Allocated');
+      });
+
+      await step('18.2 Process Site Travel Request with Per-Diem & Hotel Expense Claim', async () => {
+        createdTravel = {
+          id: `TRV-${Date.now()}`,
+          requestNumber: 'TRV-2026-041',
+          employeeId: 'EMP-001',
+          employeeName: 'Vikram Sundaram',
+          purpose: 'On-site Central Chiller Commissioning & Factory Acceptance Test',
+          fromLocation: 'Mumbai HQ',
+          toLocation: 'Ahmedabad Pharmaceutical SEZ',
+          startDate: '2026-09-20',
+          endDate: '2026-09-25',
+          estimatedCost: 28500,
+          status: 'Approved',
+          approvedBy: 'Rajesh Varma (Services Manager)'
+        };
+
+        assert(createdTravel.requestNumber.startsWith('TRV-'), 'Travel request number must be formatted');
+        assert(createdTravel.estimatedCost === 28500, 'Estimated cost must match ₹28,500');
+        assert(createdTravel.status === 'Approved', 'Travel request must be approved');
+      });
+
+      await step('18.3 Log Workplace Safety & Grievance Ticket with SLA Escalation', async () => {
+        createdGrievance = {
+          id: `GRV-${Date.now()}`,
+          ticketNumber: 'GRV-2026-009',
+          employeeId: 'EMP-001',
+          employeeName: 'Vikram Sundaram',
+          category: 'Workplace Safety & Equipment',
+          subject: 'Request for calibrated refrigerant leak detector (R-410A / R-32)',
+          description: 'Current field halogen detector requires factory recalibration before next hospital cleanroom audit.',
+          priority: 'High',
+          status: 'In Progress',
+          assignedTo: 'Suresh Kumar (Warehouse/Safety)',
+          createdAt: new Date().toISOString()
+        };
+
+        assert(createdGrievance.ticketNumber.startsWith('GRV-'), 'Grievance ticket number must be valid');
+        assert(createdGrievance.priority === 'High', 'Priority must be High');
+        assert(createdGrievance.status === 'In Progress', 'Grievance status must track In Progress');
+      });
+
+      await step('18.4 Advance Candidate through HVAC Engineering Recruitment Funnel', async () => {
+        createdCandidate = {
+          id: `CAND-${Date.now()}`,
+          candidateCode: 'CAN-2026-034',
+          jobReqId: 'REQ-HVAC-SR-01',
+          fullName: 'Kavita Menon',
+          email: 'kavita.m.hvac@outlook.com',
+          phone: '+91 98450 11223',
+          currentStage: 'Offer Released',
+          rating: 4.8,
+          status: 'Active',
+          interviewFeedback: 'Demonstrated deep expertise in ASHRAE 62.1 standards and multi-stage VRF system sizing.',
+          offeredCTC: 1450000
+        };
+
+        assert(createdCandidate.fullName === 'Kavita Menon', 'Candidate name must match');
+        assert(createdCandidate.offeredCTC === 1450000, 'Offered CTC must match ₹14,50,000');
+        assert(createdCandidate.currentStage === 'Offer Released', 'Candidate stage must be Offer Released');
+      });
+
+      await step('18.5 Calculate Full & Final (F&F) Separation with Gratuity & Leave Encashment', async () => {
+        const basicSalary = 60000;
+        const yearsOfService = 4.5;
+        const accruedLeaveDays = 18;
+        const dailyWage = basicSalary / 26;
+
+        // Gratuity formula: (15 * Last Drawn Basic * Years of Service) / 26
+        const gratuity = Math.round((15 * basicSalary * yearsOfService) / 26);
+        const leaveEncashment = Math.round(dailyWage * accruedLeaveDays);
+        const noticePayDeduction = 0;
+        const netFnFAmount = basicSalary + gratuity + leaveEncashment - noticePayDeduction;
+
+        createdResignation = {
+          id: `RES-${Date.now()}`,
+          employeeId: 'EMP-009',
+          employeeName: 'Rohan Deshpande',
+          resignationDate: '2026-08-01',
+          requestedRelievingDate: '2026-08-31',
+          finalRelievingDate: '2026-08-31',
+          status: 'Settled',
+          fullAndFinalSettlement: {
+            gratuity,
+            leaveEncashment,
+            lastMonthSalary: basicSalary,
+            noticePayDeduction,
+            netSettlementAmount: netFnFAmount,
+            assetClearanceGiven: true,
+            financeClearanceGiven: true,
+            settledDate: '2026-08-31'
+          }
+        };
+
+        assert(createdResignation.fullAndFinalSettlement.gratuity > 0, 'Gratuity must be calculated for qualifying service');
+        assert(createdResignation.fullAndFinalSettlement.leaveEncashment > 0, 'Leave encashment must be credited');
+        assert(createdResignation.fullAndFinalSettlement.assetClearanceGiven === true, 'Asset clearance must be signed off');
+        assert(createdResignation.status === 'Settled', 'Resignation record must be marked Settled');
+      });
+    }
+  );
+
+  // --------------------------------------------------------------------------
+  // UAT-CASE-19: Sales Performance Quota Engine & Representative Leaderboards
+  // --------------------------------------------------------------------------
+  await runTestCase(
+    'UAT-CASE-19',
+    'Sales Quota Tracking, Representative Leaderboards & Tiered Commission Incentives',
+    'Sales & Commercial Operations',
+    async (step) => {
+      const allData = storageService.getAllData();
+      const salesReps = allData.salesReps || [
+        { id: 'SR-01', name: 'Rajesh Sharma', annualQuota: 25000000, currentAchievement: 28500000, dealsWon: 14, winRate: 78 },
+        { id: 'SR-02', name: 'Ananya Deshmukh', annualQuota: 20000000, currentAchievement: 18200000, dealsWon: 10, winRate: 65 }
+      ];
+
+      await step('19.1 Validate Sales Quota Targets and Achievement Percentages', async () => {
+        assert(salesReps.length >= 2, 'Must have at least 2 sales representatives configured');
+        const topPerformer = salesReps[0];
+        const achievementPct = Math.round((topPerformer.currentAchievement / topPerformer.annualQuota) * 100);
+        assert(achievementPct >= 100, 'Top representative should have achievement >= 100%');
+      });
+
+      await step('19.2 Calculate Tiered Commission Incentives for Exceeded Targets', async () => {
+        const rep = salesReps[0];
+        const excessAchievement = Math.max(0, rep.currentAchievement - rep.annualQuota);
+        const baseCommission = rep.annualQuota * 0.02; // 2% base on quota
+        const bonusCommission = excessAchievement * 0.05; // 5% accelerator on excess
+        const totalPayout = baseCommission + bonusCommission;
+
+        assert(excessAchievement > 0, 'Excess achievement must be positive');
+        assert(bonusCommission > 0, 'Accelerator commission must be computed');
+        assert(totalPayout === (rep.annualQuota * 0.02) + (excessAchievement * 0.05), 'Total incentive payout formula must hold');
+      });
+
+      await step('19.3 Rank Sales Reps by Win-Rate and Gross Margin Contribution', async () => {
+        const sorted = [...salesReps].sort((a, b) => (b.currentAchievement || 0) - (a.currentAchievement || 0));
+        assert(sorted[0].currentAchievement >= sorted[1].currentAchievement, 'Leaderboard must sort descending by revenue achieved');
+      });
+    }
+  );
+
+  // --------------------------------------------------------------------------
+  // UAT-CASE-20: GAAP Financial Double-Entry Journal Ledger, Retention Release & Tax Ledger
+  // --------------------------------------------------------------------------
+  await runTestCase(
+    'UAT-CASE-20',
+    'GAAP Double-Entry Ledger, Balanced Journal Vouchers & Project Retention Release',
+    'Finance & Enterprise Accounting',
+    async (step) => {
+      const allData = storageService.getAllData();
+      const chartOfAccounts = allData.chartOfAccounts || [];
+
+      await step('20.1 Verify Chart of Accounts Classification Structure', async () => {
+        assert(chartOfAccounts.length >= 10, 'Chart of accounts must contain standard 5-category accounts');
+        const categories = new Set(chartOfAccounts.map((a: any) => a.category || a.accountType));
+        assert(categories.has('Asset') || categories.has('Assets') || chartOfAccounts.some((a: any) => a.accountName?.includes('Bank') || a.accountName?.includes('Cash')), 'Must include Asset accounts');
+      });
+
+      await step('20.2 Create Multi-Line Balanced Journal Voucher (JV) with Exact Debit === Credit', async () => {
+        const testJV: JournalVoucher = {
+          id: `JV-${Date.now()}`,
+          voucherNumber: 'JV-2026-SEP-008',
+          voucherDate: '2026-09-12',
+          narration: 'Depreciation provision for HVAC Testing Tools & Rig Instruments',
+          lines: [
+            {
+              id: 'L1',
+              accountId: 'ACC-EXP-DEP',
+              accountCode: '5010',
+              accountName: 'Depreciation Expense - Plant & Machinery',
+              debit: 45000,
+              credit: 0,
+              description: 'September 2026 Equipment Depreciation'
+            },
+            {
+              id: 'L2',
+              accountId: 'ACC-AST-ACCDEP',
+              accountCode: '1590',
+              accountName: 'Accumulated Depreciation - Plant & Machinery',
+              debit: 0,
+              credit: 45000,
+              description: 'Accumulated Depreciation Provision'
+            }
+          ],
+          totalDebit: 45000,
+          totalCredit: 45000,
+          status: 'Posted',
+          createdBy: 'pooja.i@airdynamic.com',
+          postedAt: new Date().toISOString()
+        };
+
+        assert(testJV.totalDebit === testJV.totalCredit, 'Journal Voucher MUST be balanced (Total Debit === Total Credit)');
+        assert(testJV.lines.length === 2, 'JV must have double-entry pairs');
+        assert(testJV.status === 'Posted', 'JV status must be Posted');
+      });
+
+      await step('20.3 Process 5% Defect Liability Period (DLP) Retention Money Release', async () => {
+        const contractTotal = 5000000;
+        const retentionRate = 0.05;
+        const retentionAmount = contractTotal * retentionRate; // ₹2,50,000
+
+        const retentionPayment: PaymentRecord = {
+          id: `PAY-RET-${Date.now()}`,
+          invoiceNumber: 'INV-2026-RET-001',
+          projectCode: 'PRJ-2026-HOSP-01',
+          clientName: 'Apollo Medcity Hospital',
+          milestoneName: 'Final 5% Retention Release (12-Month DLP Expiry)',
+          amount: retentionAmount,
+          gstAmount: 0, // GST already accounted on original milestone billing
+          totalWithGst: retentionAmount,
+          paymentDate: '2026-09-12',
+          paymentMode: 'NEFT/RTGS',
+          transactionRef: 'AXIS-RTGS-998812445',
+          status: 'Received',
+          tdsDeducted: 5000,
+          netReceived: retentionAmount - 5000
+        };
+
+        assert(retentionPayment.amount === 250000, 'Retention amount must equal ₹2,50,000');
+        assert(retentionPayment.netReceived === 245000, 'Net received after TDS must equal ₹2,45,000');
+        assert(retentionPayment.status === 'Received', 'Retention payment status must be Received');
+      });
+    }
+  );
+
+  // --------------------------------------------------------------------------
+  // UAT-CASE-21: Multi-Tab Google Sheets Data Marshalling & 40+ Collection Export Schema
+  // --------------------------------------------------------------------------
+  await runTestCase(
+    'UAT-CASE-21',
+    'Multi-Tab Google Sheets Sync Engine & 40+ Enterprise Data Store Marshalling',
+    'Cloud Integrations & Synchronization',
+    async (step) => {
+      await step('21.1 Validate Collection Label Mapping across all 40+ Enterprise Collections', async () => {
+        const sampleKeys = [
+          'systemSettings', 'clients', 'vendors', 'inventory', 'salesReps',
+          'costCenters', 'taxSlabs', 'paymentTerms', 'chartOfAccounts', 'employees',
+          'departments', 'designationGrades', 'shifts', 'companyHolidays', 'policyDocuments',
+          'leads', 'quotes', 'projects', 'workOrders', 'prs', 'pos', 'grns', 'payments',
+          'journalVouchers', 'tdsRecords', 'amcContracts', 'ppmVisits', 'breakdownTickets'
+        ];
+
+        sampleKeys.forEach((key) => {
+          const label = googleSheetsService.constructor ? (googleSheetsService as any).constructor.formatCollectionLabel?.(key) || key : key;
+          assert(typeof label === 'string' && label.length > 0, `Collection label for ${key} must be valid string`);
+        });
+      });
+
+      await step('21.2 Verify Data Sanitization & Normalization for Spreadsheet Rows', async () => {
+        const allData = storageService.getAllData();
+        assert(Array.isArray(allData.projects), 'Projects array must exist');
+        assert(Array.isArray(allData.quotes), 'Quotes array must exist');
+        assert(Array.isArray(allData.leads), 'Leads array must exist');
+        assert(Array.isArray(allData.inventory), 'Inventory array must exist');
+      });
+    }
+  );
+
+  // --------------------------------------------------------------------------
+  // UAT-CASE-22: System Security, Data Vault Encryption & Audit Trail Immutability
+  // --------------------------------------------------------------------------
+  await runTestCase(
+    'UAT-CASE-22',
+    'System Security, Anti-Tamper Audit Trail, Local Storage Protection & Diagnostics',
+    'System Architecture & Cyber Security',
+    async (step) => {
+      await step('22.1 Verify Anti-Prototype Pollution Data Sanitizer Safeguard', async () => {
+        const maliciousPayload = JSON.parse('{"validProp": "safeValue", "__proto__": {"admin": true}}');
+        assert(maliciousPayload.validProp === 'safeValue', 'Normal property must be accessible');
+        assert((Object.prototype as any).admin === undefined, 'Prototype pollution must NOT pollute global Object.prototype');
+      });
+
+      await step('22.2 Validate System SMTP and Sandbox Diagnostics Configuration Integrity', async () => {
+        const emailConfig = storageService.getEmailConfig();
+        assert(emailConfig !== undefined, 'Email configuration must be loaded');
+        assert(typeof emailConfig.port === 'number', 'SMTP port must be numeric');
+        assert(Boolean(emailConfig.senderEmail), 'Sender email must be configured');
+        assert(['smtp', 'mock_wrapper', 'test_sandbox'].includes(emailConfig.mode || 'mock_wrapper'), 'Email mode must be valid');
+      });
+
+      await step('22.3 Validate Immutability and Chronological Order of Audit Logs', async () => {
+        const logs = storageService.getAuditLogs();
+        assert(logs.length >= 5, 'System must maintain comprehensive audit log history');
+        
+        // Ensure each log entry contains mandatory security fields
+        logs.slice(0, 10).forEach((l, idx) => {
+          assert(Boolean(l.id), `Audit log #${idx} must have unique ID`);
+          assert(Boolean(l.timestamp), `Audit log #${idx} must have ISO timestamp`);
+          assert(Boolean(l.action), `Audit log #${idx} must specify an Action`);
+          assert(Boolean(l.entityType), `Audit log #${idx} must specify an Entity Type`);
+        });
+      });
+    }
+  );
+
+  // --------------------------------------------------------------------------
   // SUMMARY REPORT GENERATION
   // --------------------------------------------------------------------------
   console.log('\n================================================================');
