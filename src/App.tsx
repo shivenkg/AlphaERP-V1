@@ -24,6 +24,7 @@ const ProjectCostAnalysisView = lazy(() => import('./components/ProjectCostAnaly
 const ProcurementPRPOView = lazy(() => import('./components/ProcurementPRPOView').then(m => ({ default: m.ProcurementPRPOView })));
 const InventoryWarehouseView = lazy(() => import('./components/InventoryWarehouseView').then(m => ({ default: m.InventoryWarehouseView })));
 const WorkOrdersView = lazy(() => import('./components/WorkOrdersView').then(m => ({ default: m.WorkOrdersView })));
+const ServicesAMCView = lazy(() => import('./components/ServicesAMCView').then(m => ({ default: m.ServicesAMCView })));
 const FinancePaymentsView = lazy(() => import('./components/FinancePaymentsView').then(m => ({ default: m.FinancePaymentsView })));
 const FinanceView = lazy(() => import('./components/FinanceView').then(m => ({ default: m.FinanceView })));
 const MasterDataView = lazy(() => import('./components/MasterDataView').then(m => ({ default: m.MasterDataView })));
@@ -547,6 +548,7 @@ export function App() {
           pendingPOCount={pendingPOCount}
           lowStockCount={lowStockCount}
           pendingInvoicesCount={pendingInvoicesCount}
+          activeAmcCount={(data.amcContracts || []).filter((c) => c.status === 'Active').length}
           isMobileOpen={isMobileMenuOpen}
           onCloseMobile={() => setIsMobileMenuOpen(false)}
           currentRole={data.currentUser?.role}
@@ -754,6 +756,21 @@ export function App() {
                 workOrders={data.workOrders}
                 projects={data.projects}
                 onOpenSheetsModal={() => setIsSheetsModalOpen(true)}
+              />
+            )}
+
+            {/* View: HVAC Services & Annual Maintenance Contracts (AMC) */}
+            {activeTab === 'services_amc' && (
+              <ServicesAMCView
+                amcContracts={data.amcContracts || []}
+                ppmVisits={data.ppmVisits || []}
+                breakdownTickets={data.breakdownTickets || []}
+                clients={data.clients}
+                projects={data.projects}
+                inventory={data.inventory}
+                currentRole={data.currentUser?.role}
+                onOpenSheetsModal={() => setIsSheetsModalOpen(true)}
+                onNavigateToQuotes={() => setActiveTab('quotes')}
               />
             )}
 

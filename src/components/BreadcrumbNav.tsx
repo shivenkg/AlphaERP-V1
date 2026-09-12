@@ -147,7 +147,8 @@ export const ERP_HIERARCHY: Record<string, ERPNavPath> = {
     siblings: [
       { id: 'procurement', label: 'Inventory & PR/PO' },
       { id: 'inventory', label: 'Warehouse Stock & SKUs' },
-      { id: 'workorders', label: 'Work Orders & Field' }
+      { id: 'workorders', label: 'Work Orders & Field' },
+      { id: 'services_amc', label: 'Services & AMC' }
     ]
   },
   inventory: {
@@ -161,7 +162,8 @@ export const ERP_HIERARCHY: Record<string, ERPNavPath> = {
     siblings: [
       { id: 'procurement', label: 'Inventory & PR/PO' },
       { id: 'inventory', label: 'Warehouse Stock & SKUs' },
-      { id: 'workorders', label: 'Work Orders & Field' }
+      { id: 'workorders', label: 'Work Orders & Field' },
+      { id: 'services_amc', label: 'Services & AMC' }
     ]
   },
   workorders: {
@@ -175,7 +177,25 @@ export const ERP_HIERARCHY: Record<string, ERPNavPath> = {
     siblings: [
       { id: 'procurement', label: 'Inventory & PR/PO' },
       { id: 'inventory', label: 'Warehouse Stock & SKUs' },
-      { id: 'workorders', label: 'Work Orders & Field' }
+      { id: 'workorders', label: 'Work Orders & Field' },
+      { id: 'services_amc', label: 'Services & AMC' }
+    ]
+  },
+  services_amc: {
+    tabId: 'services_amc',
+    groupId: 'procurement_field',
+    groupName: 'Supply Chain & Field',
+    groupIcon: ShoppingCart,
+    pageTitle: 'Services & AMC Contracts Hub',
+    pageIcon: ShieldCheck,
+    description: 'Annual Maintenance Contracts, PPM schedules, equipment health & emergency breakdown tickets',
+    badge: 'AMC & SLA Hub',
+    badgeColor: 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+    siblings: [
+      { id: 'procurement', label: 'Inventory & PR/PO' },
+      { id: 'inventory', label: 'Warehouse Stock & SKUs' },
+      { id: 'workorders', label: 'Work Orders & Field' },
+      { id: 'services_amc', label: 'Services & AMC' }
     ]
   },
   finance: {

@@ -118,6 +118,15 @@ export const APP_MODULES: AppModuleInfo[] = [
     description: 'Site installation tickets, HVAC testing checklists, technician dispatch, and handover certs.',
     defaultRoles: ['executive', 'technician', 'warehouse']
   },
+  {
+    id: 'services_amc',
+    name: 'HVAC Services & AMC Contracts',
+    shortName: 'Services & AMC',
+    category: 'supply_chain',
+    categoryLabel: 'Supply Chain & Field',
+    description: 'Annual Maintenance Contracts (AMC), PPM schedules, SLA compliance, equipment health, and emergency breakdown tickets.',
+    defaultRoles: ['executive', 'sales_manager', 'estimator', 'technician', 'warehouse']
+  },
 
   // Finance & Commercial
   {
@@ -219,6 +228,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'procurement',
     'inventory',
     'workorders',
+    'services_amc',
     'finance',
     'payments',
     'hr',
@@ -236,6 +246,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'crm',
     'quotes',
     'projects',
+    'services_amc',
     'payments',
     'ess',
     'masterdata'
@@ -248,6 +259,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'projects',
     'inventory',
     'procurement',
+    'services_amc',
     'ess'
   ],
   procurement: [
@@ -256,6 +268,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'procurement',
     'inventory',
     'projects',
+    'services_amc',
     'masterdata',
     'ess'
   ],
@@ -265,6 +278,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'inventory',
     'procurement',
     'workorders',
+    'services_amc',
     'ess'
   ],
   finance: [
@@ -273,6 +287,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'finance',
     'payments',
     'procurement',
+    'services_amc',
     'hr',
     'masterdata',
     'ess',
@@ -281,6 +296,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
   technician: [
     'search',
     'workorders',
+    'services_amc',
     'projects',
     'inventory',
     'ess'

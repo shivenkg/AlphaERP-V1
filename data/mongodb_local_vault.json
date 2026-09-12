@@ -1,0 +1,452 @@
+{
+  "projects": [
+    {
+      "id": "prj-1789186721617",
+      "projectNumber": "26-PJ-0001",
+      "projectName": "Apollo Medcity Healthcare Ltd - Apollo Medcity - 320 TR Hospital Central Chiller & OT HVAC Suite",
+      "clientName": "Apollo Medcity Healthcare Ltd",
+      "leadId": "lead-1789186721540",
+      "quoteId": "qte-1789186721614",
+      "contractValue": 15977200,
+      "totalEstimatedCost": 11080000,
+      "targetMarginPct": 18.17,
+      "startDate": "2026-09-12",
+      "targetCompletionDate": "2026-11-11",
+      "status": "Procurement",
+      "progressPct": 10,
+      "projectManager": "Vikramaditya Solanki (Senior HVAC PM)",
+      "boqItems": [
+        {
+          "id": "boq-1789186721616-0",
+          "category": "Equipment",
+          "sku": "CHL-SCR-160TR",
+          "description": "Air-Cooled Screw Chiller 160 TR with Eco Refrigerant R134a & VFD Compressor",
+          "requiredQty": 2,
+          "unit": "Nos",
+          "unitCost": 3500000,
+          "totalCost": 7000000,
+          "inStockQty": 0,
+          "shortageQty": 2,
+          "status": "Shortage - PR Needed"
+        },
+        {
+          "id": "boq-1789186721616-1",
+          "category": "Ducting & Insulation",
+          "sku": "DUCT-GI-24G",
+          "description": "Class VIII Factory Fabricated Galvanized Iron (GI) Sheet Ducting with acoustic lining",
+          "requiredQty": 1800,
+          "unit": "Sq.Mt",
+          "unitCost": 1150,
+          "totalCost": 2070000,
+          "inStockQty": 0,
+          "shortageQty": 1800,
+          "status": "Shortage - PR Needed"
+        },
+        {
+          "id": "boq-1789186721616-2",
+          "category": "Piping & Valves",
+          "sku": "PIP-MS-150-HEAVY",
+          "description": "Heavy Class MS Chilled Water Piping (150mm NB) with 25mm Nitrile Rubber Insulation",
+          "requiredQty": 650,
+          "unit": "RMT",
+          "unitCost": 2600,
+          "totalCost": 1690000,
+          "inStockQty": 0,
+          "shortageQty": 650,
+          "status": "PO Issued",
+          "poNumber": "26-PO-0001"
+        },
+        {
+          "id": "boq-1789186721617-3",
+          "category": "Testing & Commissioning",
+          "sku": "SKU-CUST-4",
+          "description": "Complete System Air Balancing (TAB), Chilled Water Flow Balancing & Handover Protocol",
+          "requiredQty": 1,
+          "unit": "Lot",
+          "unitCost": 320000,
+          "totalCost": 320000,
+          "inStockQty": 0,
+          "shortageQty": 1,
+          "status": "In Stock"
+        }
+      ],
+      "totalShortageItemsCount": 3,
+      "prCount": 1,
+      "poCount": 1,
+      "invoicesGeneratedAmount": 5655929,
+      "paymentsReceivedAmount": 3770619,
+      "siteAddress": "Apollo Medcity Campus, Sector 18, Navi Mumbai",
+      "isDelayed": true,
+      "delayDays": 7,
+      "delayReason": "Hospital plant room civil foundation curing delayed by 7 days due to client civil contractor.",
+      "delayMitigationPlan": "Deploying double-shift welding team for piping fabrication to recover 5 lost calendar days.",
+      "delayCategory": "Civil / Structural Pending"
+    },
+    {
+      "id": "prj-001",
+      "projectNumber": "PRJ-2026-001",
+      "projectName": "Nexus Tech Park 120 TR VRF Installation",
+      "clientName": "Nexus Infinity Tech Park (Wing C)",
+      "leadId": "lead-102",
+      "quoteId": "qte-043",
+      "contractValue": 10877431.75,
+      "totalEstimatedCost": 7240500,
+      "actualExpenses": 5186320,
+      "actualCost": 5186320,
+      "targetMarginPct": 21.45,
+      "expenseMilestones": [
+        {
+          "phase": "M1",
+          "label": "Engineering & Kickoff",
+          "budgetCost": 450000,
+          "actualExpense": 380000,
+          "projectedMarginPct": 33.4
+        },
+        {
+          "phase": "M2",
+          "label": "Major Equipment POs",
+          "budgetCost": 4374000,
+          "actualExpense": 4140000,
+          "projectedMarginPct": 29.8
+        },
+        {
+          "phase": "M3",
+          "label": "Piping & Insulation",
+          "budgetCost": 1100000,
+          "actualExpense": 666320,
+          "projectedMarginPct": 28.5
+        },
+        {
+          "phase": "M4",
+          "label": "Site Erection & BMS",
+          "budgetCost": 850000,
+          "actualExpense": 0,
+          "projectedMarginPct": 24.2
+        },
+        {
+          "phase": "M5",
+          "label": "Testing & Handover",
+          "budgetCost": 466500,
+          "actualExpense": 0,
+          "projectedMarginPct": 21.45
+        }
+      ],
+      "startDate": "2026-08-28",
+      "targetCompletionDate": "2026-10-15",
+      "status": "Procurement",
+      "priority": "High",
+      "progressPct": 25,
+      "projectManager": "Vikramaditya Solanki (PMP, Senior HVAC PM)",
+      "boqItems": [
+        {
+          "id": "boq-1",
+          "category": "VRF / AC Units",
+          "sku": "VRF-ODU-20HP",
+          "description": "Daikin VRV X Series ODU 20 HP (56kW)",
+          "requiredQty": 6,
+          "unit": "Nos",
+          "unitCost": 690000,
+          "totalCost": 4140000,
+          "inStockQty": 1,
+          "shortageQty": 5,
+          "status": "PR Generated",
+          "prNumber": "PR-2026-008",
+          "poNumber": "PO-2026-014"
+        },
+        {
+          "id": "boq-2",
+          "category": "VRF / AC Units",
+          "sku": "VRF-IDU-CAS-3TR",
+          "description": "4-Way Ceiling Cassette IDU 3.0 TR",
+          "requiredQty": 32,
+          "unit": "Nos",
+          "unitCost": 42000,
+          "totalCost": 1344000,
+          "inStockQty": 10,
+          "shortageQty": 22,
+          "status": "PR Generated",
+          "prNumber": "PR-2026-008",
+          "poNumber": "PO-2026-014"
+        },
+        {
+          "id": "boq-3",
+          "category": "Copper Pipes & Fittings",
+          "sku": "COP-TUBE-0.75",
+          "description": "Hard Drawn Copper Pipe 3/4\" OD (19.05mm)",
+          "requiredQty": 450,
+          "unit": "Meters",
+          "unitCost": 950,
+          "totalCost": 427500,
+          "inStockQty": 70,
+          "shortageQty": 380,
+          "status": "PR Generated",
+          "prNumber": "PR-2026-009",
+          "poNumber": "PO-2026-015"
+        },
+        {
+          "id": "boq-4",
+          "category": "Copper Pipes & Fittings",
+          "sku": "COP-TUBE-1.125",
+          "description": "Hard Drawn Copper Pipe 1-1/8\" OD (28.58mm)",
+          "requiredQty": 180,
+          "unit": "Meters",
+          "unitCost": 1750,
+          "totalCost": 315000,
+          "inStockQty": 0,
+          "shortageQty": 180,
+          "status": "PR Generated",
+          "prNumber": "PR-2026-009",
+          "poNumber": "PO-2026-015"
+        },
+        {
+          "id": "boq-5",
+          "category": "Insulation Material",
+          "sku": "ARM-INSUL-19MM",
+          "description": "Class O Nitrile Rubber Sheet Insulation 19mm Thick",
+          "requiredQty": 30,
+          "unit": "Rolls",
+          "unitCost": 5800,
+          "totalCost": 174000,
+          "inStockQty": 7,
+          "shortageQty": 23,
+          "status": "Shortage - PR Needed"
+        },
+        {
+          "id": "boq-6",
+          "category": "BMS & Thermostats",
+          "sku": "HON-BMS-TSTAT",
+          "description": "Honeywell BACnet MS/TP Digital Touch Thermostat",
+          "requiredQty": 32,
+          "unit": "Nos",
+          "unitCost": 7500,
+          "totalCost": 240000,
+          "inStockQty": 15,
+          "shortageQty": 17,
+          "status": "Shortage - PR Needed"
+        },
+        {
+          "id": "boq-7",
+          "category": "Refrigerants",
+          "sku": "REF-R410A-CYL",
+          "description": "Eco Refrigerant Gas R-410A Cylinder (11.3 kg)",
+          "requiredQty": 8,
+          "unit": "Cylinders",
+          "unitCost": 8200,
+          "totalCost": 65600,
+          "inStockQty": 10,
+          "shortageQty": 0,
+          "status": "In Stock"
+        }
+      ],
+      "totalShortageItemsCount": 5,
+      "prCount": 2,
+      "poCount": 2,
+      "invoicesGeneratedAmount": 3263229.5,
+      "paymentsReceivedAmount": 3263229.5,
+      "siteAddress": "Outer Ring Road, Bellandur, Bengaluru, KA 560103"
+    },
+    {
+      "id": "prj-002",
+      "projectNumber": "PRJ-2026-002",
+      "projectName": "Metro Grand Tower Chiller Retrofit",
+      "clientName": "Metro Grand Realties (Commercial)",
+      "leadId": "lead-101",
+      "quoteId": "qte-042",
+      "contractValue": 6850000,
+      "totalEstimatedCost": 4720000,
+      "actualExpenses": 2890000,
+      "actualCost": 2890000,
+      "targetMarginPct": 26.5,
+      "expenseMilestones": [
+        {
+          "phase": "M1",
+          "label": "Survey & Disassembly",
+          "budgetCost": 350000,
+          "actualExpense": 310000,
+          "projectedMarginPct": 31
+        },
+        {
+          "phase": "M2",
+          "label": "AHU & Butterfly Valves",
+          "budgetCost": 2400000,
+          "actualExpense": 1780000,
+          "projectedMarginPct": 29.2
+        },
+        {
+          "phase": "M3",
+          "label": "Piping & Descaling",
+          "budgetCost": 1100000,
+          "actualExpense": 800000,
+          "projectedMarginPct": 27.8
+        },
+        {
+          "phase": "M4",
+          "label": "BMS Integration",
+          "budgetCost": 550000,
+          "actualExpense": 0,
+          "projectedMarginPct": 26.5
+        },
+        {
+          "phase": "M5",
+          "label": "Testing & Handover",
+          "budgetCost": 320000,
+          "actualExpense": 0,
+          "projectedMarginPct": 26.5
+        }
+      ],
+      "startDate": "2026-08-10",
+      "targetCompletionDate": "2026-09-30",
+      "status": "Installation",
+      "priority": "Critical",
+      "progressPct": 62,
+      "projectManager": "Sunil Mehta (HVAC Systems Lead)",
+      "boqItems": [
+        {
+          "id": "boq-201",
+          "category": "Chillers & AHU",
+          "sku": "AHU-DX-6000CFM",
+          "description": "Double Skin Modular AHU 6000 CFM (15 TR DX)",
+          "requiredQty": 2,
+          "unit": "Nos",
+          "unitCost": 285000,
+          "totalCost": 570000,
+          "inStockQty": 2,
+          "shortageQty": 0,
+          "status": "In Stock"
+        },
+        {
+          "id": "boq-202",
+          "category": "Valves & Dampers",
+          "sku": "VALVE-BUTTERFLY-6IN",
+          "description": "Cast Iron Butterfly Valve 6\" Flanged PN16",
+          "requiredQty": 8,
+          "unit": "Nos",
+          "unitCost": 18500,
+          "totalCost": 148000,
+          "inStockQty": 0,
+          "shortageQty": 8,
+          "status": "Shortage - PR Needed"
+        },
+        {
+          "id": "boq-203",
+          "category": "Valves & Dampers",
+          "sku": "DAMP-FIRE-MOT-24V",
+          "description": "Motorized Fire & Smoke Damper 450x450mm with Actuator",
+          "requiredQty": 6,
+          "unit": "Nos",
+          "unitCost": 14200,
+          "totalCost": 85200,
+          "inStockQty": 2,
+          "shortageQty": 4,
+          "status": "Shortage - PR Needed"
+        }
+      ],
+      "totalShortageItemsCount": 2,
+      "prCount": 1,
+      "poCount": 1,
+      "invoicesGeneratedAmount": 3425000,
+      "paymentsReceivedAmount": 3425000,
+      "siteAddress": "Andheri East, Metro Line 1, Mumbai, MH 400069",
+      "isDelayed": true,
+      "delayDays": 12,
+      "delayReason": "Client site access restricted to night shifts only; pending consultant drawing signoff for acoustic vibration isolators.",
+      "delayCategory": "Client Site Clearance",
+      "delayMitigationPlan": "Requested client facilities team for weekend full-day clearance; revised commissioning schedule by 5 days."
+    },
+    {
+      "id": "prj-003",
+      "projectNumber": "PRJ-2026-003",
+      "projectName": "Apex Health Cleanroom AHU & Positive Pressure Ducting",
+      "clientName": "Apex Health Tower & Multispeciality Clinic",
+      "leadId": "lead-101",
+      "quoteId": "qte-042",
+      "contractValue": 14200000,
+      "totalEstimatedCost": 9650000,
+      "actualExpenses": 1420000,
+      "actualCost": 1420000,
+      "targetMarginPct": 32.04,
+      "expenseMilestones": [
+        {
+          "phase": "M1",
+          "label": "Consultant Spec & Design",
+          "budgetCost": 650000,
+          "actualExpense": 480000,
+          "projectedMarginPct": 34.5
+        },
+        {
+          "phase": "M2",
+          "label": "Modular AHU Procurement",
+          "budgetCost": 5200000,
+          "actualExpense": 940000,
+          "projectedMarginPct": 33.2
+        },
+        {
+          "phase": "M3",
+          "label": "HEPA Duct Fabrication",
+          "budgetCost": 2100000,
+          "actualExpense": 0,
+          "projectedMarginPct": 32.8
+        },
+        {
+          "phase": "M4",
+          "label": "Particulate Validation",
+          "budgetCost": 1100000,
+          "actualExpense": 0,
+          "projectedMarginPct": 32.1
+        },
+        {
+          "phase": "M5",
+          "label": "NABH Signoff & Handover",
+          "budgetCost": 600000,
+          "actualExpense": 0,
+          "projectedMarginPct": 32.04
+        }
+      ],
+      "startDate": "2026-08-25",
+      "targetCompletionDate": "2026-11-20",
+      "status": "Planning & Engineering",
+      "priority": "High",
+      "progressPct": 15,
+      "projectManager": "Rajesh Sharma (Lead Estimator & Project PM)",
+      "boqItems": [
+        {
+          "id": "boq-301",
+          "category": "Chillers & AHU",
+          "sku": "AHU-DX-6000CFM",
+          "description": "Double Skin Modular AHU 6000 CFM (15 TR DX)",
+          "requiredQty": 4,
+          "unit": "Nos",
+          "unitCost": 285000,
+          "totalCost": 1140000,
+          "inStockQty": 1,
+          "shortageQty": 3,
+          "status": "Shortage - PR Needed"
+        },
+        {
+          "id": "boq-302",
+          "category": "Ducting & Sheets",
+          "sku": "GI-DUCT-22G",
+          "description": "Galvanized Iron Ducting Sheet 22 Gauge (0.80mm)",
+          "requiredQty": 120,
+          "unit": "Sheets",
+          "unitCost": 2100,
+          "totalCost": 252000,
+          "inStockQty": 0,
+          "shortageQty": 120,
+          "status": "Shortage - PR Needed"
+        }
+      ],
+      "totalShortageItemsCount": 2,
+      "prCount": 0,
+      "poCount": 0,
+      "invoicesGeneratedAmount": 3550000,
+      "paymentsReceivedAmount": 3550000,
+      "siteAddress": "Plot 44, BKC Bandra East, Mumbai, MH 400051",
+      "isDelayed": true,
+      "delayDays": 8,
+      "delayReason": "Civil contractor delayed ceiling reinforcement; awaiting HEPA filter test validation rig delivery from OEM.",
+      "delayCategory": "Civil / Structural Pending",
+      "delayMitigationPlan": "Civil contractor committed extra shift starting Monday; HEPA test engineer on standby."
+    }
+  ]
+}

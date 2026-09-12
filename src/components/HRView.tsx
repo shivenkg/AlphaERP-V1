@@ -60,6 +60,17 @@ import {
 } from '../types';
 import { storageService } from '../services/storageService';
 import { PREBUILT_HVAC_JDS } from '../data/hrData';
+import {
+  validateMobile,
+  formatMobileInput,
+  validateEmail,
+  validateDateOfBirth,
+  validateDateRange,
+  validatePan,
+  validateAadhaar,
+  validatePositiveNumber,
+  getTodayDateString
+} from '../utils/validation';
 
 import { HRExecutiveSummaryCard } from './hr/HRExecutiveSummaryCard';
 import { OrgMasterView } from './hr/OrgMasterView';
@@ -168,6 +179,7 @@ export const HRView: React.FC<HRViewProps> = ({
 
   // Candidate Modal
   const [candidateModalOpen, setCandidateModalOpen] = useState(false);
+  const [candidateFormError, setCandidateFormError] = useState<string | null>(null);
   const [candidateForm, setCandidateForm] = useState({
     requisitionId: jobRequisitions[0]?.id || 'req-1',
     name: '',
@@ -185,6 +197,7 @@ export const HRView: React.FC<HRViewProps> = ({
 
   // Employee Profile Modal
   const [employeeModalOpen, setEmployeeModalOpen] = useState(false);
+  const [empFormError, setEmpFormError] = useState<string | null>(null);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeMaster | null>(null);
   const [selectedEmployeeCard, setSelectedEmployeeCard] = useState<EmployeeMaster | null>(null);
 
@@ -199,6 +212,7 @@ export const HRView: React.FC<HRViewProps> = ({
     department: 'Projects & Contracting',
     officialEmail: '',
     phone: '',
+    dob: '1995-05-15',
     avatar: '',
     joiningDate: new Date().toISOString().split('T')[0],
     pan: '',
@@ -229,6 +243,7 @@ export const HRView: React.FC<HRViewProps> = ({
 
   // Leave Modal
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
+  const [leaveFormError, setLeaveFormError] = useState<string | null>(null);
   const [leaveForm, setLeaveForm] = useState({
     employeeId: employees[0]?.id || 'emp-1',
     leaveType: 'PL' as LeaveApplication['leaveType'],
@@ -296,15 +311,40 @@ export const HRView: React.FC<HRViewProps> = ({
   // Save Candidate
   const handleSaveCandidate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!candidateForm.name || !candidateForm.phone) return;
+    setCandidateFormError(null);
 
-    storageService.addCandidate(candidateForm);
+    if (!candidateForm.name.trim()) {
+      setCandidateFormError('Candidate name is required.');
+      return;
+    }
+    const candPhone = validateMobile(candidateForm.phone, true);
+    if (!candPhone.isValid) {
+      setCandidateFormError(candPhone.message || 'Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    const candEmail = validateEmail(candidateForm.email, true);
+    if (!candEmail.isValid) {
+      setCandidateFormError(candEmail.message || 'Please enter a valid email address.');
+      return;
+    }
+    const ctcCheck = validatePositiveNumber(candidateForm.expectedCTC, 'Expected CTC');
+    if (!ctcCheck.isValid) {
+      setCandidateFormError(ctcCheck.message || 'Expected CTC must be greater than 0.');
+      return;
+    }
+
+    storageService.addCandidate({
+      ...candidateForm,
+      phone: candPhone.cleanNumber,
+      email: candidateForm.email.trim()
+    });
     setCandidateModalOpen(false);
     onRefresh();
   };
 
   // Open Employee Modal
   const handleOpenEmployeeModal = (emp?: EmployeeMaster) => {
+    setEmpFormError(null);
     if (emp) {
       setEditingEmployee(emp);
       setEmpForm({
@@ -314,10 +354,11 @@ export const HRView: React.FC<HRViewProps> = ({
         department: emp.department,
         officialEmail: emp.officialEmail || (emp as any).email || '',
         phone: emp.phone,
+        dob: (emp as any).dob || (emp as any).dateOfBirth || '1995-05-15',
         avatar: emp.avatar || '',
         joiningDate: emp.joiningDate || (emp as any).dateOfJoining || new Date().toISOString().split('T')[0],
-        pan: emp.pan,
-        aadhaar: emp.aadhaar,
+        pan: emp.pan || 'ABCDE1234F',
+        aadhaar: emp.aadhaar || '123456789012',
         uan: emp.uan || '',
         pfNumber: emp.pfNumber || '',
         bankAccountNo: emp.bankAccountNo,
@@ -338,10 +379,11 @@ export const HRView: React.FC<HRViewProps> = ({
         department: 'Projects & Contracting',
         officialEmail: '',
         phone: '',
+        dob: '1995-05-15',
         avatar: '',
         joiningDate: new Date().toISOString().split('T')[0],
         pan: 'ABCDE1234F',
-        aadhaar: '1234 5678 9012',
+        aadhaar: '123456789012',
         uan: '100987654321',
         pfNumber: 'MH/BAN/0012345/000/0001',
         bankAccountNo: '501000293847',
@@ -359,7 +401,42 @@ export const HRView: React.FC<HRViewProps> = ({
   // Save Employee
   const handleSaveEmployee = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!empForm.fullName) return;
+    setEmpFormError(null);
+
+    if (!empForm.fullName.trim()) {
+      setEmpFormError('Full name is required.');
+      return;
+    }
+    const phoneCheck = validateMobile(empForm.phone, true);
+    if (!phoneCheck.isValid) {
+      setEmpFormError(phoneCheck.message || 'Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    const emailCheck = validateEmail(empForm.officialEmail, true);
+    if (!emailCheck.isValid) {
+      setEmpFormError(emailCheck.message || 'Please enter a valid email address.');
+      return;
+    }
+    const dobCheck = validateDateOfBirth(empForm.dob, 18);
+    if (!dobCheck.isValid) {
+      setEmpFormError(dobCheck.message || 'Employee date of birth must not be in future and must be at least 18 years old.');
+      return;
+    }
+    const panCheck = validatePan(empForm.pan, false);
+    if (!panCheck.isValid) {
+      setEmpFormError(panCheck.message || 'Invalid PAN format.');
+      return;
+    }
+    const aadhaarCheck = validateAadhaar(empForm.aadhaar, false);
+    if (!aadhaarCheck.isValid) {
+      setEmpFormError(aadhaarCheck.message || 'Invalid Aadhaar format.');
+      return;
+    }
+    const ctcCheck = validatePositiveNumber(empForm.annualCTC, 'Annual CTC');
+    if (!ctcCheck.isValid) {
+      setEmpFormError(ctcCheck.message || 'Annual CTC must be greater than 0.');
+      return;
+    }
 
     const monthlyGross = Math.round(empForm.annualCTC / 12);
     const basic = Math.round(monthlyGross * 0.5);
@@ -368,6 +445,10 @@ export const HRView: React.FC<HRViewProps> = ({
 
     const empData: any = {
       ...empForm,
+      fullName: empForm.fullName.trim(),
+      officialEmail: empForm.officialEmail.trim(),
+      phone: phoneCheck.cleanNumber,
+      pan: empForm.pan.trim().toUpperCase(),
       monthlySalaryStructure: {
         basicSalary: basic,
         hra,
@@ -413,6 +494,14 @@ export const HRView: React.FC<HRViewProps> = ({
   // Submit Leave
   const handleSaveLeave = (e: React.FormEvent) => {
     e.preventDefault();
+    setLeaveFormError(null);
+
+    const rangeCheck = validateDateRange(leaveForm.startDate, leaveForm.endDate, 'Leave');
+    if (!rangeCheck.isValid) {
+      setLeaveFormError(rangeCheck.message || 'Leave end date cannot be earlier than start date.');
+      return;
+    }
+
     const emp = employees.find((e) => e.id === leaveForm.employeeId);
     if (!emp) return;
 
@@ -1949,15 +2038,22 @@ export const HRView: React.FC<HRViewProps> = ({
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl border border-slate-200 max-w-lg w-full p-6 shadow-xl space-y-4 text-xs">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-base">Add Candidate to Pipeline</h3>
+              <h3 className="text-base font-bold text-slate-900">Add HVAC Candidate Profile</h3>
               <button onClick={() => setCandidateModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
+            {candidateFormError && (
+              <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                <span>{candidateFormError}</span>
+              </div>
+            )}
+
             <form onSubmit={handleSaveCandidate} className="space-y-3">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Target Requisition *</label>
+                <label className="block font-semibold text-slate-700 mb-1">Target Requisition</label>
                 <select
                   value={candidateForm.requisitionId}
                   onChange={(e) => setCandidateForm({ ...candidateForm, requisitionId: e.target.value })}
@@ -1985,21 +2081,27 @@ export const HRView: React.FC<HRViewProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Contact Phone *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-semibold text-slate-700">Contact Phone *</label>
+                    <span className="text-[10px] text-slate-400 font-mono">10 digits</span>
+                  </div>
                   <input
                     type="text"
                     required
                     value={candidateForm.phone}
-                    onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
-                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl"
+                    onChange={(e) => setCandidateForm({ ...candidateForm, phone: formatMobileInput(e.target.value) })}
+                    placeholder="9876543210"
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Official Email</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Email Address *</label>
                   <input
                     type="email"
+                    required
                     value={candidateForm.email}
                     onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                    placeholder="candidate@email.com"
                     className="w-full px-3.5 py-2 border border-slate-200 rounded-xl"
                   />
                 </div>
@@ -2019,6 +2121,7 @@ export const HRView: React.FC<HRViewProps> = ({
                   <label className="block font-semibold text-slate-700 mb-1">Total Experience (Years)</label>
                   <input
                     type="number"
+                    min="0"
                     value={candidateForm.experienceYears}
                     onChange={(e) => setCandidateForm({ ...candidateForm, experienceYears: Number(e.target.value) })}
                     className="w-full px-3.5 py-2 border border-slate-200 rounded-xl font-mono"
@@ -2031,15 +2134,18 @@ export const HRView: React.FC<HRViewProps> = ({
                   <label className="block font-semibold text-slate-700 mb-1">Current CTC (₹)</label>
                   <input
                     type="number"
+                    min="0"
                     value={candidateForm.currentCTC}
                     onChange={(e) => setCandidateForm({ ...candidateForm, currentCTC: Number(e.target.value) })}
                     className="w-full px-3.5 py-2 border border-slate-200 rounded-xl font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Expected CTC (₹)</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Expected CTC (₹) *</label>
                   <input
                     type="number"
+                    min="1"
+                    required
                     value={candidateForm.expectedCTC}
                     onChange={(e) => setCandidateForm({ ...candidateForm, expectedCTC: Number(e.target.value) })}
                     className="w-full px-3.5 py-2 border border-slate-200 rounded-xl font-mono"
@@ -2082,6 +2188,13 @@ export const HRView: React.FC<HRViewProps> = ({
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {empFormError && (
+              <div className="flex items-center gap-2 p-3 mt-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                <span>{empFormError}</span>
+              </div>
+            )}
 
             <form onSubmit={handleSaveEmployee} className="space-y-4 mt-4">
               {/* Profile Picture Upload Section */}
@@ -2173,6 +2286,7 @@ export const HRView: React.FC<HRViewProps> = ({
                     required
                     value={empForm.fullName}
                     onChange={(e) => setEmpForm({ ...empForm, fullName: e.target.value })}
+                    placeholder="e.g. Ramesh Kulkarni"
                     className="w-full px-3.5 py-2 border border-slate-200 rounded-xl"
                   />
                 </div>
@@ -2184,6 +2298,32 @@ export const HRView: React.FC<HRViewProps> = ({
                     value={empForm.empCode}
                     onChange={(e) => setEmpForm({ ...empForm, empCode: e.target.value })}
                     className="w-full px-3.5 py-2 border border-slate-200 rounded-xl font-mono bg-slate-50"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-semibold text-slate-700">Date of Birth (DOB) *</label>
+                    <span className="text-[10px] text-slate-400 font-mono">Min 18 Yrs</span>
+                  </div>
+                  <input
+                    type="date"
+                    required
+                    value={empForm.dob}
+                    max={new Date(new Date().getFullYear() - 18, new Date().getMonth(), new Date().getDate()).toISOString().split('T')[0]}
+                    onChange={(e) => setEmpForm({ ...empForm, dob: e.target.value })}
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Date of Joining</label>
+                  <input
+                    type="date"
+                    value={empForm.joiningDate}
+                    max={getTodayDateString()}
+                    onChange={(e) => setEmpForm({ ...empForm, joiningDate: e.target.value })}
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl font-mono"
                   />
                 </div>
 
@@ -2213,32 +2353,41 @@ export const HRView: React.FC<HRViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Official Email</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Official Email *</label>
                   <input
                     type="email"
+                    required
                     value={empForm.officialEmail}
                     onChange={(e) => setEmpForm({ ...empForm, officialEmail: e.target.value })}
+                    placeholder="engineer@atmosaircon.com"
                     className="w-full px-3.5 py-2 border border-slate-200 rounded-xl"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Mobile Phone</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-semibold text-slate-700">Mobile Phone *</label>
+                    <span className="text-[10px] text-slate-400 font-mono">10 digits</span>
+                  </div>
                   <input
                     type="text"
+                    required
                     value={empForm.phone}
-                    onChange={(e) => setEmpForm({ ...empForm, phone: e.target.value })}
-                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl"
+                    onChange={(e) => setEmpForm({ ...empForm, phone: formatMobileInput(e.target.value) })}
+                    placeholder="9876543210"
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Annual CTC (₹)</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Annual CTC (₹) *</label>
                   <input
                     type="number"
+                    min="1"
+                    required
                     value={empForm.annualCTC}
                     onChange={(e) => setEmpForm({ ...empForm, annualCTC: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl font-mono"
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl font-mono font-bold text-emerald-600"
                   />
                 </div>
 
@@ -2248,6 +2397,18 @@ export const HRView: React.FC<HRViewProps> = ({
                     type="text"
                     value={empForm.pan}
                     onChange={(e) => setEmpForm({ ...empForm, pan: e.target.value.toUpperCase() })}
+                    placeholder="ABCDE1234F"
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Aadhaar (12 Digits)</label>
+                  <input
+                    type="text"
+                    value={empForm.aadhaar}
+                    onChange={(e) => setEmpForm({ ...empForm, aadhaar: e.target.value.replace(/\D/g, '').slice(0, 12) })}
+                    placeholder="123456789012"
                     className="w-full px-3.5 py-2 border border-slate-200 rounded-xl font-mono"
                   />
                 </div>
@@ -2262,7 +2423,7 @@ export const HRView: React.FC<HRViewProps> = ({
                   />
                 </div>
 
-                <div>
+                <div className="sm:col-span-2">
                   <label className="block font-semibold text-slate-700 mb-1">Bank Account Number</label>
                   <input
                     type="text"

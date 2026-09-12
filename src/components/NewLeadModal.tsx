@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Plus, Users, Building, Phone, Mail, MapPin, DollarSign, Calendar, Sparkles } from 'lucide-react';
+import { Plus, Users, Building, Phone, Mail, MapPin, DollarSign, Calendar, Sparkles, AlertCircle } from 'lucide-react';
 import { Lead, LeadSource, SalesRep, FileAttachment } from '../types';
 import { storageService } from '../services/storageService';
 import { InsForgeFileUpload } from './InsForgeFileUpload';
+import { validateMobile, formatMobileInput, validateEmail, validatePositiveNumber } from '../utils/validation';
 
 interface NewLeadModalProps {
   isOpen: boolean;
@@ -26,22 +27,53 @@ export const NewLeadModal: React.FC<NewLeadModalProps> = ({ isOpen, onClose, sal
   const [assignedTo, setAssignedTo] = useState(salesReps[0]?.id || 'rep-1');
   const [notes, setNotes] = useState('Client requested immediate site survey for office floor fitout.');
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
+  const [formError, setFormError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
+  const phoneCheck = validateMobile(phone, true);
+  const emailCheck = validateEmail(email, false);
+  const capacityCheck = validatePositiveNumber(estimatedCapacityTR, 'Capacity');
+  const valueCheck = validatePositiveNumber(estimatedValue, 'Budget');
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!companyName || !clientName) return;
+    setFormError(null);
+
+    if (!companyName.trim()) {
+      setFormError('Company or organization name is required.');
+      return;
+    }
+    if (!clientName.trim()) {
+      setFormError('Contact person name is required.');
+      return;
+    }
+    if (!phoneCheck.isValid) {
+      setFormError(phoneCheck.message || 'Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    if (!emailCheck.isValid) {
+      setFormError(emailCheck.message || 'Please enter a valid email address.');
+      return;
+    }
+    if (!capacityCheck.isValid) {
+      setFormError(capacityCheck.message || 'Capacity must be greater than 0.');
+      return;
+    }
+    if (!valueCheck.isValid) {
+      setFormError(valueCheck.message || 'Estimated budget must be greater than 0.');
+      return;
+    }
 
     const rep = salesReps.find((r) => r.id === assignedTo);
 
     storageService.addLead({
-      companyName,
-      clientName,
-      phone,
-      email,
-      city,
-      projectAddress: siteAddress || `${companyName} Facility, ${city}`,
+      companyName: companyName.trim(),
+      clientName: clientName.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+      city: city.trim(),
+      projectAddress: siteAddress.trim() || `${companyName} Facility, ${city}`,
       hvacType,
       buildingType,
       estimatedCapacityTR: Number(estimatedCapacityTR),
@@ -74,6 +106,13 @@ export const NewLeadModal: React.FC<NewLeadModalProps> = ({ isOpen, onClose, sal
           <button onClick={onClose} className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900 text-xs font-bold transition-colors">✕</button>
         </div>
 
+        {formError && (
+          <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold animate-shake">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+            <span>{formError}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -102,14 +141,23 @@ export const NewLeadModal: React.FC<NewLeadModalProps> = ({ isOpen, onClose, sal
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-slate-700 font-bold mb-1">Phone / WhatsApp *</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-slate-700 font-bold">Phone / WhatsApp *</label>
+                <span className="text-[10px] text-slate-400 font-mono">Max 10 digits</span>
+              </div>
               <input
                 type="text"
                 required
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full bg-slate-50 text-slate-900 p-2.5 rounded-xl border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 font-medium"
+                onChange={(e) => setPhone(formatMobileInput(e.target.value))}
+                placeholder="+91 9876543210"
+                className={`w-full bg-slate-50 text-slate-900 p-2.5 rounded-xl border font-mono font-medium focus:bg-white focus:ring-2 ${
+                  phone && !phoneCheck.isValid ? 'border-rose-300 focus:ring-rose-500 bg-rose-50/30' : 'border-slate-200 focus:ring-blue-500'
+                }`}
               />
+              {phone && !phoneCheck.isValid && (
+                <p className="text-[10px] text-rose-600 font-medium mt-1">{phoneCheck.message}</p>
+              )}
             </div>
             <div>
               <label className="block text-slate-700 font-bold mb-1">Email</label>
@@ -118,8 +166,13 @@ export const NewLeadModal: React.FC<NewLeadModalProps> = ({ isOpen, onClose, sal
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="client@company.com"
-                className="w-full bg-slate-50 text-slate-900 p-2.5 rounded-xl border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 font-medium placeholder-slate-400"
+                className={`w-full bg-slate-50 text-slate-900 p-2.5 rounded-xl border font-medium placeholder-slate-400 focus:bg-white focus:ring-2 ${
+                  email && !emailCheck.isValid ? 'border-rose-300 focus:ring-rose-500 bg-rose-50/30' : 'border-slate-200 focus:ring-blue-500'
+                }`}
               />
+              {email && !emailCheck.isValid && (
+                <p className="text-[10px] text-rose-600 font-medium mt-1">{emailCheck.message}</p>
+              )}
             </div>
             <div>
               <label className="block text-slate-700 font-bold mb-1">City / Region</label>

@@ -54,6 +54,7 @@ interface SidebarProps {
   pendingPOCount: number;
   lowStockCount: number;
   pendingInvoicesCount: number;
+  activeAmcCount?: number;
   isMobileOpen?: boolean;
   onCloseMobile?: () => void;
   isCollapsed?: boolean;
@@ -87,6 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   pendingPOCount,
   lowStockCount,
   pendingInvoicesCount,
+  activeAmcCount,
   isMobileOpen = false,
   onCloseMobile,
   isCollapsed: controlledIsCollapsed,
@@ -200,6 +202,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           icon: Wrench,
           badge: null,
           description: 'Field engineer dispatch & service'
+        },
+        {
+          id: 'services_amc',
+          label: 'Services & AMC',
+          icon: ShieldCheck,
+          badge: activeAmcCount ? `${activeAmcCount} AMC` : 'Active',
+          badgeColor: 'bg-emerald-600',
+          description: 'AMC contracts, PPM schedule & breakdown tickets'
         }
       ]
     },

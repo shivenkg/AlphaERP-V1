@@ -188,6 +188,111 @@ export interface WorkOrder {
   };
 }
 
+export type AmcContractType =
+  | 'Comprehensive'
+  | 'Non-Comprehensive (Labor Only)'
+  | 'Semi-Comprehensive'
+  | 'Preventive Only';
+
+export type AmcStatus = 'Active' | 'Pending Renewal' | 'Expired' | 'Terminated';
+
+export interface ServiceEquipmentItem {
+  id: string;
+  tagNumber: string;
+  equipmentType: string;
+  brand: string;
+  modelNumber: string;
+  capacityTR: number;
+  locationFloor: string;
+  serialNumber?: string;
+  lastServiceDate?: string;
+  nextPpmDate?: string;
+  condition: 'Excellent' | 'Good' | 'Fair' | 'Requires Attention';
+}
+
+export interface AmcContract {
+  id: string;
+  contractNumber: string;
+  clientName: string;
+  clientId?: string;
+  companyName: string;
+  siteAddress: string;
+  contactPerson: string;
+  contactPhone: string;
+  contactEmail: string;
+  contractType: AmcContractType;
+  systemType: string;
+  equipmentCount: number;
+  equipmentList: ServiceEquipmentItem[];
+  startDate: string;
+  endDate: string;
+  billingFrequency: 'Monthly' | 'Quarterly' | 'Half-Yearly' | 'Annually';
+  annualContractValue: number;
+  billedAmount: number;
+  receivedAmount: number;
+  serviceFrequency: 'Monthly' | 'Quarterly' | 'Bi-Monthly';
+  slaResponseHours: number;
+  status: AmcStatus;
+  assignedLeadTechnician: string;
+  technicianPhone?: string;
+  ppmVisitsCompleted: number;
+  ppmVisitsTotal: number;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface PpmChecklistItem {
+  task: string;
+  done: boolean;
+  notes?: string;
+}
+
+export interface PpmScheduleVisit {
+  id: string;
+  visitNumber: string;
+  contractId: string;
+  contractNumber: string;
+  clientName: string;
+  siteAddress: string;
+  scheduledDate: string;
+  completedDate?: string;
+  quarter: string;
+  status: 'Scheduled' | 'In Progress' | 'Completed' | 'Overdue' | 'Rescheduled';
+  assignedTechnician: string;
+  checklistSummary: PpmChecklistItem[];
+  findingsNotes?: string;
+  customerSignatureName?: string;
+  customerRating?: number;
+}
+
+export interface BreakdownSparesItem {
+  partName: string;
+  qty: number;
+  cost: number;
+  isCoveredUnderAmc: boolean;
+}
+
+export interface BreakdownTicket {
+  id: string;
+  ticketNumber: string;
+  contractId?: string;
+  contractNumber?: string;
+  clientName: string;
+  siteAddress: string;
+  contactPhone: string;
+  reportedIssue: string;
+  systemType: string;
+  priority: 'Critical 24x7' | 'High' | 'Medium' | 'Low';
+  status: 'Open' | 'Dispatched' | 'Work In Progress' | 'Resolved' | 'Closed';
+  reportedAt: string;
+  assignedTechnician: string;
+  resolutionNotes?: string;
+  sparesReplaced?: BreakdownSparesItem[];
+  billableAmount?: number;
+  resolvedAt?: string;
+}
+
+
 export interface BOQItem {
   id: string;
   category: string;
@@ -1063,6 +1168,8 @@ export interface Employee {
   email?: string;
   officialEmail?: string;
   phone: string;
+  dateOfBirth?: string;
+  dob?: string;
   dateOfJoining?: string;
   joiningDate?: string;
   reportingManager?: string;

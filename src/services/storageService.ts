@@ -17,6 +17,9 @@ import {
   GoogleSheetsSyncConfig,
   SystemSettings,
   UserRole,
+  AmcContract,
+  PpmScheduleVisit,
+  BreakdownTicket,
   PRStatus,
   POStatus,
   BOQItem,
@@ -81,6 +84,12 @@ import {
 } from '../utils/reportTemplates';
 
 import { DEFAULT_ROLE_MODULE_PERMISSIONS } from '../utils/rbac';
+import {
+  validateEmail,
+  validateMobile,
+  validateDateOfBirth,
+  validateDateRange
+} from '../utils/validation';
 
 import {
   INITIAL_CURRENT_USER,
@@ -99,7 +108,10 @@ import {
   INITIAL_NOTIFICATIONS,
   INITIAL_GOOGLE_SHEETS_CONFIG,
   INITIAL_SYSTEM_SETTINGS,
-  DEFAULT_EMAIL_CONFIG
+  DEFAULT_EMAIL_CONFIG,
+  INITIAL_AMC_CONTRACTS,
+  INITIAL_PPM_VISITS,
+  INITIAL_BREAKDOWN_TICKETS
 } from '../data/initialData';
 
 import {
@@ -161,6 +173,9 @@ const STORAGE_KEYS = {
   QUOTES: 'hvac_erp_quotes',
   QUOTE_DRAFT: 'alpha_erp_new_quote_draft',
   WORK_ORDERS: 'hvac_erp_work_orders',
+  AMC_CONTRACTS: 'alpha_erp_amc_contracts',
+  PPM_VISITS: 'alpha_erp_ppm_visits',
+  BREAKDOWN_TICKETS: 'alpha_erp_breakdown_tickets',
   PROJECTS: 'hvac_erp_projects',
   INVENTORY: 'hvac_erp_inventory',
   PRS: 'hvac_erp_prs',
@@ -318,6 +333,9 @@ class StorageService {
   private leads: Lead[] = load(STORAGE_KEYS.LEADS, INITIAL_LEADS);
   private quotes: Quote[] = load(STORAGE_KEYS.QUOTES, INITIAL_QUOTES);
   private workOrders: WorkOrder[] = load(STORAGE_KEYS.WORK_ORDERS, INITIAL_WORK_ORDERS);
+  private amcContracts: AmcContract[] = load(STORAGE_KEYS.AMC_CONTRACTS, INITIAL_AMC_CONTRACTS);
+  private ppmVisits: PpmScheduleVisit[] = load(STORAGE_KEYS.PPM_VISITS, INITIAL_PPM_VISITS);
+  private breakdownTickets: BreakdownTicket[] = load(STORAGE_KEYS.BREAKDOWN_TICKETS, INITIAL_BREAKDOWN_TICKETS);
   private projects: Project[] = load(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
   private inventory: InventoryItem[] = load(STORAGE_KEYS.INVENTORY, INITIAL_INVENTORY);
   private prs: PurchaseRequisition[] = load(STORAGE_KEYS.PRS, INITIAL_PURCHASE_REQUISITIONS);
@@ -607,6 +625,20 @@ class StorageService {
       technician: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80'
     };
 
+    if (userData.email) {
+      const emailCheck = validateEmail(userData.email);
+      if (!emailCheck.isValid) {
+        throw new Error(emailCheck.error || 'Invalid email format.');
+      }
+    }
+
+    if (userData.phone && userData.phone.trim() && userData.phone.trim() !== '+91' && userData.phone.trim() !== '+91 ') {
+      const phoneCheck = validateMobile(userData.phone);
+      if (!phoneCheck.isValid) {
+        throw new Error(phoneCheck.error || 'Invalid mobile number format.');
+      }
+    }
+
     const newUser: UserProfile = {
       id: `usr-${Date.now()}`,
       name: userData.name,
@@ -721,6 +753,20 @@ class StorageService {
   }
 
   public addLead(leadData: Omit<Lead, 'id' | 'leadNumber' | 'createdAt' | 'updatedAt' | 'followUps' | 'communications' | 'quoteIds'>): Lead {
+    if (leadData.email) {
+      const emailCheck = validateEmail(leadData.email);
+      if (!emailCheck.isValid) {
+        throw new Error(emailCheck.error || 'Invalid lead email format.');
+      }
+    }
+
+    if (leadData.phone) {
+      const phoneCheck = validateMobile(leadData.phone);
+      if (!phoneCheck.isValid) {
+        throw new Error(phoneCheck.error || 'Invalid lead mobile number.');
+      }
+    }
+
     const newLead: Lead = {
       ...leadData,
       id: `lead-${Date.now()}`,
@@ -1794,6 +1840,113 @@ class StorageService {
   public updateWorkOrder(id: string, updates: Partial<WorkOrder>) {
     this.workOrders = this.workOrders.map((w) => (w.id === id ? { ...w, ...updates } : w));
     save(STORAGE_KEYS.WORK_ORDERS, this.workOrders);
+    this.notify();
+  }
+
+  // SERVICES & AMC CONTRACTS
+  public getAmcContracts(): AmcContract[] {
+    return this.amcContracts;
+  }
+
+  public addAmcContract(contract: Omit<AmcContract, 'id' | 'contractNumber' | 'createdAt'>): AmcContract {
+    if (contract.contactEmail) {
+      const emailCheck = validateEmail(contract.contactEmail);
+      if (!emailCheck.isValid) {
+        throw new Error(emailCheck.error || 'Invalid contact email format for AMC contract.');
+      }
+    }
+
+    if (contract.contactPhone) {
+      const phoneCheck = validateMobile(contract.contactPhone);
+      if (!phoneCheck.isValid) {
+        throw new Error(phoneCheck.error || 'Invalid contact phone for AMC contract.');
+      }
+    }
+
+    if (contract.startDate && contract.endDate) {
+      const rangeCheck = validateDateRange(contract.startDate, contract.endDate, 'Contract Start Date', 'Contract End Date');
+      if (!rangeCheck.isValid) {
+        throw new Error(rangeCheck.error || 'Invalid contract date range.');
+      }
+    }
+
+    const newContract: AmcContract = {
+      ...contract,
+      id: `amc-${Date.now()}`,
+      contractNumber: `AMC-2026-${(this.amcContracts.length + 1).toString().padStart(3, '0')}`,
+      createdAt: new Date().toISOString()
+    };
+    this.amcContracts = [newContract, ...this.amcContracts];
+    save(STORAGE_KEYS.AMC_CONTRACTS, this.amcContracts);
+    this.logAudit('CREATE', 'AMC_CONTRACT', newContract.contractNumber, `Registered AMC Contract ${newContract.contractNumber} for ${newContract.clientName}`);
+    this.notify();
+    return newContract;
+  }
+
+  public updateAmcContract(id: string, updates: Partial<AmcContract>) {
+    this.amcContracts = this.amcContracts.map((c) => (c.id === id ? { ...c, ...updates } : c));
+    save(STORAGE_KEYS.AMC_CONTRACTS, this.amcContracts);
+    this.notify();
+  }
+
+  public deleteAmcContract(id: string) {
+    this.amcContracts = this.amcContracts.filter((c) => c.id !== id);
+    save(STORAGE_KEYS.AMC_CONTRACTS, this.amcContracts);
+    this.notify();
+  }
+
+  // PPM SCHEDULE VISITS
+  public getPpmVisits(): PpmScheduleVisit[] {
+    return this.ppmVisits;
+  }
+
+  public addPpmVisit(visit: Omit<PpmScheduleVisit, 'id' | 'visitNumber'>): PpmScheduleVisit {
+    const newVisit: PpmScheduleVisit = {
+      ...visit,
+      id: `ppm-${Date.now()}`,
+      visitNumber: `PPM-2026-${(this.ppmVisits.length + 1).toString().padStart(3, '0')}`
+    };
+    this.ppmVisits = [newVisit, ...this.ppmVisits];
+    save(STORAGE_KEYS.PPM_VISITS, this.ppmVisits);
+    this.notify();
+    return newVisit;
+  }
+
+  public updatePpmVisit(id: string, updates: Partial<PpmScheduleVisit>) {
+    this.ppmVisits = this.ppmVisits.map((v) => (v.id === id ? { ...v, ...updates } : v));
+    save(STORAGE_KEYS.PPM_VISITS, this.ppmVisits);
+    this.notify();
+  }
+
+  // BREAKDOWN & EMERGENCY SERVICE TICKETS
+  public getBreakdownTickets(): BreakdownTicket[] {
+    return this.breakdownTickets;
+  }
+
+  public addBreakdownTicket(ticket: Omit<BreakdownTicket, 'id' | 'ticketNumber' | 'reportedAt'>): BreakdownTicket {
+    if (ticket.contactPhone) {
+      const phoneCheck = validateMobile(ticket.contactPhone);
+      if (!phoneCheck.isValid) {
+        throw new Error(phoneCheck.error || 'Invalid contact phone for breakdown ticket.');
+      }
+    }
+
+    const newTicket: BreakdownTicket = {
+      ...ticket,
+      id: `srv-${Date.now()}`,
+      ticketNumber: `SRV-2026-${(this.breakdownTickets.length + 80).toString().padStart(3, '0')}`,
+      reportedAt: new Date().toISOString()
+    };
+    this.breakdownTickets = [newTicket, ...this.breakdownTickets];
+    save(STORAGE_KEYS.BREAKDOWN_TICKETS, this.breakdownTickets);
+    this.logAudit('CREATE', 'SERVICE_TICKET', newTicket.ticketNumber, `Logged Breakdown Ticket ${newTicket.ticketNumber} for ${newTicket.clientName}`);
+    this.notify();
+    return newTicket;
+  }
+
+  public updateBreakdownTicket(id: string, updates: Partial<BreakdownTicket>) {
+    this.breakdownTickets = this.breakdownTickets.map((t) => (t.id === id ? { ...t, ...updates } : t));
+    save(STORAGE_KEYS.BREAKDOWN_TICKETS, this.breakdownTickets);
     this.notify();
   }
 
@@ -3685,6 +3838,29 @@ class StorageService {
   }
 
   public addEmployee(data: Omit<Employee, 'id' | 'empCode'> & { empCode?: string }): Employee {
+    if (data.email) {
+      const emailCheck = validateEmail(data.email);
+      if (!emailCheck.isValid) {
+        throw new Error(emailCheck.error || 'Invalid employee email format.');
+      }
+    }
+
+    const rawPhone = data.phone || (data as any).mobile;
+    if (rawPhone && rawPhone.trim() && rawPhone.trim() !== '+91' && rawPhone.trim() !== '+91 ') {
+      const phoneCheck = validateMobile(rawPhone);
+      if (!phoneCheck.isValid) {
+        throw new Error(phoneCheck.error || 'Invalid employee mobile number.');
+      }
+    }
+
+    const rawDob = data.dateOfBirth || data.dob;
+    if (rawDob) {
+      const dobCheck = validateDateOfBirth(rawDob, 18);
+      if (!dobCheck.isValid) {
+        throw new Error(dobCheck.error || 'Invalid date of birth.');
+      }
+    }
+
     const empCode = data.empCode || this.generateSeriesNumber('employee');
     const computedName = data.name || (data as any).fullName || `${(data as any).firstName || ''} ${(data as any).lastName || ''}`.trim() || 'Employee';
     const computedSalary = Number(data.grossMonthlySalary || data.baseMonthlySalary || data.basicSalary || (data as any).salary || 50000);
@@ -4842,6 +5018,9 @@ class StorageService {
       leads: this.leads,
       quotes: this.quotes,
       workOrders: this.workOrders,
+      amcContracts: this.amcContracts,
+      ppmVisits: this.ppmVisits,
+      breakdownTickets: this.breakdownTickets,
       projects: this.projects,
       inventory: this.inventory,
       prs: this.prs,
@@ -5187,6 +5366,21 @@ class StorageService {
         this.workOrders = data.workOrders;
         save(STORAGE_KEYS.WORK_ORDERS, this.workOrders);
         transactionCounts['Work Orders'] = this.workOrders.length;
+      }
+      if (Array.isArray(data.amcContracts)) {
+        this.amcContracts = data.amcContracts;
+        save(STORAGE_KEYS.AMC_CONTRACTS, this.amcContracts);
+        transactionCounts['AMC Contracts'] = this.amcContracts.length;
+      }
+      if (Array.isArray(data.ppmVisits)) {
+        this.ppmVisits = data.ppmVisits;
+        save(STORAGE_KEYS.PPM_VISITS, this.ppmVisits);
+        transactionCounts['PPM Maintenance Visits'] = this.ppmVisits.length;
+      }
+      if (Array.isArray(data.breakdownTickets)) {
+        this.breakdownTickets = data.breakdownTickets;
+        save(STORAGE_KEYS.BREAKDOWN_TICKETS, this.breakdownTickets);
+        transactionCounts['Breakdown Tickets'] = this.breakdownTickets.length;
       }
       if (Array.isArray(data.prs)) {
         this.prs = data.prs;

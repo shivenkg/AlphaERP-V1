@@ -24,6 +24,7 @@ import { UserProfile, UserRole } from '../types';
 import { storageService } from '../services/storageService';
 import { RBAC, ROLE_DEFINITIONS, APP_MODULES } from '../utils/rbac';
 import { RoleModulePermissionsManager } from './RoleModulePermissionsManager';
+import { validateEmail, validateMobile, formatMobileInput } from '../utils/validation';
 
 interface UserManagementViewProps {
   currentRole: UserRole;
@@ -49,6 +50,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
   const [newUserRole, setNewUserRole] = useState<UserRole>('procurement');
   const [newUserTitle, setNewUserTitle] = useState('');
   const [newUserDepartment, setNewUserDepartment] = useState('');
+  const [addUserError, setAddUserError] = useState<string | null>(null);
 
   // Edit User Role Modal State
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
@@ -73,6 +75,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
     setNewUserRole('procurement');
     setNewUserTitle(ROLE_DEFINITIONS.procurement.name);
     setNewUserDepartment('Procurement & Materials');
+    setAddUserError(null);
     setIsAddUserModalOpen(true);
   };
 
@@ -84,9 +87,25 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
 
   const handleCreateUser = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUserName.trim() || !newUserEmail.trim()) {
-      alert('Please enter user name and email.');
+    setAddUserError(null);
+
+    if (!newUserName.trim()) {
+      setAddUserError('Full Name is required.');
       return;
+    }
+
+    const emailCheck = validateEmail(newUserEmail);
+    if (!emailCheck.isValid) {
+      setAddUserError(emailCheck.error || 'Invalid email address format.');
+      return;
+    }
+
+    if (newUserPhone.trim() && newUserPhone.trim() !== '+91' && newUserPhone.trim() !== '+91 ') {
+      const phoneCheck = validateMobile(newUserPhone);
+      if (!phoneCheck.isValid) {
+        setAddUserError(phoneCheck.error || 'Invalid 10-digit mobile number.');
+        return;
+      }
     }
 
     try {
@@ -101,7 +120,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
 
       setIsAddUserModalOpen(false);
     } catch (e: any) {
-      alert(e.message || 'Error creating user');
+      setAddUserError(e.message || 'Error creating user');
     }
   };
 
@@ -621,6 +640,13 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
             </div>
 
             <form onSubmit={handleCreateUser} className="p-6 space-y-4">
+              {addUserError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium flex items-center gap-2">
+                  <XCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{addUserError}</span>
+                </div>
+              )}
+
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Full Name *
@@ -652,12 +678,14 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Phone Number
+                    Phone Number (10 Digits)
                   </label>
                   <input
                     type="text"
+                    placeholder="+91 9876543210"
+                    maxLength={15}
                     value={newUserPhone}
-                    onChange={(e) => setNewUserPhone(e.target.value)}
+                    onChange={(e) => setNewUserPhone(formatMobileInput(e.target.value))}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
                   />
                 </div>

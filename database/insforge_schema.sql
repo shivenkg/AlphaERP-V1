@@ -453,3 +453,125 @@ VALUES
 ON CONFLICT (id) DO UPDATE SET
     title = EXCLUDED.title,
     contract_value = EXCLUDED.contract_value;
+
+-- ====================================================================
+-- 11. AMC CONTRACTS TABLE
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS public.amc_contracts (
+    id TEXT PRIMARY KEY,
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
+    contract_number TEXT NOT NULL,
+    client_name TEXT NOT NULL,
+    company_name TEXT,
+    site_address TEXT,
+    contact_person TEXT,
+    phone TEXT,
+    email TEXT,
+    contract_type TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'Active',
+    start_date TEXT NOT NULL,
+    end_date TEXT NOT NULL,
+    annual_value NUMERIC DEFAULT 0,
+    billing_frequency TEXT DEFAULT 'Quarterly',
+    sla_response_hours NUMERIC DEFAULT 4,
+    sla_resolution_hours NUMERIC DEFAULT 24,
+    assigned_tech_id TEXT,
+    assigned_tech_name TEXT,
+    equipment_count INTEGER DEFAULT 0,
+    emergency_visits_included INTEGER DEFAULT 6,
+    emergency_visits_used INTEGER DEFAULT 0,
+    ppm_frequency TEXT DEFAULT 'Quarterly',
+    data JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 12. PPM VISITS TABLE
+CREATE TABLE IF NOT EXISTS public.ppm_visits (
+    id TEXT PRIMARY KEY,
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
+    visit_number TEXT NOT NULL,
+    amc_id TEXT NOT NULL REFERENCES public.amc_contracts(id) ON DELETE CASCADE,
+    contract_number TEXT NOT NULL,
+    client_name TEXT NOT NULL,
+    site_address TEXT NOT NULL,
+    scheduled_date TEXT NOT NULL,
+    completed_date TEXT,
+    assigned_tech_id TEXT NOT NULL,
+    assigned_tech_name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'Scheduled',
+    quarter TEXT NOT NULL,
+    data JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 13. BREAKDOWN TICKETS TABLE
+CREATE TABLE IF NOT EXISTS public.breakdown_tickets (
+    id TEXT PRIMARY KEY,
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
+    ticket_number TEXT NOT NULL,
+    amc_id TEXT,
+    contract_number TEXT,
+    client_name TEXT NOT NULL,
+    site_address TEXT NOT NULL,
+    contact_person TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    equipment_tag TEXT,
+    equipment_type TEXT NOT NULL,
+    issue_description TEXT NOT NULL,
+    severity TEXT NOT NULL DEFAULT 'High',
+    status TEXT NOT NULL DEFAULT 'Open',
+    assigned_tech_id TEXT,
+    assigned_tech_name TEXT,
+    reported_at TEXT NOT NULL,
+    dispatched_at TEXT,
+    arrived_at TEXT,
+    resolved_at TEXT,
+    sla_breached BOOLEAN DEFAULT false,
+    data JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS Enablement
+ALTER TABLE public.amc_contracts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ppm_visits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.breakdown_tickets ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own amc_contracts" ON public.amc_contracts;
+CREATE POLICY "Users can view own amc_contracts" ON public.amc_contracts
+    FOR SELECT TO authenticated
+    USING (auth.uid() = user_id OR user_id IS NULL);
+
+DROP POLICY IF EXISTS "Users can insert own amc_contracts" ON public.amc_contracts;
+CREATE POLICY "Users can insert own amc_contracts" ON public.amc_contracts
+    FOR INSERT TO authenticated
+    WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+
+DROP POLICY IF EXISTS "Users can update own amc_contracts" ON public.amc_contracts;
+CREATE POLICY "Users can update own amc_contracts" ON public.amc_contracts
+    FOR UPDATE TO authenticated
+    USING (auth.uid() = user_id OR user_id IS NULL)
+    WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+
+DROP POLICY IF EXISTS "Users can view own ppm_visits" ON public.ppm_visits;
+CREATE POLICY "Users can view own ppm_visits" ON public.ppm_visits
+    FOR SELECT TO authenticated
+    USING (auth.uid() = user_id OR user_id IS NULL);
+
+DROP POLICY IF EXISTS "Users can insert own ppm_visits" ON public.ppm_visits;
+CREATE POLICY "Users can insert own ppm_visits" ON public.ppm_visits
+    FOR INSERT TO authenticated
+    WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+
+DROP POLICY IF EXISTS "Users can view own breakdown_tickets" ON public.breakdown_tickets;
+CREATE POLICY "Users can view own breakdown_tickets" ON public.breakdown_tickets
+    FOR SELECT TO authenticated
+    USING (auth.uid() = user_id OR user_id IS NULL);
+
+DROP POLICY IF EXISTS "Users can insert own breakdown_tickets" ON public.breakdown_tickets;
+CREATE POLICY "Users can insert own breakdown_tickets" ON public.breakdown_tickets
+    FOR INSERT TO authenticated
+    WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+

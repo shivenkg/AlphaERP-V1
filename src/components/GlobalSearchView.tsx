@@ -12,6 +12,7 @@ import {
   CreditCard,
   Landmark,
   Wrench,
+  ShieldCheck,
   ExternalLink,
   Download,
   Filter,
@@ -48,6 +49,9 @@ export interface GlobalSearchViewProps {
     payments?: any[];
     vouchers?: any[];
     workOrders?: any[];
+    amcContracts?: any[];
+    ppmVisits?: any[];
+    breakdownTickets?: any[];
     costCenters?: any[];
     [key: string]: any;
   };
@@ -65,7 +69,8 @@ export type SearchCategory =
   | 'clients'
   | 'employees'
   | 'finance'
-  | 'workorders';
+  | 'workorders'
+  | 'services_amc';
 
 export interface SearchResultItem {
   id: string;
@@ -442,6 +447,56 @@ export const GlobalSearchView: React.FC<GlobalSearchViewProps> = ({
       });
     });
 
+    // 12. Services & AMC Contracts
+    (data.amcContracts || []).forEach((amc) => {
+      items.push({
+        id: `amc-${amc.id}`,
+        category: 'services_amc',
+        categoryLabel: 'Services & AMC',
+        categoryIcon: ShieldCheck,
+        categoryColor: 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800',
+        code: amc.contractNumber,
+        title: `${amc.contractType} AMC — ${amc.clientName}`,
+        subtitle: `System: ${amc.systemType} | Equipment: ${amc.equipmentCount} units`,
+        details: [
+          `Tenure: ${amc.startDate} to ${amc.endDate}`,
+          `Lead Tech: ${amc.assignedLeadTechnician}`,
+          `PPM: ${amc.ppmVisitsCompleted}/${amc.ppmVisitsTotal} done`
+        ],
+        status: amc.status.toUpperCase(),
+        statusType: amc.status === 'Active' ? 'success' : amc.status === 'Pending Renewal' ? 'warning' : 'neutral',
+        amount: amc.annualContractValue,
+        location: amc.siteAddress,
+        targetTab: 'services_amc',
+        rawItem: amc
+      });
+    });
+
+    // 13. Breakdown / Emergency Service Tickets
+    (data.breakdownTickets || []).forEach((tkt) => {
+      items.push({
+        id: `tkt-${tkt.id}`,
+        category: 'services_amc',
+        categoryLabel: 'Breakdown Ticket',
+        categoryIcon: Wrench,
+        categoryColor: 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800',
+        code: tkt.ticketNumber,
+        title: tkt.reportedIssue,
+        subtitle: `Customer: ${tkt.clientName} | Priority: ${tkt.priority}`,
+        details: [
+          `Technician: ${tkt.assignedTechnician}`,
+          `Reported: ${new Date(tkt.reportedAt).toLocaleDateString()}`,
+          tkt.systemType
+        ],
+        status: tkt.status.toUpperCase(),
+        statusType: tkt.status === 'Resolved' || tkt.status === 'Closed' ? 'success' : 'danger',
+        amount: tkt.billableAmount || 0,
+        location: tkt.siteAddress,
+        targetTab: 'services_amc',
+        rawItem: tkt
+      });
+    });
+
     return items;
   }, [data]);
 
@@ -535,7 +590,8 @@ export const GlobalSearchView: React.FC<GlobalSearchViewProps> = ({
     { id: 'clients', label: 'Client Accounts', icon: Building2 },
     { id: 'employees', label: 'HR & Employees', icon: UserCheck },
     { id: 'finance', label: 'Invoices & Finance', icon: CreditCard },
-    { id: 'workorders', label: 'Work Orders', icon: Wrench }
+    { id: 'workorders', label: 'Work Orders', icon: Wrench },
+    { id: 'services_amc', label: 'Services & AMC', icon: ShieldCheck }
   ];
 
   return (

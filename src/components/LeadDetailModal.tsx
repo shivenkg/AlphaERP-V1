@@ -12,12 +12,14 @@ import {
   Sparkles,
   FileText,
   DollarSign,
-  ArrowRight
+  ArrowRight,
+  AlertCircle
 } from 'lucide-react';
 import { Lead, Quote, LeadStatus, FileAttachment } from '../types';
 import { storageService } from '../services/storageService';
 import { CommunicationService } from '../services/whatsappEmailService';
 import { InsForgeFileUpload } from './InsForgeFileUpload';
+import { validateAppointmentDate, getTodayDateString, getMaxAppointmentDateString } from '../utils/validation';
 
 interface LeadDetailModalProps {
   lead: Lead | null;
@@ -42,6 +44,7 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
   const [newFollowUpType, setNewFollowUpType] = useState<string>('Site Survey & Technical Review');
   const [newFollowUpNote, setNewFollowUpNote] = useState<string>('Confirm duct routing with site MEP consultant');
   const [attachments, setAttachments] = useState<FileAttachment[]>(lead?.attachments || []);
+  const [dateError, setDateError] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (lead) {
@@ -59,7 +62,18 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
   const linkedQuotes = quotes.filter((q) => lead.quoteIds?.includes(q.id) || q.leadId === lead.id);
 
   const handleAddFollowUp = () => {
-    if (!newFollowUpNote) return;
+    setDateError(null);
+    if (!newFollowUpNote.trim()) {
+      setDateError('Please enter notes or instructions for the follow-up.');
+      return;
+    }
+
+    const dateValidation = validateAppointmentDate(newFollowUpDate, 2, true);
+    if (!dateValidation.isValid) {
+      setDateError(dateValidation.message || 'Appointment date must be within 2 months from today.');
+      return;
+    }
+
     storageService.addLeadFollowUp(lead.id, {
       date: newFollowUpDate,
       type: 'Site Visit',
@@ -371,12 +385,26 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
 
             {/* Add Follow-up task form */}
             <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
-              <div className="text-[11px] font-bold text-slate-700">Schedule Next Action / Follow-up:</div>
+              <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
+                <span>Schedule Next Action / Follow-up:</span>
+                <span className="text-[10px] text-slate-400 font-normal">Max 2 months ahead</span>
+              </div>
+              {dateError && (
+                <div className="flex items-center gap-1.5 p-2 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-[11px] font-semibold">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
+                  <span>{dateError}</span>
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <input
                   type="date"
                   value={newFollowUpDate}
-                  onChange={(e) => setNewFollowUpDate(e.target.value)}
+                  min={getTodayDateString()}
+                  max={getMaxAppointmentDateString(2)}
+                  onChange={(e) => {
+                    setNewFollowUpDate(e.target.value);
+                    setDateError(null);
+                  }}
                   className="bg-white text-slate-900 p-2 rounded-xl border border-slate-200 font-medium text-xs focus:ring-2 focus:ring-blue-500"
                 />
                 <input
