@@ -211,7 +211,6 @@ $$\text{Suggested Reorder Indent} = \max\Big(0, \, \text{Reorder Level Threshold
 | **Lead / Service Engineer** | ❌ | ❌ | 👁️ Site | ❌ | 👁️ Allocated Spares | ✍️ Log PPM & Breakdown | ✅ Full & Sign | ❌ | 👤 Self | ❌ |
 
 > **Admin Module Assignment:** The `Executive / MD` role can grant or revoke sidebar module access for any role at runtime via **System & Administration → Users & RBAC Roles**. Permissions are persisted to `localStorage` and take effect immediately — no page reload required.
-
 > **Permissions Auto-Reset on Upgrade:** When `PERMISSIONS_SCHEMA_VERSION` is bumped in `src/services/storageService.ts` (e.g., after a new module is added to `src/utils/rbac.ts`), each user's browser automatically rebuilds its cached role-module permissions from the latest defaults on the next page load. The **Services & AMC Contracts** sidebar group (`services_amc`, `services_schedule`, `workorders`) is governed by this mechanism.
 
 ---

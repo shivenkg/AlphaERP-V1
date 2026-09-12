@@ -416,7 +416,6 @@ flowchart TD
 | **Admin SMTP & MongoDB Config** | Full | No | No | No | No | No | No | No |
 
 > **RBAC Module Assignment:** The `executive` (Super Admin) role can assign or revoke any module from any role at runtime via **System & Administration → Users & RBAC Roles**. Changes are persisted to `localStorage` and take effect immediately on next navigation.
-
 > **RBAC Permissions Auto-Reset:** `storageService.ts` maintains a `PERMISSIONS_SCHEMA_VERSION` stamp (current: `'3'`). Whenever this version differs from the value stored in `systemSettings.permissionsSchemaVersion` in `localStorage`, the entire `roleModulePermissions` map is rebuilt from `DEFAULT_ROLE_MODULE_PERMISSIONS` in `src/utils/rbac.ts`. This ensures newly introduced modules (such as `services_amc`, `services_schedule`, `workorders`) always surface automatically after a code deployment — no manual browser cache clearing is needed.
 
 ---
