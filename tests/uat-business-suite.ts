@@ -8,6 +8,8 @@
  */
 
 import { storageService } from '../src/services/storageService';
+import { googleSheetsService } from '../src/services/googleSheets';
+import { amcRenewalNotificationService } from '../src/services/amcRenewalNotificationService';
 import { convertUomValue } from '../src/utils/uomConverter';
 import { exportProjectCostAnalysisPDF } from '../src/utils/pdfExportHelper';
 import {
@@ -1448,6 +1450,91 @@ export async function executeAllUATTests() {
           empDobThrown = true;
         }
         assert(empDobThrown, 'storageService.addEmployee must throw error on underage (<18) date of birth');
+      });
+    }
+  );
+
+  // --------------------------------------------------------------------------
+  // UAT-CASE-16: AMC Services, Google Sheets 'AMC_Service_Contracts' Tab Sync,
+  // 30-Day Renewal Alerts & PPM Inspection Dispatch Engine
+  // --------------------------------------------------------------------------
+  await runTestCase(
+    'UAT-CASE-16',
+    'AMC Contracts, Google Sheets Sync, 30-Day Renewal Email Alerts & PPM Scheduling',
+    'Services & AMC Management',
+    async (step) => {
+      let contractDataVault: any;
+      let sheetTabs: any[];
+
+      await step('Verify Google Sheets generates AMC_Service_Contracts tab and multi-tab sync schema', async () => {
+        sheetTabs = googleSheetsService.generateAllSheetTabsData();
+        const amcSheet = sheetTabs.find((t) => t.title.includes('AMC_Service_Contracts'));
+        assert(amcSheet !== undefined, "Google Sheets export must include dedicated 'AMC_Service_Contracts' sheet tab");
+        assert(amcSheet.values.length >= 4, "AMC_Service_Contracts sheet must contain active seed contract rows (got " + amcSheet.values.length + ")");
+        
+        // Check header column format
+        const headers = amcSheet.values[0];
+        assert(headers.includes('Contract Number'), "Sheet header must contain 'Contract Number'");
+        assert(headers.includes('Client / Company'), "Sheet header must contain 'Client / Company'");
+        assert(headers.includes('Annual Contract Value (ACV)'), "Sheet header must contain 'Annual Contract Value (ACV)'");
+        assert(headers.includes('End Date'), "Sheet header must contain 'End Date'");
+      });
+
+      await step('Verify encrypted cloud Data Vault includes amcContracts, ppmVisits and breakdownTickets', async () => {
+        const vaultTab = googleSheetsService.generateDataVaultSheetTab();
+        assert(vaultTab.title.includes('Data Vault'), 'Data vault tab title must contain Data Vault');
+        assert(vaultTab.values.length >= 2, 'Data vault tab must have rows');
+        
+        const keysInVault = vaultTab.values.map((r: any) => r[0]);
+        assert(keysInVault.includes('amcContracts'), 'Data Vault must include amcContracts key');
+        assert(keysInVault.includes('ppmVisits'), 'Data Vault must include ppmVisits key');
+        assert(keysInVault.includes('breakdownTickets'), 'Data Vault must include breakdownTickets key');
+      });
+
+      await step('Validate 30-Day AMC Renewal Scanner logic and SLA detection', async () => {
+        const renewalSummary = amcRenewalNotificationService.checkAmcRenewalAlerts(true);
+        assert(renewalSummary.hasExpiringContracts === true, 'Renewal scanner must find expiring contracts');
+        assert(Array.isArray(renewalSummary.expiringContracts), 'Renewal scanner must return array of contracts');
+        assert(renewalSummary.expiringContracts.length >= 1, 'Should detect at least 1 AMC contract expiring within 30 days');
+        
+        const firstAlert = renewalSummary.expiringContracts[0];
+        assert(firstAlert.contractNumber.startsWith('AMC-'), 'Alert must reference valid AMC contract number');
+        assert(firstAlert.daysRemaining <= 30, 'Alerted contract must have daysRemaining <= 30');
+        assert(['CRITICAL_EXPIRED', 'URGENT_15_DAYS', 'RENEWAL_30_DAYS'].includes(firstAlert.urgency), 'Urgency tag must be valid');
+      });
+
+      await step('Validate AMC renewal email template generation (HTML + Plaintext)', async () => {
+        const renewalSummary = amcRenewalNotificationService.checkAmcRenewalAlerts(true);
+        const { html, text, subject } = amcRenewalNotificationService.generateAmcRenewalEmailContent(renewalSummary.expiringContracts);
+        
+        assert(subject.includes('AMC') && (subject.includes('Renewal') || subject.includes('Expiring') || subject.includes('Expired')), 'Email subject must indicate AMC Renewal Alert');
+        assert(html.includes('AMC') && html.includes('Renewal'), 'HTML template must contain AMC renewal content');
+        assert(html.includes('End Date') || html.includes('Expiration') || html.includes('Renewal'), 'HTML template must include End Date header');
+        assert(text.includes('AMC CONTRACT RENEWAL NOTIFICATION'), 'Text template must contain header banner');
+      });
+
+      await step('Validate AMC renewal notification dispatch with Mock Sandbox Wrapper fallback', async () => {
+        const result = await amcRenewalNotificationService.triggerAmcRenewalEmailNotification({ forceSend: true });
+        assert(result.success === true, 'Renewal notification dispatch must succeed');
+        assert(result.contractCount >= 1, 'At least 1 contract must be processed in notification alert');
+        assert(result.mode === 'smtp' || result.mode === 'mock_wrapper', 'Mode must be smtp or mock_wrapper');
+        
+        // Verify in-app audit log entry was written
+        const auditLogs = storageService.getAuditLogs();
+        const renewalLog = auditLogs.find((l) => l.entityType === 'AMC_CONTRACT' || l.summary?.includes('AMC') || (l.entityId && l.entityId.includes('RENEWAL')));
+        assert(renewalLog !== undefined, 'Immutable audit log must contain record for AMC_CONTRACT renewal');
+      });
+
+      await step('Verify PPM visits, 4-point inspection checklist and emergency breakdown queue', async () => {
+        const visits = typeof storageService.getPpmVisits === 'function' ? storageService.getPpmVisits() : (storageService.getAllData() as any).ppmVisits || [];
+        const tickets = typeof storageService.getBreakdownTickets === 'function' ? storageService.getBreakdownTickets() : (storageService.getAllData() as any).breakdownTickets || [];
+        
+        assert(visits.length >= 4, 'PPM visits should contain seed schedules (got ' + visits.length + ')');
+        assert(tickets.length >= 2, 'Breakdown tickets should contain emergency entries (got ' + tickets.length + ')');
+        
+        // Check inspection checklist on a visit
+        const sampleVisit = visits.find((v: any) => (v.checklistSummary && v.checklistSummary.length > 0) || v.checklist !== undefined);
+        assert(sampleVisit !== undefined, 'At least one PPM visit should contain inspection checklist tasks');
       });
     }
   );

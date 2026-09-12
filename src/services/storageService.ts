@@ -90,6 +90,11 @@ import {
   validateDateOfBirth,
   validateDateRange
 } from '../utils/validation';
+import {
+  checkAmcRenewalAlerts,
+  notifyAmcRenewals,
+  SendAmcRenewalAlertOptions
+} from './amcRenewalNotificationService';
 
 import {
   INITIAL_CURRENT_USER,
@@ -2860,6 +2865,17 @@ class StorageService {
     });
 
     return result;
+  }
+
+  // ==========================================
+  // AUTOMATED AMC RENEWAL NOTIFICATIONS
+  // ==========================================
+  public checkAmcRenewalAlerts(forceCheck?: boolean) {
+    return checkAmcRenewalAlerts(forceCheck, this.amcContracts);
+  }
+
+  public async notifyAmcRenewals(options?: SendAmcRenewalAlertOptions) {
+    return notifyAmcRenewals(options);
   }
 
   // ==========================================

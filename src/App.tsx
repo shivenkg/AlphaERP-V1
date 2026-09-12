@@ -25,6 +25,7 @@ const ProcurementPRPOView = lazy(() => import('./components/ProcurementPRPOView'
 const InventoryWarehouseView = lazy(() => import('./components/InventoryWarehouseView').then(m => ({ default: m.InventoryWarehouseView })));
 const WorkOrdersView = lazy(() => import('./components/WorkOrdersView').then(m => ({ default: m.WorkOrdersView })));
 const ServicesAMCView = lazy(() => import('./components/ServicesAMCView').then(m => ({ default: m.ServicesAMCView })));
+const ServiceScheduleView = lazy(() => import('./components/ServiceScheduleView').then(m => ({ default: m.ServiceScheduleView })));
 const FinancePaymentsView = lazy(() => import('./components/FinancePaymentsView').then(m => ({ default: m.FinancePaymentsView })));
 const FinanceView = lazy(() => import('./components/FinanceView').then(m => ({ default: m.FinanceView })));
 const MasterDataView = lazy(() => import('./components/MasterDataView').then(m => ({ default: m.MasterDataView })));
@@ -771,6 +772,21 @@ export function App() {
                 currentRole={data.currentUser?.role}
                 onOpenSheetsModal={() => setIsSheetsModalOpen(true)}
                 onNavigateToQuotes={() => setActiveTab('quotes')}
+              />
+            )}
+
+            {/* View: Service Scheduling, PPM Visits & Breakdown Tickets */}
+            {activeTab === 'services_schedule' && (
+              <ServiceScheduleView
+                amcContracts={data.amcContracts || []}
+                ppmVisits={data.ppmVisits || []}
+                breakdownTickets={data.breakdownTickets || []}
+                clients={data.clients}
+                projects={data.projects}
+                inventory={data.inventory}
+                currentRole={data.currentUser?.role}
+                onOpenSheetsModal={() => setIsSheetsModalOpen(true)}
+                onNavigateToAMC={() => setActiveTab('services_amc')}
               />
             )}
 

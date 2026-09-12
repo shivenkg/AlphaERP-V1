@@ -127,6 +127,15 @@ export const APP_MODULES: AppModuleInfo[] = [
     description: 'Annual Maintenance Contracts (AMC), PPM schedules, SLA compliance, equipment health, and emergency breakdown tickets.',
     defaultRoles: ['executive', 'sales_manager', 'estimator', 'technician', 'warehouse']
   },
+  {
+    id: 'services_schedule',
+    name: 'Service Scheduling & PPM Visits',
+    shortName: 'PPM Scheduling',
+    category: 'supply_chain',
+    categoryLabel: 'Supply Chain & Field',
+    description: 'Technician dispatch, 4-point HVAC inspection checklists, preventive maintenance visits, and 24x7 emergency ticket resolution.',
+    defaultRoles: ['executive', 'sales_manager', 'estimator', 'technician', 'warehouse']
+  },
 
   // Finance & Commercial
   {
@@ -229,6 +238,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'inventory',
     'workorders',
     'services_amc',
+    'services_schedule',
     'finance',
     'payments',
     'hr',
@@ -247,6 +257,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'quotes',
     'projects',
     'services_amc',
+    'services_schedule',
     'payments',
     'ess',
     'masterdata'
@@ -260,6 +271,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'inventory',
     'procurement',
     'services_amc',
+    'services_schedule',
     'ess'
   ],
   procurement: [
@@ -269,6 +281,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'inventory',
     'projects',
     'services_amc',
+    'services_schedule',
     'masterdata',
     'ess'
   ],
@@ -279,6 +292,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'procurement',
     'workorders',
     'services_amc',
+    'services_schedule',
     'ess'
   ],
   finance: [
@@ -288,6 +302,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'payments',
     'procurement',
     'services_amc',
+    'services_schedule',
     'hr',
     'masterdata',
     'ess',
@@ -297,6 +312,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'search',
     'workorders',
     'services_amc',
+    'services_schedule',
     'projects',
     'inventory',
     'ess'

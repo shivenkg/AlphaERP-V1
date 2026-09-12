@@ -441,3 +441,44 @@ export async function triggerProcurementReorderEmailNotification(
     timestamp
   };
 }
+
+export const notifyProcurementReorderLevels = triggerProcurementReorderEmailNotification;
+
+export function checkSafetyStockAlerts(items?: InventoryItem[] | boolean): {
+  hasAlerts: boolean;
+  flaggedItems: InventoryItem[];
+  totalDeficitValue: number;
+} {
+  let inv: InventoryItem[] = [];
+  if (items && Array.isArray(items)) {
+    inv = items;
+  } else {
+    try {
+      if (typeof storageService !== 'undefined' && storageService && typeof storageService.getInventory === 'function') {
+        inv = storageService.getInventory();
+      }
+    } catch {}
+  }
+
+  const flagged = inv.filter((item: any) => {
+    const reorderLevel = Number(item.reorderLevel || 0);
+    const minThreshold = Number(item.minThreshold || item.minStock || 0);
+    const availableStock = Number(item.availableStock ?? (item.currentStock - (item.allocatedStock || 0)));
+    const thresholdToCompare = reorderLevel > 0 ? reorderLevel : minThreshold;
+    return (thresholdToCompare > 0 && availableStock <= thresholdToCompare) || availableStock <= 0;
+  });
+
+  const totalDeficitValue = flagged.reduce((sum, it: any) => {
+    const deficit = Math.max(0, (it.reorderLevel || it.minThreshold || 0) - (it.availableStock ?? it.currentStock));
+    const rate = Number(it.averageUnitCost || it.unitRate || it.costPrice || 2000);
+    return sum + deficit * rate;
+  }, 0);
+
+  return {
+    hasAlerts: flagged.length > 0,
+    flaggedItems: flagged,
+    totalDeficitValue
+  };
+}
+
+

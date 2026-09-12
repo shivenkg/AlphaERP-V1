@@ -14,6 +14,7 @@ export type MainSectionWidgetId =
   | 'section_activity_feed'
   | 'section_pipeline_funnel'
   | 'section_active_projects'
+  | 'section_upcoming_service_visits'
   | 'section_sales_leaderboard'
   | 'section_operational_stats';
 
@@ -159,12 +160,21 @@ export const DEFAULT_MAIN_SECTION_WIDGETS: WidgetConfig[] = [
     minWidth: 'half'
   },
   {
+    id: 'section_upcoming_service_visits',
+    name: 'Upcoming Service Visits & AMC Schedules',
+    category: 'MAIN_SECTION',
+    description: 'Scheduled preventive maintenance visits, active technician dispatch, and breakdown tickets',
+    visible: true,
+    order: 5,
+    minWidth: 'half'
+  },
+  {
     id: 'section_sales_leaderboard',
     name: 'Sales Engineering Leaderboard',
     category: 'MAIN_SECTION',
     description: 'Monthly quotas, target achievements, and rep commissions',
     visible: true,
-    order: 5,
+    order: 6,
     minWidth: 'third'
   },
   {
@@ -173,7 +183,7 @@ export const DEFAULT_MAIN_SECTION_WIDGETS: WidgetConfig[] = [
     category: 'MAIN_SECTION',
     description: 'Quick link cards for Projects, Procurement PR/PO, and Master Data',
     visible: true,
-    order: 6,
+    order: 7,
     minWidth: 'full'
   }
 ];
@@ -189,6 +199,7 @@ export const DASHBOARD_PRESETS = [
       'section_analytics_charts',
       'section_pipeline_funnel',
       'section_active_projects',
+      'section_upcoming_service_visits',
       'section_sales_leaderboard',
       'section_activity_feed',
       'section_operational_stats'

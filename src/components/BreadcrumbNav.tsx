@@ -25,7 +25,8 @@ import {
   Compass,
   Search,
   Pin,
-  PinOff
+  PinOff,
+  CalendarClock
 } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -195,7 +196,26 @@ export const ERP_HIERARCHY: Record<string, ERPNavPath> = {
       { id: 'procurement', label: 'Inventory & PR/PO' },
       { id: 'inventory', label: 'Warehouse Stock & SKUs' },
       { id: 'workorders', label: 'Work Orders & Field' },
-      { id: 'services_amc', label: 'Services & AMC' }
+      { id: 'services_amc', label: 'Services & AMC' },
+      { id: 'services_schedule', label: 'Service Scheduling & PPM' }
+    ]
+  },
+  services_schedule: {
+    tabId: 'services_schedule',
+    groupId: 'procurement_field',
+    groupName: 'Supply Chain & Field',
+    groupIcon: ShoppingCart,
+    pageTitle: 'Service Scheduling, PPM & Breakdown Tickets',
+    pageIcon: CalendarClock,
+    description: 'Technician assignment, 4-point HVAC inspection checklists, preventive maintenance visits & emergency breakdown queue',
+    badge: 'PPM & Dispatch',
+    badgeColor: 'bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+    siblings: [
+      { id: 'procurement', label: 'Inventory & PR/PO' },
+      { id: 'inventory', label: 'Warehouse Stock & SKUs' },
+      { id: 'workorders', label: 'Work Orders & Field' },
+      { id: 'services_amc', label: 'Services & AMC' },
+      { id: 'services_schedule', label: 'Service Scheduling & PPM' }
     ]
   },
   finance: {

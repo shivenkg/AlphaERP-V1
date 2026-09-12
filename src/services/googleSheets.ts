@@ -64,6 +64,9 @@ export function formatCollectionLabel(key: string): string {
     grievanceTickets: 'Grievance Tickets',
     workforceForecasts: 'Workforce Forecasts',
     biometricPunchLogs: 'Biometric Punch Logs',
+    amcContracts: 'AMC Service Contracts',
+    ppmVisits: 'PPM Maintenance Visits',
+    breakdownTickets: 'Breakdown & Emergency Tickets',
     auditLogs: 'Audit Logs'
   };
   return map[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
@@ -421,7 +424,22 @@ class GoogleSheetsService {
   // Generate All Formatted Sheets Data Structure for all AlphaERP Modules
   public generateAllSheetTabsData(): SheetTabDefinition[] {
     const data = storageService.getAllData();
-    const { leads, quotes, projects, inventory, prs, pos, payments, salesReps, auditLogs, systemSettings, clients, vendors, employees } = data;
+    const {
+      leads,
+      quotes,
+      projects,
+      inventory,
+      prs,
+      pos,
+      payments,
+      salesReps,
+      auditLogs,
+      systemSettings,
+      clients,
+      vendors,
+      employees,
+      amcContracts
+    } = data;
     const curr = systemSettings.currencySymbol || '₹';
 
     // 1. Executive Dashboard KPIs
@@ -804,6 +822,44 @@ class GoogleSheetsService {
       ])
     ];
 
+    // 14. AMC & Maintenance Contracts
+    const amcRows = [
+      [
+        'Contract Number',
+        'Client / Company',
+        'Site Address',
+        'Plan Tier',
+        'Annual Contract Value (ACV)',
+        'Start Date',
+        'End Date',
+        'Renewal / Contract Status',
+        'PPM Frequency / Year',
+        'SLA Response (Hours)',
+        'Contact Person',
+        'Contact Phone',
+        'Contact Email',
+        'Equipment Units Covered',
+        'Emergency 24x7 Coverage'
+      ],
+      ...(amcContracts || []).map((c: any) => [
+        c.contractNumber,
+        c.clientName,
+        c.siteAddress,
+        c.planType,
+        c.annualContractValue,
+        c.startDate,
+        c.endDate,
+        c.status,
+        c.ppmFrequencyPerYear || 4,
+        `${c.slaResponseHours || 4} Hours`,
+        c.contactPerson,
+        c.contactPhone,
+        c.contactEmail || 'N/A',
+        (c.equipmentCovered || []).map((eq: any) => `${eq.qty}x ${eq.model || eq.equipmentType}`).join('; ') || 'Standard Package',
+        c.emergencyBreakdownCoverage ? 'YES (24x7 Included)' : 'NO (Standard Business Hours)'
+      ])
+    ];
+
     return [
       { title: '📊 Management Dashboard & KPIs', values: dashboardRows },
       { title: '🎯 CRM Leads Pipeline', values: leadsRows },
@@ -816,6 +872,7 @@ class GoogleSheetsService {
       { title: '🏢 Clients Master', values: clientRows },
       { title: '🏭 Vendors Master', values: vendorRows },
       { title: '👔 Employees & HR Master', values: employeeRows },
+      { title: '🔧 AMC_Service_Contracts', values: amcRows },
       { title: '👥 Sales Quota & Comm', values: salesRows },
       { title: '📜 Audit Trail Logs', values: auditRows }
     ];
@@ -853,6 +910,9 @@ class GoogleSheetsService {
       'quotes',
       'projects',
       'workOrders',
+      'amcContracts',
+      'ppmVisits',
+      'breakdownTickets',
       'prs',
       'pos',
       'grns',

@@ -78,6 +78,7 @@ import { WhatsAppKpiWidgetCard } from './WhatsAppKpiWidgetCard';
 import { WhatsAppDailyKpiModal } from './WhatsAppDailyKpiModal';
 import { PersonalizedRoleWidgets } from './dashboard/PersonalizedRoleWidgets';
 import { RecentActivityPanel } from './dashboard/RecentActivityPanel';
+import { UpcomingServiceVisitsWidget } from './dashboard/UpcomingServiceVisitsWidget';
 import { QuickActionFloatingButton } from './QuickActionFloatingButton';
 
 interface DashboardViewProps {
@@ -1055,6 +1056,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               )}
             </div>
           </div>
+        );
+        break;
+
+      case 'section_upcoming_service_visits':
+        sectionBody = (
+          <UpcomingServiceVisitsWidget onNavigate={onNavigate} />
         );
         break;
 

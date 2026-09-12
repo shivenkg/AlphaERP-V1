@@ -37,7 +37,8 @@ import {
   Zap,
   Search,
   TrendingUp,
-  Presentation
+  Presentation,
+  CalendarClock
 } from 'lucide-react';
 import { JSAlphaSoftLogo } from './JSAlphaSoftLogo';
 import { QuickExportMenu } from './QuickExportMenu';
@@ -210,6 +211,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           badge: activeAmcCount ? `${activeAmcCount} AMC` : 'Active',
           badgeColor: 'bg-emerald-600',
           description: 'AMC contracts, PPM schedule & breakdown tickets'
+        },
+        {
+          id: 'services_schedule',
+          label: 'Service Scheduling & PPM',
+          icon: CalendarClock,
+          badge: 'Live',
+          badgeColor: 'bg-blue-600',
+          description: 'PPM visits, 4-point checklists & breakdown queue'
         }
       ]
     },
