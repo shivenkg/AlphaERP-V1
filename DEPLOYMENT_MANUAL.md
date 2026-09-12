@@ -2,7 +2,7 @@
 
 ## Production Deployment for InsForge BaaS, Vercel Serverless, Google Cloud Run, Docker Containers, Ubuntu Linux, Systemd, PM2 & Nginx
 
-**Document Version:** 3.5.0-Production  
+**Document Version:** 3.5.1-Production  
 **Primary Custom Domain:** [https://hvacbiz.insforge.site](https://hvacbiz.insforge.site)  
 **Vercel Production Mirror:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
 **Ingress Host & Port:** `0.0.0.0:3000` (Dedicated Server) | Vercel Serverless Edge | InsForge Edge
@@ -315,3 +315,5 @@ npm ci
 npm run build
 pm2 reload alpha-erp --update-env
 ```
+
+> **Permissions Cache Reset on Upgrade:** If the release bumps `PERMISSIONS_SCHEMA_VERSION` in `src/services/storageService.ts` (which happens whenever new sidebar modules are added to `src/utils/rbac.ts`), each user's browser will automatically detect the version mismatch on the next page load and rebuild its cached `roleModulePermissions` from the latest defaults. No additional migration steps, database changes, or manual browser cache clearing are required.

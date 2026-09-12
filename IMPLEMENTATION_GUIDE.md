@@ -2,7 +2,7 @@
 
 ## Enterprise HVAC Techno-Commercial, BOQ Engineering, Multi-Tier Procurement, Email/SMTP Alerts, GAAP Accounting & Multi-Cloud Suite
 
-**Document Version:** 3.5.0-Production  
+**Document Version:** 3.5.1-Production  
 **Custom Production Domain:** [https://hvacbiz.insforge.site](https://hvacbiz.insforge.site)  
 **Vercel Production Mirror:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
 **Target Environments:** InsForge BaaS Edge / Vercel Serverless / Ubuntu 24.04-22.04 LTS / Docker & Google Cloud Run
@@ -326,3 +326,5 @@ npm ci
 npm run build
 pm2 reload alpha-erp --update-env
 ```
+
+> **Permissions Cache Reset:** Releases that bump `PERMISSIONS_SCHEMA_VERSION` in `storageService.ts` trigger a one-time automatic rebuild of each user's cached role-module permission map from `DEFAULT_ROLE_MODULE_PERMISSIONS` on next page load. No manual browser cache clearing or migration steps are needed.

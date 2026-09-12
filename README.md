@@ -6,7 +6,7 @@
 [![InsForge BaaS](https://img.shields.io/badge/PostgreSQL_14+-InsForge_BaaS-336791?style=for-the-badge&logo=postgresql)](https://as2hwz72.us-east.insforge.app)
 [![UAT Test Suite](https://img.shields.io/badge/UAT_Tests-100%25_Passing_(17_Cases%2F65_Steps)-10B981?style=for-the-badge)](#11-enterprise-uat-test-verification-suite)
 [![Production Status](https://img.shields.io/badge/Production-Live-success?style=for-the-badge&logo=vercel)](https://hvacbiz.insforge.site)
-[![Version](https://img.shields.io/badge/Version-3.5.0--Production-blue?style=for-the-badge)](https://hvacbiz.insforge.site)
+[![Version](https://img.shields.io/badge/Version-3.5.1--Production-blue?style=for-the-badge)](https://hvacbiz.insforge.site)
 [![Framework](https://img.shields.io/badge/React_19-Vite_6-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-v4.1-38B2AC?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
@@ -209,6 +209,10 @@ $$\text{Suggested Reorder Indent} = \max\Big(0, \, \text{Reorder Level Threshold
 | **Finance Controller** | 👁️ Won | 👁️ Approved | 👁️ Value | 👁️ POs | 👁️ Value | 👁️ AMC Billing | 👁️ Work Orders | ✅ Full | ✅ Payroll Admin | ❌ |
 | **Service Operations Manager** | 👁️ Client Info | 👁️ Quotes | 👁️ Sites | ✍️ Request Spares | 👁️ Van Stock | ✅ Full (AMC/PPM/Roster) | ✅ Full & Dispatch | 👁️ Invoices | 👁️ Team | ❌ |
 | **Lead / Service Engineer** | ❌ | ❌ | 👁️ Site | ❌ | 👁️ Allocated Spares | ✍️ Log PPM & Breakdown | ✅ Full & Sign | ❌ | 👤 Self | ❌ |
+
+> **Admin Module Assignment:** The `Executive / MD` role can grant or revoke sidebar module access for any role at runtime via **System & Administration → Users & RBAC Roles**. Permissions are persisted to `localStorage` and take effect immediately — no page reload required.
+
+> **Permissions Auto-Reset on Upgrade:** When `PERMISSIONS_SCHEMA_VERSION` is bumped in `src/services/storageService.ts` (e.g., after a new module is added to `src/utils/rbac.ts`), each user's browser automatically rebuilds its cached role-module permissions from the latest defaults on the next page load. The **Services & AMC Contracts** sidebar group (`services_amc`, `services_schedule`, `workorders`) is governed by this mechanism.
 
 ---
 

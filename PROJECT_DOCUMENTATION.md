@@ -3,7 +3,7 @@
 ## Enterprise HVAC Techno-Commercial, BOQ Engineering, Multi-Tier Procurement, Predictive Stock Indents, GAAP Accounting & Multi-Cloud Platform
 
 **Project Name:** AlphaERP / HVAC-Sync Pro (Commercial HVAC & MEP Enterprise Lifecycle Platform)  
-**Version:** 3.5.0-Production  
+**Version:** 3.5.1-Production  
 **Document Author:** Google AI Studio Systems Engineering & Enterprise Solutions Architecture  
 **Date:** September 2026  
 **Live Production URL:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
@@ -414,6 +414,10 @@ flowchart TD
 | **GAAP Double-Entry Ledger** | Full | No | No | No | No | Full | No | No |
 | **HRMS & Payroll Administration** | Full | Team View | Self | Self | Self | Payroll Full | Team View | Self |
 | **Admin SMTP & MongoDB Config** | Full | No | No | No | No | No | No | No |
+
+> **RBAC Module Assignment:** The `executive` (Super Admin) role can assign or revoke any module from any role at runtime via **System & Administration → Users & RBAC Roles**. Changes are persisted to `localStorage` and take effect immediately on next navigation.
+
+> **RBAC Permissions Auto-Reset:** `storageService.ts` maintains a `PERMISSIONS_SCHEMA_VERSION` stamp (current: `'3'`). Whenever this version differs from the value stored in `systemSettings.permissionsSchemaVersion` in `localStorage`, the entire `roleModulePermissions` map is rebuilt from `DEFAULT_ROLE_MODULE_PERMISSIONS` in `src/utils/rbac.ts`. This ensures newly introduced modules (such as `services_amc`, `services_schedule`, `workorders`) always surface automatically after a code deployment — no manual browser cache clearing is needed.
 
 ---
 

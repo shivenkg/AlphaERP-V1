@@ -10,7 +10,7 @@ alwaysApply: true
 
 **Target Repository:** `AlphaERP-V1`  
 **Live Production Applet:** [https://hvacbiz.insforge.site/#dashboard](https://hvacbiz.insforge.site/#dashboard) (Custom InsForge Domain) | [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
-**Version:** 3.5.0-Production
+**Version:** 3.5.1-Production
 
 ---
 
@@ -25,7 +25,7 @@ flowchart TD
     end
 
     subgraph ClientApplication["🖥️ Presentation Layer (React 19 + TypeScript + Vite 6 + Tailwind CSS)"]
-        UI["SPA Views (Dashboard, CRM, Quotes, BOQ, PR/PO, Inventory, Finance, HR)"]
+        UI["SPA Views (Dashboard, CRM, Quotes, BOQ, PR/PO, Inventory, Services & AMC, Finance, HR)"]
         Storage["Storage Service & PubSub State (storageService.ts)"]
         Audio["Duplex PCM Audio Worklet (Gemini Live Voice)"]
         UI --> Storage
@@ -192,7 +192,7 @@ AlphaERP-V1/
 │   ├── index.css                        # Tailwind CSS global styling
 │   ├── types/index.ts                   # TypeScript interfaces & enums
 │   ├── services/
-│   │   ├── storageService.ts            # Reactive storage & audit logger
+│   │   ├── storageService.ts            # Reactive storage, audit logger & RBAC permissions schema versioning (PERMISSIONS_SCHEMA_VERSION)
 │   │   ├── googleSheets.ts              # Google Identity Services 9-tab sync
 │   │   └── whatsappEmailService.ts      # SMTP alert & WhatsApp formatters
 │   └── components/
@@ -232,6 +232,42 @@ npm run test:uat
 # 3. Build verification for all targets (Vite SPA + Serverless + Standalone Server)
 npm run build
 ```
+
+---
+
+## 8. Sidebar Navigation & RBAC Module Visibility
+
+The sidebar (`src/components/Sidebar.tsx`) renders `navGroups` in this fixed order:
+
+| # | Group ID | Sidebar Label |
+| :---: | :--- | :--- |
+| 1 | `executive` | Executive & Strategy |
+| 2 | `sales_eng` | Sales & Engineering |
+| 3 | **`services_section`** | **Services & AMC Contracts** *(immediately below Sales & Engineering)* |
+| 4 | `procurement_field` | Supply Chain & Procurement |
+| 5 | `finance_section` | Finance & Accounting |
+| 6 | `hr_section` | AlphaHR & Talent Operations |
+| 7 | `master_section` | Master Data Hub |
+| 8 | `system_section` | System & Administration |
+
+### Services & AMC RBAC Module IDs
+
+| Tab Label | Module ID | Default Roles |
+| :--- | :--- | :--- |
+| Services & AMC Contracts | `services_amc` | executive, sales_manager, estimator, technician, warehouse, service_manager |
+| Service Scheduling & PPM | `services_schedule` | executive, sales_manager, estimator, technician, warehouse, service_manager |
+| Work Orders & Field Dispatch | `workorders` | executive, technician, warehouse, service_manager |
+
+A sidebar group is only rendered if **at least one** of its items passes the `allowedModuleIds` filter for the active role. If all items in a group are filtered out, the entire group header is hidden.
+
+### RBAC Permissions Schema Versioning — Critical Agent Rule
+
+`storageService.ts` declares a **private static** `PERMISSIONS_SCHEMA_VERSION` (`'3'` as of v3.5.1). On every app load, `getRoleModulePermissions()` compares the stored `systemSettings.permissionsSchemaVersion` against this constant:
+
+- **Version match** → use cached permissions (normal path).
+- **Version mismatch** → **force-rebuild** `roleModulePermissions` from `DEFAULT_ROLE_MODULE_PERMISSIONS` in `rbac.ts`, persist the new version stamp, and return fresh permissions.
+
+> **⚠️ Agent Rule**: Whenever you add a new module ID to `DEFAULT_ROLE_MODULE_PERMISSIONS` in `src/utils/rbac.ts`, you **MUST** also increment `PERMISSIONS_SCHEMA_VERSION` in `src/services/storageService.ts` (e.g., `'3'` → `'4'`). Failure to do this will leave users with stale cached permissions that hide the new module in the sidebar.
 
 <!-- INSFORGE:START -->
 ## InsForge backend

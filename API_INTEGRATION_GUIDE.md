@@ -2,7 +2,7 @@
 
 ## Enterprise HVAC Techno-Commercial, BOQ Verification, WhatsApp Automated Digest, Email/SMTP Alerts, MongoDB Cloud Sync & Gemini Live APIs
 
-**Document Version:** 3.5.0-Production  
+**Document Version:** 3.5.1-Production  
 **Base Production URL:** `https://hvacbiz.vercel.app`  
 **WebSocket Protocol:** `ws://<host>/live` (or `wss://<host>/live` on HTTPS)
 
@@ -351,7 +351,17 @@ The automated AMC Renewal Engine (`src/services/amcRenewalNotificationService.ts
 
 ---
 
-## 4. Security, Rate Limiting & Enterprise Validation
+### 3.8 Services & AMC RBAC Module IDs
+
+When using the admin RBAC panel to assign or query module permissions, use these canonical module IDs:
+
+| Sidebar Tab Label | Module ID | `category` in `APP_MODULES` | Default Roles |
+| :--- | :--- | :--- | :--- |
+| Services & AMC Contracts | `services_amc` | `services` | executive, sales_manager, estimator, technician, warehouse, service_manager |
+| Service Scheduling & PPM | `services_schedule` | `services` | executive, sales_manager, estimator, technician, warehouse, service_manager |
+| Work Orders & Field Dispatch | `workorders` | `services` | executive, technician, warehouse, service_manager |
+
+All three IDs are grouped under the `services_section` sidebar group and appear **immediately below** the `Sales & Engineering` (`sales_eng`) group in the navigation sidebar.
 
 - **Rate Limits**: 120 req/min for general REST routes; 20 req/min for email alerts and AI endpoints.
 - **WebSocket Protection**: Maximum 5 concurrent WebSocket connections per IP address with automated heartbeat ping/pong cleanup.
