@@ -1,0 +1,641 @@
+import {
+  ServiceCustomer,
+  ServiceEquipment,
+  ServiceTechnician,
+  ServiceWorkOrder,
+  TruckStockItem,
+  FlatRatePriceBookItem,
+  ServiceInvoice
+} from '../types/service';
+
+export const INITIAL_SERVICE_CUSTOMERS: ServiceCustomer[] = [
+  {
+    id: 'scust-001',
+    name: 'Apollo Super Specialty Hospital',
+    companyName: 'Apollo Health Enterprises Ltd.',
+    phone: '+91 98201 44521',
+    email: 'facilities@apollohealth.org',
+    address: 'Sector 26, Belapur CBD, Navi Mumbai, MH 400614',
+    city: 'Navi Mumbai',
+    preferredContact: 'WhatsApp',
+    amcStatus: 'Active',
+    amcExpiryDate: '2027-03-31',
+    totalEquipments: 8,
+    openTicketsCount: 1,
+    createdDate: '2025-04-10'
+  },
+  {
+    id: 'scust-002',
+    name: 'One BKC Financial Center',
+    companyName: 'The Blackstone Group / Nucleus',
+    phone: '+91 97692 88419',
+    email: 'maint.onebkc@nucleusproperties.com',
+    address: 'G Block, Bandra Kurla Complex, Mumbai, MH 400051',
+    city: 'Mumbai',
+    preferredContact: 'Email',
+    amcStatus: 'Active',
+    amcExpiryDate: '2026-12-31',
+    totalEquipments: 14,
+    openTicketsCount: 1,
+    createdDate: '2025-01-15'
+  },
+  {
+    id: 'scust-003',
+    name: 'Phoenix MarketCity Mall',
+    companyName: 'The Phoenix Mills Limited',
+    phone: '+91 99304 11280',
+    email: 'hvac.ops@phoenixmarketcity.com',
+    address: 'LBS Marg, Kurla West, Mumbai, MH 400070',
+    city: 'Mumbai',
+    preferredContact: 'Phone',
+    amcStatus: 'Active',
+    amcExpiryDate: '2027-06-30',
+    totalEquipments: 22,
+    openTicketsCount: 0,
+    createdDate: '2024-11-20'
+  },
+  {
+    id: 'scust-004',
+    name: 'Taj Gateway Hotel & Suites',
+    companyName: 'Indian Hotels Company Ltd (IHCL)',
+    phone: '+91 91677 33490',
+    email: 'chiefengg.gateway@ihcltata.com',
+    address: 'MIDC Industrial Area, Hinjewadi Phase 1, Pune, MH 411057',
+    city: 'Pune',
+    preferredContact: 'WhatsApp',
+    amcStatus: 'Expiring Soon',
+    amcExpiryDate: '2026-09-30',
+    totalEquipments: 6,
+    openTicketsCount: 1,
+    createdDate: '2025-08-01'
+  },
+  {
+    id: 'scust-005',
+    name: 'Prestige Cyber Towers',
+    companyName: 'Prestige Estates Projects Ltd',
+    phone: '+91 98450 77123',
+    email: 'facility.bangalore@prestigeconstructions.com',
+    address: 'Outer Ring Road, Bellandur, Bengaluru, KA 560103',
+    city: 'Bengaluru',
+    preferredContact: 'Email',
+    amcStatus: 'Under Warranty',
+    amcExpiryDate: '2027-08-15',
+    totalEquipments: 12,
+    openTicketsCount: 1,
+    createdDate: '2026-02-14'
+  }
+];
+
+export const INITIAL_SERVICE_EQUIPMENTS: ServiceEquipment[] = [
+  {
+    id: 'seq-001',
+    customerId: 'scust-001',
+    customerName: 'Apollo Super Specialty Hospital',
+    type: 'VRV / VRF Outdoor Unit',
+    brand: 'Daikin',
+    modelNumber: 'RXYQ20BYLT',
+    serialNumber: 'DKN-VRV-2024-8849',
+    capacityTR: 20,
+    refrigerantType: 'R-410A',
+    installDate: '2024-05-10',
+    warrantyExpiry: '2027-05-10',
+    amcType: 'Comprehensive AMC',
+    amcExpiry: '2027-03-31',
+    status: 'Requires Service',
+    lastServicedDate: '2026-06-12',
+    locationNotes: 'OT Wing 3rd Floor Terrace - Critical Care Unit A/C'
+  },
+  {
+    id: 'seq-002',
+    customerId: 'scust-002',
+    customerName: 'One BKC Financial Center',
+    type: 'Water-Cooled Screw Chiller',
+    brand: 'Carrier',
+    modelNumber: '23XRV-500TR',
+    serialNumber: 'CRR-CHL-2023-1104',
+    capacityTR: 150,
+    refrigerantType: 'R-134a',
+    installDate: '2023-08-20',
+    warrantyExpiry: '2025-08-20',
+    amcType: 'Comprehensive AMC',
+    amcExpiry: '2026-12-31',
+    status: 'Operational',
+    lastServicedDate: '2026-08-04',
+    locationNotes: 'Basement 2 Central Plant Room - Chiller #2'
+  },
+  {
+    id: 'seq-003',
+    customerId: 'scust-004',
+    customerName: 'Taj Gateway Hotel & Suites',
+    type: 'Air-Cooled Package Chiller',
+    brand: 'Trane',
+    modelNumber: 'CGAM-060F',
+    serialNumber: 'TRN-PKG-2022-7712',
+    capacityTR: 60,
+    refrigerantType: 'R-410A',
+    installDate: '2022-11-15',
+    warrantyExpiry: '2024-11-15',
+    amcType: 'Non-Comprehensive AMC',
+    amcExpiry: '2026-09-30',
+    status: 'Under Repair',
+    lastServicedDate: '2026-07-19',
+    locationNotes: 'Rooftop Service Bay - Banquet Hall Chilled Water Loop'
+  },
+  {
+    id: 'seq-004',
+    customerId: 'scust-003',
+    customerName: 'Phoenix MarketCity Mall',
+    type: 'Air Handling Unit (AHU)',
+    brand: 'Blue Star',
+    modelNumber: 'BS-AHU-12000CFM',
+    serialNumber: 'BLS-AHU-2024-4019',
+    capacityTR: 30,
+    refrigerantType: 'R-410A',
+    installDate: '2024-03-01',
+    warrantyExpiry: '2026-03-01',
+    amcType: 'Comprehensive AMC',
+    amcExpiry: '2027-06-30',
+    status: 'Operational',
+    lastServicedDate: '2026-08-15',
+    locationNotes: 'Mezzanine Level Air Handler Room - Food Court Supply'
+  },
+  {
+    id: 'seq-005',
+    customerId: 'scust-005',
+    customerName: 'Prestige Cyber Towers',
+    type: 'VRV / VRF Outdoor Unit',
+    brand: 'Voltas',
+    modelNumber: 'V-VRF-INV-16HP',
+    serialNumber: 'VLT-VRF-2026-0211',
+    capacityTR: 16,
+    refrigerantType: 'R-32',
+    installDate: '2026-02-14',
+    warrantyExpiry: '2028-02-14',
+    amcType: 'Standard Warranty',
+    amcExpiry: '2028-02-14',
+    status: 'Operational',
+    lastServicedDate: '2026-07-28',
+    locationNotes: 'Block A South Facing Service Balcony'
+  }
+];
+
+export const INITIAL_SERVICE_TECHNICIANS: ServiceTechnician[] = [
+  {
+    id: 'tech-001',
+    name: 'Imran Khan',
+    phone: '+91 98331 55209',
+    email: 'imran.khan@alphaerp.hvac.biz',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
+    certifications: ['VRF Commissioning Level 3 (Daikin Certified)', 'EPA 608 Universal Master', 'ISHRAE Safety Lead'],
+    truckId: 'TRK-01',
+    truckPlate: 'MH-02-CB-4019 (Alpha Van 1)',
+    workingHours: '08:30 AM - 06:00 PM',
+    status: 'On Site',
+    currentCoordinates: {
+      lat: 19.0178,
+      lng: 73.0426,
+      address: 'Apollo Hospital Belapur, Navi Mumbai'
+    },
+    assignedTicketId: 'srv-001',
+    assignedTicketNumber: 'SRV-2026-0101',
+    assignedCustomer: 'Apollo Super Specialty Hospital',
+    completedJobsToday: 2,
+    rating: 4.95
+  },
+  {
+    id: 'tech-002',
+    name: 'Suresh Patil',
+    phone: '+91 98200 44912',
+    email: 'suresh.patil@alphaerp.hvac.biz',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80',
+    certifications: ['Chiller Overhaul Specialist (Carrier Certified)', 'VFD Programming BACnet', 'First Aid Certified'],
+    truckId: 'TRK-02',
+    truckPlate: 'MH-01-EE-8821 (Alpha Van 2)',
+    workingHours: '09:00 AM - 06:30 PM',
+    status: 'En Route',
+    currentCoordinates: {
+      lat: 19.0657,
+      lng: 72.8687,
+      address: 'En route to One BKC, Bandra Kurla Complex'
+    },
+    assignedTicketId: 'srv-002',
+    assignedTicketNumber: 'SRV-2026-0102',
+    assignedCustomer: 'One BKC Financial Center',
+    completedJobsToday: 1,
+    rating: 4.88
+  },
+  {
+    id: 'tech-003',
+    name: 'Deepak Sharma',
+    phone: '+91 97112 33401',
+    email: 'deepak.sharma@alphaerp.hvac.biz',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&auto=format&fit=crop&q=80',
+    certifications: ['Refrigerant Leak Diagnostics', 'Oxy-Acetylene Brazing Class A', 'Commercial AHU Specialist'],
+    truckId: 'TRK-03',
+    truckPlate: 'MH-12-QQ-1108 (Alpha Pune Unit)',
+    workingHours: '08:00 AM - 05:30 PM',
+    status: 'Idle',
+    currentCoordinates: {
+      lat: 18.5913,
+      lng: 73.7389,
+      address: 'Hinjewadi Central Hub, Pune'
+    },
+    completedJobsToday: 3,
+    rating: 4.80
+  },
+  {
+    id: 'tech-004',
+    name: 'Arun Varma',
+    phone: '+91 99401 22849',
+    email: 'arun.varma@alphaerp.hvac.biz',
+    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&auto=format&fit=crop&q=80',
+    certifications: ['VRV Inverter Diagnostics (Voltas/LG)', 'HVAC Electrical & Control Panels'],
+    truckId: 'TRK-04',
+    truckPlate: 'KA-03-MM-5541 (Alpha Bengaluru Van)',
+    workingHours: '09:00 AM - 06:00 PM',
+    status: 'On Site',
+    currentCoordinates: {
+      lat: 12.9279,
+      lng: 77.6773,
+      address: 'Prestige Cyber Towers, Bellandur, Bengaluru'
+    },
+    assignedTicketId: 'srv-004',
+    assignedTicketNumber: 'SRV-2026-0104',
+    assignedCustomer: 'Prestige Cyber Towers',
+    completedJobsToday: 2,
+    rating: 4.90
+  }
+];
+
+export const INITIAL_SERVICE_WORK_ORDERS: ServiceWorkOrder[] = [
+  {
+    id: 'srv-001',
+    ticketNumber: 'SRV-2026-0101',
+    customerId: 'scust-001',
+    customerName: 'Apollo Super Specialty Hospital',
+    customerPhone: '+91 98201 44521',
+    customerAddress: 'Sector 26, Belapur CBD, Navi Mumbai, MH 400614',
+    equipmentId: 'seq-001',
+    equipmentTitle: 'Daikin 20HP VRV ODU (SN: DKN-VRV-2024-8849)',
+    technicianId: 'tech-001',
+    technicianName: 'Imran Khan',
+    priority: 'P1 - Emergency Breakdown',
+    status: 'In Progress',
+    scheduledDate: '2026-09-11',
+    scheduledTimeSlot: '09:30 AM - 12:00 PM',
+    estimatedDurationHours: 2.5,
+    bufferMinutes: 30,
+    symptomsReported: 'High-pressure alarm code E4 on outdoor unit; Operation Theatre 2 experiencing temperature rise above 24°C.',
+    diagnosisNotes: 'Condenser fan motor 2 capacitor ruptured; dust build-up causing thermal tripping under peak load. Suction pressure is normal at 115 PSI.',
+    workDoneSummary: 'Replaced dual 45μF capacitor from truck stock; chemical degreased condenser fins; cleared E4 fault code on Daikin micro-processor board.',
+    checklist: [
+      { id: 'chk-1', task: 'Check suction & discharge operating pressures', category: 'Refrigerant', completed: true, measurementValue: '118 PSI / 385 PSI', status: 'Pass' },
+      { id: 'chk-2', task: 'Measure compressor electrical running amp draw', category: 'Electrical', completed: true, measurementValue: '28.4 Amps (Rated: 32A)', status: 'Pass' },
+      { id: 'chk-3', task: 'Inspect dual-run motor capacitors & contactor contacts', category: 'Electrical', completed: true, measurementValue: 'Replaced ruptured capacitor', status: 'Attention Required' },
+      { id: 'chk-4', task: 'Wash and power-rinse condenser coil fins', category: 'Airflow', completed: true, measurementValue: 'Airflow restored to 7,400 CFM', status: 'Pass' },
+      { id: 'chk-5', task: 'Verify thermostat delta T (Supply vs Return Temp)', category: 'Safety', completed: false, measurementValue: 'Testing in progress', status: 'Attention Required' }
+    ],
+    partsUsed: [
+      { id: 'part-1', sku: 'ELEC-CAP-45UF', name: 'Dual Run Motor Capacitor 45+5 μF 440V', quantity: 1, unit: 'Nos', unitCost: 1450, totalCost: 1450 },
+      { id: 'part-2', sku: 'CHEM-COIL-CLEAN-5L', name: 'Alkaline Coil Cleaner Degreaser 5L', quantity: 1, unit: 'Can', unitCost: 1800, totalCost: 1800 }
+    ],
+    laborHours: 2.5,
+    laborRatePerHour: 1200,
+    flatRateItemId: 'frp-002',
+    flatRateItemName: 'High Pressure Tripping Diagnostics & Coil Wash',
+    flatRateAmount: 4800,
+    photos: [
+      { id: 'p-1', caption: 'Burned capacitor inside outdoor control panel', url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&auto=format&fit=crop&q=80', type: 'Before', timestamp: '2026-09-11 10:05' },
+      { id: 'p-2', caption: 'Fresh capacitor installed & clean terminal wiring', url: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=500&auto=format&fit=crop&q=80', type: 'After', timestamp: '2026-09-11 11:15' }
+    ],
+    timeTracking: {
+      clockInTime: '2026-09-11 09:10',
+      travelStartTime: '2026-09-11 09:15',
+      arrivedOnSiteTime: '2026-09-11 09:42',
+      totalTravelMinutes: 27,
+      totalLaborMinutes: 110
+    },
+    invoiceStatus: 'Unbilled',
+    clientNotificationSent: true,
+    createdAt: '2026-09-11 08:45',
+    updatedAt: '2026-09-11 11:30'
+  },
+  {
+    id: 'srv-002',
+    ticketNumber: 'SRV-2026-0102',
+    customerId: 'scust-002',
+    customerName: 'One BKC Financial Center',
+    customerPhone: '+91 97692 88419',
+    customerAddress: 'G Block, Bandra Kurla Complex, Mumbai, MH 400051',
+    equipmentId: 'seq-002',
+    equipmentTitle: 'Carrier 150 TR Water-Cooled Chiller (SN: CRR-CHL-2023-1104)',
+    technicianId: 'tech-002',
+    technicianName: 'Suresh Patil',
+    priority: 'P3 - Routine Maintenance',
+    status: 'En Route',
+    scheduledDate: '2026-09-11',
+    scheduledTimeSlot: '11:00 AM - 02:00 PM',
+    estimatedDurationHours: 3.0,
+    bufferMinutes: 30,
+    symptomsReported: 'Q3 Comprehensive AMC inspection and oil filter differential pressure test.',
+    diagnosisNotes: 'Scheduled preventive service: Oil viscosity sampling, approach temperature check, and refrigerant level sight glass inspection.',
+    workDoneSummary: '',
+    checklist: [
+      { id: 'chk-201', task: 'Check oil filter differential pressure (Max 1.2 bar)', category: 'Mechanical', completed: false },
+      { id: 'chk-202', task: 'Spectroscopic compressor oil sample draw', category: 'Mechanical', completed: false },
+      { id: 'chk-203', task: 'Test water flow switch interlocks & delta P', category: 'Safety', completed: false },
+      { id: 'chk-204', task: 'Inspect electronic expansion valve stepper travel', category: 'Refrigerant', completed: false }
+    ],
+    partsUsed: [],
+    laborHours: 3.0,
+    laborRatePerHour: 1500,
+    photos: [],
+    timeTracking: {
+      travelStartTime: '2026-09-11 10:20',
+      totalTravelMinutes: 35,
+      totalLaborMinutes: 0
+    },
+    invoiceStatus: 'Unbilled',
+    clientNotificationSent: true,
+    createdAt: '2026-09-10 14:00',
+    updatedAt: '2026-09-11 10:20'
+  },
+  {
+    id: 'srv-003',
+    ticketNumber: 'SRV-2026-0100',
+    customerId: 'scust-004',
+    customerName: 'Taj Gateway Hotel & Suites',
+    customerPhone: '+91 91677 33490',
+    customerAddress: 'MIDC Industrial Area, Hinjewadi Phase 1, Pune, MH 411057',
+    equipmentId: 'seq-003',
+    equipmentTitle: 'Trane 60 TR Package Chiller (SN: TRN-PKG-2022-7712)',
+    technicianId: 'tech-003',
+    technicianName: 'Deepak Sharma',
+    priority: 'P2 - Urgent',
+    status: 'Completed',
+    scheduledDate: '2026-09-10',
+    scheduledTimeSlot: '02:00 PM - 05:00 PM',
+    estimatedDurationHours: 3.0,
+    bufferMinutes: 20,
+    symptomsReported: 'Low refrigerant charge alert; Circuit 1 frost formation on suction line.',
+    diagnosisNotes: 'Micro-leak detected on flare connection of 5/8" liquid line filter drier. System lost 3.5 kg R-410A.',
+    workDoneSummary: 'Repaired flare joint with new copper gasket, nitrogen pressure held at 38 bar for 45 mins, evacuated to 350 microns, topped up 3.5 kg R-410A refrigerant.',
+    checklist: [
+      { id: 'chk-301', task: 'Electronic Halogen & Nitrogen leak test', category: 'Refrigerant', completed: true, measurementValue: 'Zero leak at 38 bar', status: 'Pass' },
+      { id: 'chk-302', task: 'Deep dual-stage vacuum decay test', category: 'Refrigerant', completed: true, measurementValue: '340 microns held', status: 'Pass' },
+      { id: 'chk-303', task: 'Weighed refrigerant top-up', category: 'Refrigerant', completed: true, measurementValue: '3.5 kg R-410A injected', status: 'Pass' },
+      { id: 'chk-304', task: 'Subcooling & Superheat verification', category: 'Refrigerant', completed: true, measurementValue: 'Subcool: 6.2K, Superheat: 5.8K', status: 'Pass' }
+    ],
+    partsUsed: [
+      { id: 'part-301', sku: 'REF-R410A-KG', name: 'R-410A Refrigerant Gas (Bulk per kg)', quantity: 3.5, unit: 'kg', unitCost: 1100, totalCost: 3850 },
+      { id: 'part-302', sku: 'FLT-DRY-0.625', name: 'Liquid Line Filter Drier 5/8" ODF', quantity: 1, unit: 'Nos', unitCost: 2200, totalCost: 2200 }
+    ],
+    laborHours: 3.0,
+    laborRatePerHour: 1200,
+    flatRateItemId: 'frp-001',
+    flatRateItemName: 'Nitrogen Leak Test & Deep Evacuation Package',
+    flatRateAmount: 6500,
+    photos: [
+      { id: 'p-301', caption: 'Oil residue indicating flare joint leakage', url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&auto=format&fit=crop&q=80', type: 'Before', timestamp: '2026-09-10 14:35' },
+      { id: 'p-302', caption: 'Digital vacuum gauge showing 340 microns', url: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=500&auto=format&fit=crop&q=80', type: 'After', timestamp: '2026-09-10 16:45' }
+    ],
+    timeTracking: {
+      clockInTime: '2026-09-10 13:40',
+      travelStartTime: '2026-09-10 13:45',
+      arrivedOnSiteTime: '2026-09-10 14:05',
+      workCompletedTime: '2026-09-10 17:15',
+      totalTravelMinutes: 20,
+      totalLaborMinutes: 190
+    },
+    signature: {
+      signerName: 'Kishore Deshmukh',
+      signerDesignation: 'Chief Engineering Manager (Taj Gateway)',
+      signatureDataUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="60"><path d="M10 40 Q 50 10, 90 35 T 180 20" stroke="%232563eb" stroke-width="3" fill="none"/></svg>',
+      signedAt: '2026-09-10 17:20',
+      customerFeedbackScore: 5,
+      customerComments: 'Outstanding prompt repair. Restored chiller cooling before the banquet reception.'
+    },
+    invoiceId: 'inv-srv-001',
+    invoiceAmount: 19057,
+    invoiceStatus: 'Invoiced',
+    clientNotificationSent: true,
+    createdAt: '2026-09-10 11:20',
+    updatedAt: '2026-09-10 17:25'
+  },
+  {
+    id: 'srv-004',
+    ticketNumber: 'SRV-2026-0104',
+    customerId: 'scust-005',
+    customerName: 'Prestige Cyber Towers',
+    customerPhone: '+91 98450 77123',
+    customerAddress: 'Outer Ring Road, Bellandur, Bengaluru, KA 560103',
+    equipmentId: 'seq-005',
+    equipmentTitle: 'Voltas 16HP Inverter VRV (SN: VLT-VRF-2026-0211)',
+    technicianId: 'tech-004',
+    technicianName: 'Arun Varma',
+    priority: 'P4 - Inspection',
+    status: 'Scheduled',
+    scheduledDate: '2026-09-11',
+    scheduledTimeSlot: '02:30 PM - 04:30 PM',
+    estimatedDurationHours: 2.0,
+    bufferMinutes: 20,
+    symptomsReported: 'Post-handover 6-month seasonal performance review and filter cleaning.',
+    diagnosisNotes: 'Quarterly check of inverter PCB heat sink thermal paste, firmware version check and drain pan flushing.',
+    workDoneSummary: '',
+    checklist: [
+      { id: 'chk-401', task: 'Wash and sanitize nylon air filters', category: 'Airflow', completed: false },
+      { id: 'chk-402', task: 'Clean indoor unit condensate drain tray', category: 'Safety', completed: false },
+      { id: 'chk-403', task: 'Tighten 3-phase incoming terminal screws', category: 'Electrical', completed: false }
+    ],
+    partsUsed: [],
+    laborHours: 2.0,
+    laborRatePerHour: 1000,
+    photos: [],
+    timeTracking: {
+      totalTravelMinutes: 0,
+      totalLaborMinutes: 0
+    },
+    invoiceStatus: 'Unbilled',
+    clientNotificationSent: true,
+    createdAt: '2026-09-10 16:30',
+    updatedAt: '2026-09-11 08:00'
+  }
+];
+
+export const INITIAL_TRUCK_STOCK: TruckStockItem[] = [
+  {
+    id: 'tstk-001',
+    technicianId: 'tech-001',
+    technicianName: 'Imran Khan',
+    truckPlate: 'MH-02-CB-4019',
+    sku: 'REF-R410A-CYL',
+    name: 'R-410A Refrigerant Gas Cylinder (11.3 kg)',
+    category: 'Refrigerants',
+    currentStock: 3,
+    minThreshold: 2,
+    unit: 'Cylinders',
+    unitPrice: 11500,
+    barcode: '89040112001',
+    lastRestockedDate: '2026-09-08'
+  },
+  {
+    id: 'tstk-002',
+    technicianId: 'tech-001',
+    technicianName: 'Imran Khan',
+    truckPlate: 'MH-02-CB-4019',
+    sku: 'ELEC-CAP-45UF',
+    name: 'Dual Run Motor Capacitor 45+5 μF 440V',
+    category: 'Electrical & Motors',
+    currentStock: 4,
+    minThreshold: 3,
+    unit: 'Nos',
+    unitPrice: 1450,
+    barcode: '89040112002',
+    lastRestockedDate: '2026-09-09'
+  },
+  {
+    id: 'tstk-003',
+    technicianId: 'tech-001',
+    technicianName: 'Imran Khan',
+    truckPlate: 'MH-02-CB-4019',
+    sku: 'ELEC-CONT-3P-40A',
+    name: '3-Pole Heavy Duty Contactor 40A 230V Coil',
+    category: 'Electrical & Motors',
+    currentStock: 1, // Alert: below threshold!
+    minThreshold: 3,
+    unit: 'Nos',
+    unitPrice: 2850,
+    barcode: '89040112003',
+    lastRestockedDate: '2026-09-01'
+  },
+  {
+    id: 'tstk-004',
+    technicianId: 'tech-002',
+    technicianName: 'Suresh Patil',
+    truckPlate: 'MH-01-EE-8821',
+    sku: 'REF-R134A-CYL',
+    name: 'R-134a Chiller Refrigerant Cylinder (13.6 kg)',
+    category: 'Refrigerants',
+    currentStock: 2,
+    minThreshold: 2,
+    unit: 'Cylinders',
+    unitPrice: 12800,
+    barcode: '89040112004',
+    lastRestockedDate: '2026-09-05'
+  },
+  {
+    id: 'tstk-005',
+    technicianId: 'tech-002',
+    technicianName: 'Suresh Patil',
+    truckPlate: 'MH-01-EE-8821',
+    sku: 'CHL-OIL-PUMP-5L',
+    name: 'Polyolester (POE) Chiller Synthetic Oil 5L',
+    category: 'Oils & Lubricants',
+    currentStock: 5,
+    minThreshold: 2,
+    unit: 'Cans',
+    unitPrice: 4200,
+    barcode: '89040112005',
+    lastRestockedDate: '2026-09-07'
+  },
+  {
+    id: 'tstk-006',
+    technicianId: 'tech-003',
+    technicianName: 'Deepak Sharma',
+    truckPlate: 'MH-12-QQ-1108',
+    sku: 'BRAZ-ROD-SILV-15',
+    name: '15% Silver Brazing Rods Pack (1 kg)',
+    category: 'Piping & Brazing',
+    currentStock: 1,
+    minThreshold: 2, // Alert!
+    unit: 'Packs',
+    unitPrice: 6500,
+    barcode: '89040112006',
+    lastRestockedDate: '2026-08-25'
+  }
+];
+
+export const INITIAL_FLAT_RATE_PRICE_BOOK: FlatRatePriceBookItem[] = [
+  {
+    id: 'frp-001',
+    code: 'FRP-NIT-LEAK',
+    serviceName: 'Nitrogen High-Pressure Leak Test & Vacuum Decay Package',
+    category: 'Refrigerant & Leakage',
+    standardHours: 2.5,
+    fixedLaborFee: 3500,
+    standardPartsFee: 3000,
+    totalFlatRate: 6500,
+    description: 'Pressurizing system with dry nitrogen up to 38-42 bar, electronic bubble test, 2-stage micron evacuation to 400 microns.'
+  },
+  {
+    id: 'frp-002',
+    code: 'FRP-COIL-WASH',
+    serviceName: 'Commercial Condenser High-Pressure Chemical Wash',
+    category: 'Preventive AMC',
+    standardHours: 2.0,
+    fixedLaborFee: 2600,
+    standardPartsFee: 2200,
+    totalFlatRate: 4800,
+    description: 'Biodegradable coil foaming chemical spray, power wash rinse, comb bent aluminum fins, and static pressure test.'
+  },
+  {
+    id: 'frp-003',
+    code: 'FRP-COMP-OVERHAUL',
+    serviceName: 'Compressor Magnetic Contactor & Terminal Rebuild',
+    category: 'Electrical & Controls',
+    standardHours: 2.0,
+    fixedLaborFee: 2800,
+    standardPartsFee: 3400,
+    totalFlatRate: 6200,
+    description: 'Replacing pitted 3-pole contactor, new ceramic terminal lugs, dielectric grease, and amp load thermal calibration.'
+  },
+  {
+    id: 'frp-004',
+    code: 'FRP-VRV-EXPANSION',
+    serviceName: 'Electronic Expansion Valve (EEV) Coil Replacement',
+    category: 'Refrigerant & Leakage',
+    standardHours: 3.0,
+    fixedLaborFee: 4200,
+    standardPartsFee: 5500,
+    totalFlatRate: 9700,
+    description: 'Diagnosis of stuck stepper motor, isolation, replace OEM magnetic stepper pulse coil and recalibrate controller.'
+  },
+  {
+    id: 'frp-005',
+    code: 'FRP-ANNUAL-AMC-VRF',
+    serviceName: 'Annual Comprehensive AMC Service (Quarterly Visits per 10 TR)',
+    category: 'Preventive AMC',
+    standardHours: 8.0,
+    fixedLaborFee: 12000,
+    standardPartsFee: 6500,
+    totalFlatRate: 18500,
+    description: 'Includes 4 quarterly deep visits, 2 breakdown emergency calls, belt replacement, lubrication, and priority SLA dispatch.'
+  }
+];
+
+export const INITIAL_SERVICE_INVOICES: ServiceInvoice[] = [
+  {
+    id: 'inv-srv-001',
+    invoiceNumber: 'INV-SRV-2026-0045',
+    workOrderId: 'srv-003',
+    ticketNumber: 'SRV-2026-0100',
+    customerId: 'scust-004',
+    customerName: 'Taj Gateway Hotel & Suites',
+    billingAddress: 'MIDC Industrial Area, Hinjewadi Phase 1, Pune, MH 411057',
+    customerEmail: 'chiefengg.gateway@ihcltata.com',
+    customerPhone: '+91 91677 33490',
+    partsTotal: 6050,
+    laborTotal: 3600,
+    flatRateTotal: 6500,
+    subtotal: 16150,
+    gstRatePct: 18,
+    gstAmount: 2907,
+    grandTotal: 19057,
+    paymentStatus: 'Paid - UPI',
+    paymentRef: 'UPI-RAZOR-99120482',
+    paidAt: '2026-09-10 17:45',
+    invoiceDate: '2026-09-10',
+    dueDate: '2026-09-25',
+    accountingSyncStatus: 'Synced to QuickBooks'
+  }
+];
