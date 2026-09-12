@@ -169,53 +169,48 @@ export const ERP_HIERARCHY: Record<string, ERPNavPath> = {
   },
   workorders: {
     tabId: 'workorders',
-    groupId: 'procurement_field',
-    groupName: 'Supply Chain & Field',
-    groupIcon: ShoppingCart,
+    groupId: 'services_section',
+    groupName: 'Services & AMC Contracts',
+    groupIcon: ShieldCheck,
     pageTitle: 'Work Orders & Field Dispatch',
     pageIcon: Wrench,
     description: 'Installation dispatch, testing & commissioning checklists and site logs',
     siblings: [
-      { id: 'procurement', label: 'Inventory & PR/PO' },
-      { id: 'inventory', label: 'Warehouse Stock & SKUs' },
-      { id: 'workorders', label: 'Work Orders & Field' },
-      { id: 'services_amc', label: 'Services & AMC' }
+      { id: 'services_amc', label: 'Services & AMC' },
+      { id: 'services_schedule', label: 'Service Scheduling & PPM' },
+      { id: 'workorders', label: 'Work Orders & Field' }
     ]
   },
   services_amc: {
     tabId: 'services_amc',
-    groupId: 'procurement_field',
-    groupName: 'Supply Chain & Field',
-    groupIcon: ShoppingCart,
+    groupId: 'services_section',
+    groupName: 'Services & AMC Contracts',
+    groupIcon: ShieldCheck,
     pageTitle: 'Services & AMC Contracts Hub',
     pageIcon: ShieldCheck,
     description: 'Annual Maintenance Contracts, PPM schedules, equipment health & emergency breakdown tickets',
     badge: 'AMC & SLA Hub',
     badgeColor: 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
     siblings: [
-      { id: 'procurement', label: 'Inventory & PR/PO' },
-      { id: 'inventory', label: 'Warehouse Stock & SKUs' },
-      { id: 'workorders', label: 'Work Orders & Field' },
       { id: 'services_amc', label: 'Services & AMC' },
-      { id: 'services_schedule', label: 'Service Scheduling & PPM' }
+      { id: 'services_schedule', label: 'Service Scheduling & PPM' },
+      { id: 'workorders', label: 'Work Orders & Field' }
     ]
   },
   services_schedule: {
     tabId: 'services_schedule',
-    groupId: 'procurement_field',
-    groupName: 'Supply Chain & Field',
-    groupIcon: ShoppingCart,
+    groupId: 'services_section',
+    groupName: 'Services & AMC Contracts',
+    groupIcon: ShieldCheck,
     pageTitle: 'Service Scheduling, PPM & Breakdown Tickets',
     pageIcon: CalendarClock,
     description: 'Technician assignment, 4-point HVAC inspection checklists, preventive maintenance visits & emergency breakdown queue',
     badge: 'PPM & Dispatch',
     badgeColor: 'bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
     siblings: [
-      { id: 'procurement', label: 'Inventory & PR/PO' },
-      { id: 'inventory', label: 'Warehouse Stock & SKUs' },
-      { id: 'workorders', label: 'Work Orders & Field' },
       { id: 'services_amc', label: 'Services & AMC' },
-      { id: 'services_schedule', label: 'Service Scheduling & PPM' }
+      { id: 'services_schedule', label: 'Service Scheduling & PPM' },
+      { id: 'workorders', label: 'Work Orders & Field' }
     ]
   },
   finance: {

@@ -14,7 +14,7 @@ export interface AppModuleInfo {
   id: string;
   name: string;
   shortName: string;
-  category: 'management' | 'sales_eng' | 'supply_chain' | 'finance' | 'hr' | 'system';
+  category: 'management' | 'sales_eng' | 'services' | 'supply_chain' | 'finance' | 'hr' | 'system';
   categoryLabel: string;
   description: string;
   defaultRoles: UserRole[];
@@ -41,6 +41,15 @@ export const APP_MODULES: AppModuleInfo[] = [
     categoryLabel: 'Management & Strategy',
     description: 'High-level business KPIs, gross margins, project status distributions, cashflow and sales trends.',
     defaultRoles: ['executive', 'sales_manager', 'estimator', 'procurement', 'warehouse', 'finance']
+  },
+  {
+    id: 'pitch_deck',
+    name: 'Interactive Investor Pitch Deck',
+    shortName: 'Pitch Deck',
+    category: 'management',
+    categoryLabel: 'Management & Strategy',
+    description: 'Interactive presentation deck for investors, business partners, and key stakeholders.',
+    defaultRoles: ['executive', 'sales_manager']
   },
   {
     id: 'sales',
@@ -90,7 +99,36 @@ export const APP_MODULES: AppModuleInfo[] = [
     defaultRoles: ['executive', 'sales_manager', 'estimator', 'finance', 'procurement']
   },
 
-  // Supply Chain & Field Operations
+  // Services & AMC Operations
+  {
+    id: 'services_amc',
+    name: 'HVAC Services & AMC Contracts',
+    shortName: 'Services & AMC',
+    category: 'services',
+    categoryLabel: 'Services & AMC Operations',
+    description: 'Annual Maintenance Contracts (AMC), PPM schedules, SLA compliance, equipment health, and emergency breakdown tickets.',
+    defaultRoles: ['executive', 'sales_manager', 'estimator', 'technician', 'warehouse']
+  },
+  {
+    id: 'services_schedule',
+    name: 'Service Scheduling & PPM Visits',
+    shortName: 'PPM Scheduling',
+    category: 'services',
+    categoryLabel: 'Services & AMC Operations',
+    description: 'Technician dispatch, 4-point HVAC inspection checklists, preventive maintenance visits, and 24x7 emergency ticket resolution.',
+    defaultRoles: ['executive', 'sales_manager', 'estimator', 'technician', 'warehouse']
+  },
+  {
+    id: 'workorders',
+    name: 'Work Orders & Field Operations',
+    shortName: 'Work Orders',
+    category: 'services',
+    categoryLabel: 'Services & AMC Operations',
+    description: 'Site installation tickets, HVAC testing checklists, technician dispatch, and handover certs.',
+    defaultRoles: ['executive', 'technician', 'warehouse']
+  },
+
+  // Supply Chain & Procurement
   {
     id: 'procurement',
     name: 'Procurement & PR/PO Pipeline',
@@ -108,33 +146,6 @@ export const APP_MODULES: AppModuleInfo[] = [
     categoryLabel: 'Supply Chain & Field',
     description: 'Multi-bay storage bins, SKU counts, reorder level alerts, and Goods Receipt Notes (GRN).',
     defaultRoles: ['executive', 'warehouse', 'procurement', 'technician']
-  },
-  {
-    id: 'workorders',
-    name: 'Work Orders & Field Operations',
-    shortName: 'Work Orders',
-    category: 'supply_chain',
-    categoryLabel: 'Supply Chain & Field',
-    description: 'Site installation tickets, HVAC testing checklists, technician dispatch, and handover certs.',
-    defaultRoles: ['executive', 'technician', 'warehouse']
-  },
-  {
-    id: 'services_amc',
-    name: 'HVAC Services & AMC Contracts',
-    shortName: 'Services & AMC',
-    category: 'supply_chain',
-    categoryLabel: 'Supply Chain & Field',
-    description: 'Annual Maintenance Contracts (AMC), PPM schedules, SLA compliance, equipment health, and emergency breakdown tickets.',
-    defaultRoles: ['executive', 'sales_manager', 'estimator', 'technician', 'warehouse']
-  },
-  {
-    id: 'services_schedule',
-    name: 'Service Scheduling & PPM Visits',
-    shortName: 'PPM Scheduling',
-    category: 'supply_chain',
-    categoryLabel: 'Supply Chain & Field',
-    description: 'Technician dispatch, 4-point HVAC inspection checklists, preventive maintenance visits, and 24x7 emergency ticket resolution.',
-    defaultRoles: ['executive', 'sales_manager', 'estimator', 'technician', 'warehouse']
   },
 
   // Finance & Commercial
@@ -230,15 +241,17 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
   executive: [
     'search',
     'dashboard',
+    'pitch_deck',
     'sales',
     'crm',
     'quotes',
     'projects',
-    'procurement',
-    'inventory',
-    'workorders',
+    'cost_analysis',
     'services_amc',
     'services_schedule',
+    'workorders',
+    'procurement',
+    'inventory',
     'finance',
     'payments',
     'hr',
@@ -256,8 +269,10 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'crm',
     'quotes',
     'projects',
+    'cost_analysis',
     'services_amc',
     'services_schedule',
+    'workorders',
     'payments',
     'ess',
     'masterdata'
@@ -268,10 +283,12 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'crm',
     'quotes',
     'projects',
-    'inventory',
-    'procurement',
+    'cost_analysis',
     'services_amc',
     'services_schedule',
+    'workorders',
+    'inventory',
+    'procurement',
     'ess'
   ],
   procurement: [
@@ -280,6 +297,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'procurement',
     'inventory',
     'projects',
+    'cost_analysis',
     'services_amc',
     'services_schedule',
     'masterdata',
@@ -301,6 +319,7 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
     'finance',
     'payments',
     'procurement',
+    'cost_analysis',
     'services_amc',
     'services_schedule',
     'hr',
@@ -310,9 +329,9 @@ export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
   ],
   technician: [
     'search',
-    'workorders',
     'services_amc',
     'services_schedule',
+    'workorders',
     'projects',
     'inventory',
     'ess'

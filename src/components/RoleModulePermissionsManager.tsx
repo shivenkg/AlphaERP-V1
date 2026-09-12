@@ -414,7 +414,7 @@ export const RoleModulePermissionsManager: React.FC<RoleModulePermissionsManager
                       <div className="flex items-center gap-2">
                         <Layers className="w-4 h-4 text-blue-600" />
                         <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                          {catName}
+                          {modules[0]?.categoryLabel || catName}
                         </h4>
                       </div>
                       <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">

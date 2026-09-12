@@ -176,9 +176,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ]
     },
     {
+      id: 'services_section',
+      title: 'Services & AMC Contracts',
+      shortTitle: 'Services/AMC',
+      icon: ShieldCheck,
+      items: [
+        {
+          id: 'services_amc',
+          label: 'Services & AMC Contracts',
+          icon: ShieldCheck,
+          badge: activeAmcCount ? `${activeAmcCount} AMC` : 'Active',
+          badgeColor: 'bg-emerald-600',
+          description: 'AMC contracts, PPM schedule & breakdown tickets'
+        },
+        {
+          id: 'services_schedule',
+          label: 'Service Scheduling & PPM',
+          icon: CalendarClock,
+          badge: 'Live',
+          badgeColor: 'bg-blue-600',
+          description: 'PPM visits, 4-point checklists & breakdown queue'
+        },
+        {
+          id: 'workorders',
+          label: 'Work Orders & Field Dispatch',
+          icon: Wrench,
+          badge: null,
+          description: 'Field engineer dispatch & service'
+        }
+      ]
+    },
+    {
       id: 'procurement_field',
-      title: 'Supply Chain & Field',
-      shortTitle: 'Procure/Field',
+      title: 'Supply Chain & Procurement',
+      shortTitle: 'Supply Chain',
       icon: ShoppingCart,
       items: [
         {
@@ -196,29 +227,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           badge: lowStockCount > 0 ? `${lowStockCount} Low` : null,
           badgeColor: 'bg-red-500',
           description: 'Warehouse ledger & stock balance'
-        },
-        {
-          id: 'workorders',
-          label: 'Work Orders & Field Dispatch',
-          icon: Wrench,
-          badge: null,
-          description: 'Field engineer dispatch & service'
-        },
-        {
-          id: 'services_amc',
-          label: 'Services & AMC',
-          icon: ShieldCheck,
-          badge: activeAmcCount ? `${activeAmcCount} AMC` : 'Active',
-          badgeColor: 'bg-emerald-600',
-          description: 'AMC contracts, PPM schedule & breakdown tickets'
-        },
-        {
-          id: 'services_schedule',
-          label: 'Service Scheduling & PPM',
-          icon: CalendarClock,
-          badge: 'Live',
-          badgeColor: 'bg-blue-600',
-          description: 'PPM visits, 4-point checklists & breakdown queue'
         }
       ]
     },
@@ -488,6 +496,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const groupBgColors: Record<string, string> = {
     executive: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
     sales_eng: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
+    services_section: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
     procurement_field: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
     finance_section: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
     hr_section: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',

@@ -2490,6 +2490,28 @@ class StorageService {
     if (!this.systemSettings.roleModulePermissions) {
       this.systemSettings.roleModulePermissions = JSON.parse(JSON.stringify(DEFAULT_ROLE_MODULE_PERMISSIONS));
       save(STORAGE_KEYS.SYSTEM_SETTINGS, this.systemSettings);
+    } else {
+      // Auto-heal any stale role arrays that may be missing newly introduced default modules (e.g. services_amc, services_schedule)
+      let modified = false;
+      const current = this.systemSettings.roleModulePermissions;
+      (Object.keys(DEFAULT_ROLE_MODULE_PERMISSIONS) as UserRole[]).forEach((role) => {
+        const defaults = DEFAULT_ROLE_MODULE_PERMISSIONS[role] || [];
+        if (!current[role] || !Array.isArray(current[role])) {
+          current[role] = [...defaults];
+          modified = true;
+        } else {
+          // If services_amc or services_schedule were never in this role's array and the role by default has them, add them
+          ['services_amc', 'services_schedule'].forEach((mod) => {
+            if (defaults.includes(mod) && !current[role].includes(mod)) {
+              current[role].push(mod);
+              modified = true;
+            }
+          });
+        }
+      });
+      if (modified) {
+        save(STORAGE_KEYS.SYSTEM_SETTINGS, this.systemSettings);
+      }
     }
     return this.systemSettings.roleModulePermissions;
   }
