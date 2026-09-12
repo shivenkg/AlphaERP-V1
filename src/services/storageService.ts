@@ -2540,12 +2540,27 @@ class StorageService {
   // ==========================================
   // ROLE-BASED MODULE VISIBILITY & ACCESS PERMISSIONS
   // ==========================================
+  // Bump this version any time a new module is added to DEFAULT_ROLE_MODULE_PERMISSIONS
+  // so cached localStorage permissions are rebuilt from the latest defaults.
+  private static readonly PERMISSIONS_SCHEMA_VERSION = '3';
+
   public getRoleModulePermissions(): Record<UserRole, string[]> {
+    // Force-refresh if the stored schema version is outdated (handles stale localStorage)
+    const storedVersion = this.systemSettings.permissionsSchemaVersion;
+    if (storedVersion !== StorageService.PERMISSIONS_SCHEMA_VERSION) {
+      this.systemSettings.roleModulePermissions = JSON.parse(JSON.stringify(DEFAULT_ROLE_MODULE_PERMISSIONS));
+      this.systemSettings.permissionsSchemaVersion = StorageService.PERMISSIONS_SCHEMA_VERSION;
+      save(STORAGE_KEYS.SYSTEM_SETTINGS, this.systemSettings);
+      return this.systemSettings.roleModulePermissions;
+    }
+
     if (!this.systemSettings.roleModulePermissions) {
       this.systemSettings.roleModulePermissions = JSON.parse(JSON.stringify(DEFAULT_ROLE_MODULE_PERMISSIONS));
+      this.systemSettings.permissionsSchemaVersion = StorageService.PERMISSIONS_SCHEMA_VERSION;
       save(STORAGE_KEYS.SYSTEM_SETTINGS, this.systemSettings);
     } else {
-      // Auto-heal any stale role arrays that may be missing newly introduced default modules (e.g. services_amc, services_schedule)
+      // Auto-heal: ensure all services modules present in defaults are included per role
+      const SERVICES_MODULES = ['services_amc', 'services_schedule', 'workorders'];
       let modified = false;
       const current = this.systemSettings.roleModulePermissions;
       (Object.keys(DEFAULT_ROLE_MODULE_PERMISSIONS) as UserRole[]).forEach((role) => {
@@ -2554,8 +2569,7 @@ class StorageService {
           current[role] = [...defaults];
           modified = true;
         } else {
-          // If services_amc or services_schedule were never in this role's array and the role by default has them, add them
-          ['services_amc', 'services_schedule'].forEach((mod) => {
+          SERVICES_MODULES.forEach((mod) => {
             if (defaults.includes(mod) && !current[role].includes(mod)) {
               current[role].push(mod);
               modified = true;

@@ -719,6 +719,9 @@ export interface SystemSettings {
   // Role-Based Module Visibility Configuration (maps each UserRole to its allowed module tab IDs)
   roleModulePermissions?: Record<UserRole, string[]>;
 
+  // Schema version stamp — bump in storageService to force a one-time reset of cached permissions
+  permissionsSchemaVersion?: string;
+
   // Master Data & Transaction Unique Automated Number Series Configuration
   numberSeries?: SeriesDefinition[];
 
