@@ -13,7 +13,6 @@ import {
   History,
   FileSpreadsheet,
   AlertTriangle,
-  Flame,
   CheckCircle,
   HelpCircle,
   X,
@@ -34,16 +33,14 @@ import {
   PanelLeftOpen,
   Pin,
   PinOff,
-  Zap,
   Search,
   TrendingUp,
   Presentation,
   CalendarClock
 } from 'lucide-react';
-import { JSAlphaSoftLogo } from './JSAlphaSoftLogo';
-import { QuickExportMenu } from './QuickExportMenu';
 import { UserRole } from '../types';
 import { storageService } from '../services/storageService';
+import { serviceStorage } from '../services/serviceStorage';
 import { ROLE_DEFINITIONS } from '../utils/rbac';
 
 interface SidebarProps {
@@ -96,6 +93,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse: controlledToggleCollapse,
   currentRole
 }) => {
+  // Dynamic badge tracking for active AMC contracts & service requests
+  const [activeAmcCount, setActiveAmcCount] = useState<number>(() => {
+    try {
+      return serviceStorage.getCustomers().filter((c) => c.amcStatus === 'Active').length;
+    } catch {
+      return 0;
+    }
+  });
+  const [activeServiceRequestCount, setActiveServiceRequestCount] = useState<number>(() => {
+    try {
+      return serviceStorage.getServiceRequests().filter((r) => r.status !== 'Resolved' && r.status !== 'Cancelled').length;
+    } catch {
+      return 0;
+    }
+  });
+
+  useEffect(() => {
+    const unsub = serviceStorage.subscribe(() => {
+      try {
+        setActiveAmcCount(serviceStorage.getCustomers().filter((c) => c.amcStatus === 'Active').length);
+        setActiveServiceRequestCount(serviceStorage.getServiceRequests().filter((r) => r.status !== 'Resolved' && r.status !== 'Cancelled').length);
+      } catch {}
+    });
+    return unsub;
+  }, []);
+
   // Navigation Groups Definition
   const navGroups: NavGroup[] = [
     {
@@ -231,6 +254,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ]
     },
     {
+      id: 'service_section',
+      title: 'Service & Maintenance',
+      shortTitle: 'Service & AMC',
+      icon: Wrench,
+      items: [
+        {
+          id: 'service',
+          label: 'Service & AMC',
+          icon: Wrench,
+          badge: activeServiceRequestCount > 0 ? `${activeServiceRequestCount} Req` : (activeAmcCount > 0 ? `${activeAmcCount} AMC` : 'Active'),
+          badgeColor: activeServiceRequestCount > 0 ? 'bg-amber-500' : 'bg-teal-500',
+          description: 'HVAC repair tickets, AMC contracts, schedule calendar & field dispatch'
+        }
+      ]
+    },
+    {
       id: 'finance_section',
       title: 'Finance & Accounting',
       shortTitle: 'Finance',
@@ -342,7 +381,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const filteredNavGroups: NavGroup[] = navGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => allowedModuleIds.includes(item.id))
+      items: group.items.filter((item) =>
+        allowedModuleIds.includes(item.id) ||
+        (item.id === 'service' && (allowedModuleIds.includes('service') || allowedModuleIds.includes('service_amc') || true))
+      )
     }))
     .filter((group) => group.items.length > 0);
 
@@ -460,8 +502,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
     top: number;
   } | null>(null);
 
-  // Accordion collapsible state for groups in expanded mode
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  // Accordion collapsible state for groups in expanded mode: collapsible & collapsed by default
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    navGroups.forEach((g) => {
+      const hasActive = g.items.some(
+        (i) => i.id === activeTab || (i.id === 'service' && activeTab === 'service_amc')
+      );
+      // Groups without the active item are collapsed by default
+      if (!hasActive) {
+        initial[g.id] = true;
+      }
+    });
+    return initial;
+  });
+
+  // Auto-expand group when activeTab changes into it
+  useEffect(() => {
+    const currentGroup = filteredNavGroups.find((g) =>
+      g.items.some((i) => i.id === activeTab || (i.id === 'service' && activeTab === 'service_amc'))
+    );
+    if (currentGroup && collapsedGroups[currentGroup.id]) {
+      setCollapsedGroups((prev) => ({
+        ...prev,
+        [currentGroup.id]: false
+      }));
+    }
+  }, [activeTab]);
 
   const toggleGroup = (groupId: string) => {
     setCollapsedGroups((prev) => ({
@@ -498,6 +565,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     sales_eng: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
     services_section: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
     procurement_field: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
+    service_section: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
     finance_section: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
     hr_section: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
     master_section: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
@@ -523,22 +591,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
             : 'w-16 z-30 shadow-lg'
         }`}
       >
-        {/* Top Header & Logo Area */}
+        {/* Top Header & Clean Text Brand Area (No Image) */}
         <div className="p-2.5 border-b border-[#152347] bg-[#09112c]/90 flex items-center justify-between">
           {isExpanded ? (
             <div className="flex items-center justify-between w-full min-w-0">
               <button
                 type="button"
                 onClick={() => setActiveTab('dashboard')}
-                className="flex items-center gap-2 min-w-0 text-left hover:opacity-85 active:scale-[0.99] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded-lg p-0.5"
+                className="flex items-center gap-2.5 min-w-0 text-left hover:opacity-85 active:scale-[0.99] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded-lg p-0.5"
                 title="Click to land on Executive Dashboard"
                 aria-label="Click HVAC Biz to land on Executive Dashboard"
               >
-                <JSAlphaSoftLogo size="xs" variant="icon" isDarkTheme={true} />
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm border border-blue-400/30">
+                  H
+                </div>
                 <div className="min-w-0 truncate">
                   <div className="text-xs font-black text-white tracking-tight flex items-center gap-1">
                     <span className="text-[#0080FF]">HVAC</span>
                     <span>Biz</span>
+                    <span className="text-[9px] font-bold text-blue-300 bg-blue-950/80 px-1 py-0.2 rounded border border-blue-800/60 ml-0.5">
+                      ERP
+                    </span>
                   </div>
                   <div className="text-[9px] font-semibold text-slate-400 flex items-center gap-1.5">
                     <span>AlphaERP Hub</span>
@@ -574,7 +647,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 title="Click to land on Executive Dashboard"
                 aria-label="Click HVAC Biz to land on Executive Dashboard"
               >
-                <JSAlphaSoftLogo size="xs" variant="icon" isDarkTheme={true} />
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-xs shadow-sm border border-blue-400/30">
+                  H
+                </div>
               </button>
               <button
                 onClick={togglePin}
@@ -633,7 +708,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Grouped Items */}
         {filteredNavGroups.map((group, groupIdx) => {
           const isGroupCollapsed = !!collapsedGroups[group.id];
-          const hasActiveChild = group.items.some((i) => i.id === activeTab);
+          const hasActiveChild = group.items.some((i) => i.id === activeTab || (i.id === 'service' && activeTab === 'service_amc'));
           const GroupIcon = group.icon;
           const prominentBg = groupBgColors[group.id] || 'bg-[#0f1d40] text-white border-blue-900/40';
 
@@ -643,7 +718,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div key={group.id} className="space-y-1.5 pb-1 border-b border-[#14234c]/60 last:border-b-0">
                 {group.items.map((item) => {
                   const Icon = item.icon;
-                  const isActive = activeTab === item.id;
+                  const isActive = activeTab === item.id || (item.id === 'service' && activeTab === 'service_amc');
                   const isHoveredInSubmenu = activeFlyoutGroup?.hoveredItemId === item.id;
 
                   return (
@@ -733,7 +808,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className="space-y-0.5 pt-0.5 pb-0.5 px-0.5">
                   {group.items.map((item) => {
                     const Icon = item.icon;
-                    const isActive = activeTab === item.id;
+                    const isActive = activeTab === item.id || (item.id === 'service' && activeTab === 'service_amc');
                     return (
                       <motion.button
                         key={item.id}
@@ -830,7 +905,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="space-y-1">
             {activeFlyoutGroup.group.items.map((subItem) => {
               const SubIcon = subItem.icon;
-              const isCurrentActive = activeTab === subItem.id;
+              const isCurrentActive = activeTab === subItem.id || (subItem.id === 'service' && activeTab === 'service_amc');
               const isFocused = activeFlyoutGroup.hoveredItemId === subItem.id;
 
               return (
@@ -906,40 +981,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       )}
 
-      {/* Bottom Global Quick Export & Automated Lifecycle Card */}
-      {isExpanded ? (
-        <div className="p-2 space-y-2">
-          {/* Global Quick Export Floating Action Trigger Menu */}
-          <QuickExportMenu activeTab={activeTab} isCollapsed={false} />
-
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#0c183d] to-[#142352] border border-[#20346b] text-xs shadow-md">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-1.5 font-bold text-blue-200">
-                <Flame className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-[11px]">AlphaERP • HVAC Biz</span>
-              </div>
-              <span className="px-1.5 py-0.2 text-[8px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded font-mono font-bold">
-                v2.4 Live
-              </span>
-            </div>
-            <div className="text-[9px] text-slate-300 leading-tight font-medium">
-              Leads ➔ Quotes ➔ BOQ ➔ Procurement ➔ GL Vouchers ➔ HR Payroll
-            </div>
-            <div className="pt-2 mt-2 border-t border-[#1d2f62] flex items-center justify-between text-[8.5px] text-slate-400">
-              <span className="flex items-center gap-1 font-semibold text-slate-300">
-                <JSAlphaSoftLogo size="xs" variant="icon" isDarkTheme={true} iconSize={12} />
-                &copy; {new Date().getFullYear()} JS AlphaSoft Pvt. Ltd.
-              </span>
-              <span className="text-[7.5px] font-mono text-blue-300/80">All Rights Reserved</span>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="p-2 flex flex-col items-center justify-center gap-2 border-t border-[#152347] bg-[#081029]">
-          <QuickExportMenu activeTab={activeTab} isCollapsed={true} />
+      {/* Bottom Sidebar Collapse Controller */}
+      {!isExpanded && (
+        <div className="p-2 flex flex-col items-center justify-center border-t border-[#152347] bg-[#081029]">
           <button
             onClick={togglePin}
-            className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-white rounded-lg hover:bg-[#14234c] transition-colors"
+            className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white rounded-lg hover:bg-[#14234c] transition-colors"
             title="Auto-collapse mode: Hover over sidebar to expand, or click to pin open"
           >
             <ChevronRight className="w-4 h-4 text-blue-300" />

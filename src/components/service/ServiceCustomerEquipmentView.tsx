@@ -14,7 +14,9 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
-  X
+  X,
+  History,
+  QrCode
 } from 'lucide-react';
 import {
   ServiceCustomer,
@@ -24,19 +26,23 @@ import {
   PreferredContactMethod
 } from '../../types/service';
 import { serviceStorage } from '../../services/serviceStorage';
+import { AssetQrCodeModal } from './AssetQrCodeModal';
+import { AssetDetailsModal } from './AssetDetailsModal';
 
 interface ServiceCustomerEquipmentViewProps {
   customers: ServiceCustomer[];
   equipments: ServiceEquipment[];
   onRefresh: () => void;
   onDispatchForEquipment?: (equipment: ServiceEquipment) => void;
+  onViewHistory?: (equipmentId: string) => void;
 }
 
 export const ServiceCustomerEquipmentView: React.FC<ServiceCustomerEquipmentViewProps> = ({
   customers,
   equipments,
   onRefresh,
-  onDispatchForEquipment
+  onDispatchForEquipment,
+  onViewHistory
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'customers' | 'equipments'>('customers');
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,6 +51,13 @@ export const ServiceCustomerEquipmentView: React.FC<ServiceCustomerEquipmentView
   // Modals
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
   const [isAddEquipmentOpen, setIsAddEquipmentOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [qrModalEquipment, setQrModalEquipment] = useState<ServiceEquipment | null>(null);
+  const [qrModalAutoPrint, setQrModalAutoPrint] = useState(false);
+
+  // Asset Details Modal State
+  const [isAssetDetailsOpen, setIsAssetDetailsOpen] = useState(false);
+  const [selectedAssetForDetails, setSelectedAssetForDetails] = useState<ServiceEquipment | null>(null);
 
   // Add Customer Form
   const [custName, setCustName] = useState('');
@@ -319,12 +332,47 @@ export const ServiceCustomerEquipmentView: React.FC<ServiceCustomerEquipmentView
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <button
-                          onClick={() => onDispatchForEquipment && onDispatchForEquipment(eq)}
-                          className="px-2.5 py-1 bg-blue-50 hover:bg-blue-600 hover:text-white dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold rounded-lg transition-colors border border-blue-200 dark:border-blue-800"
-                        >
-                          Dispatch Service
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => {
+                              setSelectedAssetForDetails(eq);
+                              setIsAssetDetailsOpen(true);
+                            }}
+                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-lg transition-colors border border-slate-200 dark:border-slate-700 flex items-center gap-1 cursor-pointer"
+                            title="View full asset specifications and maintenance passport"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Details</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setQrModalEquipment(eq);
+                              setQrModalAutoPrint(false);
+                              setIsQrModalOpen(true);
+                            }}
+                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-lg transition-colors border border-slate-200 dark:border-slate-700 flex items-center gap-1 cursor-pointer"
+                            title="Generate printable QR code asset sticker"
+                          >
+                            <QrCode className="w-3.5 h-3.5 text-blue-600" />
+                            <span>QR Tag</span>
+                          </button>
+                          {onViewHistory && (
+                            <button
+                              onClick={() => onViewHistory(eq.id)}
+                              className="px-2.5 py-1 bg-teal-50 hover:bg-teal-600 hover:text-white dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 font-bold rounded-lg transition-colors border border-teal-200 dark:border-teal-800 flex items-center gap-1 cursor-pointer"
+                              title="View Maintenance History Timeline & Repair Notes"
+                            >
+                              <History className="w-3.5 h-3.5" />
+                              <span>History</span>
+                            </button>
+                          )}
+                          <button
+                            onClick={() => onDispatchForEquipment && onDispatchForEquipment(eq)}
+                            className="px-2.5 py-1 bg-blue-50 hover:bg-blue-600 hover:text-white dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold rounded-lg transition-colors border border-blue-200 dark:border-blue-800 cursor-pointer"
+                          >
+                            Dispatch Service
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -544,6 +592,52 @@ export const ServiceCustomerEquipmentView: React.FC<ServiceCustomerEquipmentView
             </form>
           </div>
         </div>
+      )}
+      {/* Asset Details Modal */}
+      {isAssetDetailsOpen && selectedAssetForDetails && (
+        <AssetDetailsModal
+          isOpen={isAssetDetailsOpen}
+          equipment={selectedAssetForDetails}
+          customer={customers.find((c) => c.id === selectedAssetForDetails.customerId)}
+          onClose={() => {
+            setIsAssetDetailsOpen(false);
+            setSelectedAssetForDetails(null);
+          }}
+          onAttachQr={(eq) => {
+            setIsAssetDetailsOpen(false);
+            setQrModalEquipment(eq);
+            setQrModalAutoPrint(true);
+            setIsQrModalOpen(true);
+          }}
+          onViewHistory={(eqId) => {
+            setIsAssetDetailsOpen(false);
+            onViewHistory?.(eqId);
+          }}
+          onDispatchService={(eq) => {
+            setIsAssetDetailsOpen(false);
+            onDispatchForEquipment?.(eq);
+          }}
+        />
+      )}
+
+      {/* Printable QR Code Asset Modal */}
+      {isQrModalOpen && qrModalEquipment && (
+        <AssetQrCodeModal
+          isOpen={isQrModalOpen}
+          onClose={() => {
+            setIsQrModalOpen(false);
+            setQrModalEquipment(null);
+            setQrModalAutoPrint(false);
+          }}
+          equipment={qrModalEquipment}
+          customer={customers.find((c) => c.id === qrModalEquipment.customerId)}
+          allEquipments={equipments}
+          autoPrint={qrModalAutoPrint}
+          onNavigateToTimeline={(eqId) => {
+            setIsQrModalOpen(false);
+            onViewHistory?.(eqId);
+          }}
+        />
       )}
     </div>
   );

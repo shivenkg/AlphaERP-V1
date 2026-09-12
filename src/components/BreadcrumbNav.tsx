@@ -213,6 +213,38 @@ export const ERP_HIERARCHY: Record<string, ERPNavPath> = {
       { id: 'workorders', label: 'Work Orders & Field' }
     ]
   },
+  service: {
+    tabId: 'service',
+    groupId: 'service_section',
+    groupName: 'Service & Maintenance',
+    groupIcon: Wrench,
+    pageTitle: 'Service & AMC Operations',
+    pageIcon: Wrench,
+    description: 'Field service tickets, preventive AMC contracts, technician dispatch calendar & truck inventory',
+    badge: 'AMC',
+    badgeColor: 'bg-teal-600',
+    siblings: [
+      { id: 'service', label: 'Service & AMC' },
+      { id: 'workorders', label: 'Work Orders & Field' },
+      { id: 'inventory', label: 'Warehouse Stock' }
+    ]
+  },
+  service_amc: {
+    tabId: 'service',
+    groupId: 'service_section',
+    groupName: 'Service & Maintenance',
+    groupIcon: Wrench,
+    pageTitle: 'Service & AMC Operations',
+    pageIcon: Wrench,
+    description: 'Field service tickets, preventive AMC contracts, technician dispatch calendar & truck inventory',
+    badge: 'AMC',
+    badgeColor: 'bg-teal-600',
+    siblings: [
+      { id: 'service', label: 'Service & AMC' },
+      { id: 'workorders', label: 'Work Orders & Field' },
+      { id: 'inventory', label: 'Warehouse Stock' }
+    ]
+  },
   finance: {
     tabId: 'finance',
     groupId: 'finance_section',

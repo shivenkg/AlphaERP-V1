@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { ServiceAnalyticsKPIs, ServiceTechnician } from '../../types/service';
 import { serviceStorage } from '../../services/serviceStorage';
+import { TechnicianTurnaroundChart } from './TechnicianTurnaroundChart';
 
 interface ServiceAnalyticsViewProps {
   kpis: ServiceAnalyticsKPIs;
@@ -117,6 +118,9 @@ export const ServiceAnalyticsView: React.FC<ServiceAnalyticsViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Technician Turnaround Time SLA Chart (Recharts) */}
+      <TechnicianTurnaroundChart />
 
       {/* Technician Leaderboard & Failure Root Cause */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">

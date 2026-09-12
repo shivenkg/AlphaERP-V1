@@ -241,3 +241,185 @@ export interface ServiceAnalyticsKPIs {
   monthlyServiceRevenue: number;
   activeAmcContracts: number;
 }
+
+export type MaintenanceActionType =
+  | 'Routine Preventive Maintenance (PPM)'
+  | 'Emergency Breakdown Repair'
+  | 'Quarterly AMC Inspection'
+  | 'Compressor Overhaul / Replacement'
+  | 'Coil Chemical Cleaning & Wash'
+  | 'Refrigerant Leak Rectification & Gas Charging'
+  | 'Filter Cleaning & Replacement'
+  | 'Electrical Panel & Contactor Servicing'
+  | 'Thermostat / Sensor Calibration'
+  | 'Blower Motor & Bearing Servicing'
+  | 'Water Treatment & Descaling';
+
+export interface AssetServiceHistoryEntry {
+  id: string;
+  equipmentId: string;
+  equipmentName: string;
+  equipmentSerialNumber: string;
+  equipmentType?: EquipmentType;
+  customerId: string;
+  customerName: string;
+  actionDate: string; // YYYY-MM-DD
+  actionType: MaintenanceActionType;
+  technicianName: string;
+  technicianId?: string;
+  operatingHours?: number;
+  refrigerantPressurePSI?: {
+    suction: number;
+    discharge: number;
+  };
+  ampsDrawn?: number;
+  workSummary: string;
+  repairNotes: string;
+  partsReplaced?: string[];
+  totalCost?: number;
+  outcomeStatus: 'Operational & Verified' | 'Requires Follow-up' | 'Parts Pending' | 'Observation Mode';
+  nextServiceDueDate?: string;
+  workOrderTicketNumber?: string;
+  loggedBy: string;
+  loggedAt: string;
+}
+
+export interface AmcScheduledVisit {
+  id: string;
+  contractCode: string;
+  customerId: string;
+  customerName: string;
+  customerPhone: string;
+  siteAddress: string;
+  equipmentId: string;
+  equipmentName: string;
+  equipmentSerialNumber: string;
+  equipmentType: EquipmentType;
+  capacityTR: number;
+  scheduledDate: string; // YYYY-MM-DD
+  timeSlot: string; // e.g. "09:00 AM - 12:00 PM"
+  quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4';
+  visitNumber: number;
+  totalVisitsInContract: number;
+  status: 'Scheduled' | 'Due Soon' | 'Overdue' | 'In Progress' | 'Completed' | 'Rescheduled';
+  amcType: AmcContractType;
+  assignedTechnicianId?: string;
+  assignedTechnicianName?: string;
+  checklistItems: string[];
+  notes?: string;
+  completedAt?: string;
+  completionNotes?: string;
+}
+
+export type ServiceRequestIssueCategory =
+  | 'No Cooling / High Temperature'
+  | 'Refrigerant Gas Leakage'
+  | 'Water Dropping / Drain Choke'
+  | 'Compressor Tripped / High Noise'
+  | 'Electrical / MCB Tripping'
+  | 'Thermostat & Controller Error'
+  | 'Preventive AMC Breakdown Visit'
+  | 'Vibration & Blower Issue'
+  | 'Other Breakdown';
+
+export type ServiceRequestStatus =
+  | 'New'
+  | 'Assigned'
+  | 'En Route'
+  | 'In Progress'
+  | 'Resolved'
+  | 'Cancelled';
+
+export type ServiceRequestPriority =
+  | 'P1 - Emergency Breakdown'
+  | 'P2 - Urgent'
+  | 'P3 - Routine'
+  | 'P4 - Low Priority';
+
+export interface ServiceRequest {
+  id: string;
+  requestNumber: string; // e.g. "SR-2026-0081"
+  customerId: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
+  siteAddress: string;
+  projectId?: string;
+  projectNumber?: string;
+  projectName?: string;
+  equipmentId?: string;
+  equipmentName: string;
+  equipmentType?: EquipmentType;
+  equipmentSerialNumber?: string;
+  issueCategory: ServiceRequestIssueCategory;
+  priority: ServiceRequestPriority;
+  status: ServiceRequestStatus;
+  requestSource: 'Phone Call' | 'WhatsApp' | 'Customer Portal' | 'Email' | 'Site Inspection';
+  description: string;
+  preferredDate: string; // YYYY-MM-DD
+  preferredSlot: string;
+  contactPerson?: string;
+  contactPersonPhone?: string;
+  assignedTechnicianId?: string;
+  assignedTechnicianName?: string;
+  workOrderId?: string;
+  workOrderTicketNumber?: string;
+  slaTargetMinutes: number;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string;
+  resolutionNotes?: string;
+}
+
+export type AmcContractRenewalStatus =
+  | 'Active'
+  | 'Expiring Soon'
+  | 'Pending Reminder'
+  | 'Expired'
+  | 'Proposal Sent'
+  | 'Renewed'
+  | 'Lapsed';
+
+export interface AmcContract {
+  id: string;
+  contractCode: string; // e.g. "AMC-2025-APOLLO-01"
+  customerId: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  siteAddress: string;
+  coveredEquipmentSummary: string;
+  equipmentIds: string[];
+  contractType: AmcContractType;
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  annualValue: number; // ₹
+  renewalProposedValue: number; // ₹
+  paymentTerms: 'Annual Advance' | 'Quarterly Advance' | 'Half-Yearly' | 'Milestone Linked';
+  visitsPerYear: number;
+  visitsCompleted: number;
+  status: 'Active' | 'Expiring Soon' | 'Expired' | 'Renewed';
+  renewalStatus: AmcContractRenewalStatus;
+  lastReminderDate?: string;
+  renewalProposalRef?: string;
+  technicianInCharge?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TechnicianTurnaroundStat {
+  technicianId: string;
+  technicianName: string;
+  avatar?: string;
+  truckPlate?: string;
+  totalAssigned: number;
+  resolvedCount: number;
+  avgTurnaroundHours: number;
+  fastestHours: number;
+  longestHours: number;
+  slaTargetHours: number;
+  slaCompliancePct: number;
+  rating: number;
+}
+

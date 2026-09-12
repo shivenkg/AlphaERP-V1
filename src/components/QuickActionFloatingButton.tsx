@@ -7,13 +7,15 @@ import {
   Receipt,
   ChevronRight,
   Zap,
-  Sparkles
+  Sparkles,
+  Wrench
 } from 'lucide-react';
 
 interface QuickActionFloatingButtonProps {
   onOpenNewLead: () => void;
   onOpenNewPR: () => void;
   onOpenNewExpense: () => void;
+  onOpenNewServiceRequest?: () => void;
   className?: string;
   isInline?: boolean;
 }
@@ -22,6 +24,7 @@ export const QuickActionFloatingButton: React.FC<QuickActionFloatingButtonProps>
   onOpenNewLead,
   onOpenNewPR,
   onOpenNewExpense,
+  onOpenNewServiceRequest,
   className = '',
   isInline = false
 }) => {
@@ -179,6 +182,35 @@ export const QuickActionFloatingButton: React.FC<QuickActionFloatingButtonProps>
             </div>
             <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors shrink-0" />
           </button>
+
+          {/* Action 4: New Service Request */}
+          {onOpenNewServiceRequest && (
+            <button
+              type="button"
+              onClick={() => handleAction(onOpenNewServiceRequest)}
+              className="w-full flex items-center justify-between p-2.5 rounded-2xl hover:bg-teal-50/70 dark:hover:bg-teal-950/40 border border-transparent hover:border-teal-200 dark:hover:border-teal-800 transition-all text-left group cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-teal-100 dark:bg-teal-900/60 text-teal-600 dark:text-teal-400 group-hover:scale-105 transition-transform shrink-0">
+                  <Wrench className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                      New Service Request
+                    </span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300">
+                      Service &amp; AMC
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                    Log HVAC breakdown, emergency ticket &amp; link asset
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors shrink-0" />
+            </button>
+          )}
         </div>
       )}
 
@@ -189,7 +221,7 @@ export const QuickActionFloatingButton: React.FC<QuickActionFloatingButtonProps>
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
         aria-haspopup="true"
-        title="Quick Action: Create New Lead, New PR, or New Expense Log"
+        title="Quick Action: Create New Lead, New PR, Expense Log, or Service Request"
         className="group flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white font-bold rounded-full shadow-lg hover:shadow-xl hover:shadow-indigo-500/30 transition-all cursor-pointer border border-white/20"
       >
         <div

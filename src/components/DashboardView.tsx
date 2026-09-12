@@ -105,6 +105,7 @@ interface DashboardViewProps {
   onOpenSheetsModal: () => void;
   onOpenNewPR?: () => void;
   onOpenNewExpense?: () => void;
+  onOpenNewServiceRequest?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -130,7 +131,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenNewQuote,
   onOpenSheetsModal,
   onOpenNewPR,
-  onOpenNewExpense
+  onOpenNewExpense,
+  onOpenNewServiceRequest
 }) => {
   // Layout Management State
   const [layoutState, setLayoutState] = useState<DashboardLayoutState>(() =>
@@ -1775,6 +1777,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           onOpenNewLead={onOpenNewLead}
           onOpenNewPR={onOpenNewPR || (() => onNavigate('procurement'))}
           onOpenNewExpense={onOpenNewExpense || (() => onNavigate('hr'))}
+          onOpenNewServiceRequest={onOpenNewServiceRequest || (() => onNavigate('service'))}
         />
       </div>
     </div>

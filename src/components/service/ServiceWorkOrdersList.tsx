@@ -38,6 +38,7 @@ interface ServiceWorkOrdersListProps {
   onOpenMobileMode: (ticket: ServiceWorkOrder) => void;
   onGenerateInvoice: (ticket: ServiceWorkOrder) => void;
   onRefresh: () => void;
+  initialStatusFilter?: string;
 }
 
 export const ServiceWorkOrdersList: React.FC<ServiceWorkOrdersListProps> = ({
@@ -49,12 +50,19 @@ export const ServiceWorkOrdersList: React.FC<ServiceWorkOrdersListProps> = ({
   onSelectTicket,
   onOpenMobileMode,
   onGenerateInvoice,
-  onRefresh
+  onRefresh,
+  initialStatusFilter = 'all'
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>(initialStatusFilter);
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (initialStatusFilter) {
+      setStatusFilter(initialStatusFilter);
+    }
+  }, [initialStatusFilter]);
 
   // New Ticket Form State
   const [newCustId, setNewCustId] = useState(customers[0]?.id || '');
@@ -73,7 +81,12 @@ export const ServiceWorkOrdersList: React.FC<ServiceWorkOrdersListProps> = ({
       wo.equipmentTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
       wo.technicianName.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = statusFilter === 'all' || wo.status === statusFilter;
+    const matchesStatus =
+      statusFilter === 'all'
+        ? true
+        : statusFilter === 'Pending' || statusFilter === 'pending'
+        ? wo.status !== 'Completed' && wo.status !== 'Invoiced' && wo.status !== 'Cancelled'
+        : wo.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || wo.priority === priorityFilter;
 
     return matchesSearch && matchesStatus && matchesPriority;
