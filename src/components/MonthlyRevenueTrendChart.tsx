@@ -377,67 +377,121 @@ export const MonthlyRevenueTrendChart: React.FC<MonthlyRevenueTrendChartProps> =
       {/* Executive Summary Metrics Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 pt-1">
         {/* Total Horizon Revenue */}
-        <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-3.5 shadow-2xs">
+        <div
+          onClick={() => onNavigate?.('quotes')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate?.('quotes');
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          title="Click to view Awarded HVAC Quotations & Orders"
+          className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 hover:border-blue-400 dark:hover:border-blue-500 rounded-xl p-3.5 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
-            <span>Horizon Awarded Sales</span>
-            <DollarSign className="w-3.5 h-3.5 text-blue-600" />
+            <span className="group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Horizon Awarded Sales</span>
+            <DollarSign className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition-transform" />
           </div>
           <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-xl font-bold font-mono text-slate-900 dark:text-white">
+            <span className="text-xl font-bold font-mono text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
               ₹{(summary.totalAwarded / 100).toFixed(2)} Cr
             </span>
           </div>
-          <div className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-            <ArrowUpRight className="w-3 h-3" />
-            <span>₹{(summary.totalAwarded).toFixed(1)} Lakhs total</span>
+          <div className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center justify-between">
+            <span className="flex items-center gap-1">
+              <ArrowUpRight className="w-3 h-3" />
+              <span>₹{(summary.totalAwarded).toFixed(1)} Lakhs total</span>
+            </span>
+            <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">View ➔</span>
           </div>
         </div>
 
         {/* Average Monthly Run Rate */}
-        <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-3.5 shadow-2xs">
+        <div
+          onClick={() => onNavigate?.('sales')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate?.('sales');
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          title="Click to view Sales Engineering Quotas & Targets"
+          className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-xl p-3.5 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
-            <span>Avg Monthly Run Rate</span>
-            <TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
+            <span className="group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Avg Monthly Run Rate</span>
+            <TrendingUp className="w-3.5 h-3.5 text-indigo-600 group-hover:scale-110 transition-transform" />
           </div>
           <div className="mt-1 flex items-baseline gap-1.5">
             <span className="text-xl font-bold font-mono text-indigo-700 dark:text-indigo-400">
               ₹{summary.avgMonthlyRunRate.toFixed(1)} L/mo
             </span>
           </div>
-          <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-            vs ₹{summary.avgTargetQuota.toFixed(1)} L/mo Target Quota
+          <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>vs ₹{summary.avgTargetQuota.toFixed(1)} L/mo Target</span>
+            <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">View ➔</span>
           </div>
         </div>
 
         {/* Realized Cash Collections */}
-        <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-3.5 shadow-2xs">
+        <div
+          onClick={() => onNavigate?.('payments')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate?.('payments');
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          title="Click to view Milestone Invoices & Collections"
+          className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 hover:border-emerald-400 dark:hover:border-emerald-500 rounded-xl p-3.5 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        >
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
-            <span>Cash Collections</span>
-            <CreditCard className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Cash Collections</span>
+            <CreditCard className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform" />
           </div>
           <div className="mt-1 flex items-baseline gap-1.5">
             <span className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
               ₹{(summary.totalCollections / 100).toFixed(2)} Cr
             </span>
           </div>
-          <div className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-            {((summary.totalCollections / summary.totalAwarded) * 100).toFixed(1)}% Realization Rate
+          <div className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center justify-between">
+            <span>{((summary.totalCollections / summary.totalAwarded) * 100).toFixed(1)}% Realization</span>
+            <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">View ➔</span>
           </div>
         </div>
 
         {/* Cumulative Gross Margin Profit */}
-        <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-3.5 shadow-2xs">
+        <div
+          onClick={() => onNavigate?.('cost_analysis')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate?.('cost_analysis');
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          title="Click to view HVAC Job Costing & Profit Margins"
+          className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 hover:border-purple-400 dark:hover:border-purple-500 rounded-xl p-3.5 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-purple-500"
+        >
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
-            <span>Gross Profit Margin</span>
-            <Percent className="w-3.5 h-3.5 text-purple-600" />
+            <span className="group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Gross Profit Margin</span>
+            <Percent className="w-3.5 h-3.5 text-purple-600 group-hover:scale-110 transition-transform" />
           </div>
           <div className="mt-1 flex items-baseline gap-1.5">
             <span className="text-xl font-bold font-mono text-purple-700 dark:text-purple-400">
               {summary.overallMarginPct.toFixed(1)}%
             </span>
           </div>
-          <div className="mt-1 text-[11px] text-purple-600 dark:text-purple-400 font-medium">
-            ₹{summary.totalProfit.toFixed(1)} Lakhs gross margin
+          <div className="mt-1 text-[11px] text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between">
+            <span>₹{summary.totalProfit.toFixed(1)}L gross margin</span>
+            <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity">View ➔</span>
           </div>
         </div>
       </div>

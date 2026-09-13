@@ -201,10 +201,19 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
         {/* Card 1: Active Contracts */}
         <div
           onClick={() => onNavigate('services_amc')}
-          className="relative overflow-hidden bg-gradient-to-br from-emerald-50/50 via-white to-slate-50 dark:from-emerald-950/20 dark:via-slate-900 dark:to-slate-800/60 p-4 sm:p-5 rounded-2xl border border-emerald-200/80 dark:border-emerald-900/50 shadow-xs hover:shadow-md transition-all cursor-pointer group"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate('services_amc');
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          title="Click to view Active AMC Contracts & Equipment Directory"
+          className="relative overflow-hidden bg-gradient-to-br from-emerald-50/50 via-white to-slate-50 dark:from-emerald-950/20 dark:via-slate-900 dark:to-slate-800/60 p-4 sm:p-5 rounded-2xl border border-emerald-200/80 dark:border-emerald-900/50 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <div className="flex items-center justify-between">
-            <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/80">
+            <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/80 group-hover:scale-105 transition-transform">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform">
@@ -216,7 +225,7 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Active AMC Contracts
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 font-mono mt-1">
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 font-mono mt-1 group-hover:text-emerald-600 transition-colors">
               {activeContracts.length}{' '}
               <span className="text-xs font-normal text-slate-500 font-sans">Contracts</span>
             </div>
@@ -235,10 +244,19 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
         {/* Card 2: Pending Service Calls */}
         <div
           onClick={() => onNavigate('services_schedule')}
-          className="relative overflow-hidden bg-gradient-to-br from-amber-50/50 via-white to-slate-50 dark:from-amber-950/20 dark:via-slate-900 dark:to-slate-800/60 p-4 sm:p-5 rounded-2xl border border-amber-200/80 dark:border-amber-900/50 shadow-xs hover:shadow-md transition-all cursor-pointer group"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate('services_schedule');
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          title="Click to view Field Service Schedule & Dispatch Board"
+          className="relative overflow-hidden bg-gradient-to-br from-amber-50/50 via-white to-slate-50 dark:from-amber-950/20 dark:via-slate-900 dark:to-slate-800/60 p-4 sm:p-5 rounded-2xl border border-amber-200/80 dark:border-amber-900/50 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-amber-500"
         >
           <div className="flex items-center justify-between">
-            <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/80">
+            <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/80 group-hover:scale-105 transition-transform">
               <Wrench className="w-5 h-5" />
             </div>
             <div className="flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 group-hover:translate-x-0.5 transition-transform">
@@ -250,7 +268,7 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Pending Service Calls
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 font-mono mt-1">
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 font-mono mt-1 group-hover:text-amber-600 transition-colors">
               {totalPendingServiceCalls}{' '}
               <span className="text-xs font-normal text-slate-500 font-sans">Calls in Queue</span>
             </div>
@@ -274,10 +292,19 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
         {/* Card 3: Total Revenue from AMCs */}
         <div
           onClick={() => onNavigate('services_amc')}
-          className="relative overflow-hidden bg-gradient-to-br from-blue-50/50 via-white to-slate-50 dark:from-blue-950/20 dark:via-slate-900 dark:to-slate-800/60 p-4 sm:p-5 rounded-2xl border border-blue-200/80 dark:border-blue-900/50 shadow-xs hover:shadow-md transition-all cursor-pointer group"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate('services_amc');
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          title="Click to view AMC Revenue & Service Contracts"
+          className="relative overflow-hidden bg-gradient-to-br from-blue-50/50 via-white to-slate-50 dark:from-blue-950/20 dark:via-slate-900 dark:to-slate-800/60 p-4 sm:p-5 rounded-2xl border border-blue-200/80 dark:border-blue-900/50 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <div className="flex items-center justify-between">
-            <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/80">
+            <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/80 group-hover:scale-105 transition-transform">
               <IndianRupee className="w-5 h-5" />
             </div>
             <div className="flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
@@ -330,14 +357,21 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
                   <div
                     key={visit.id}
                     onClick={() => onNavigate('services_schedule')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onNavigate('services_schedule');
+                      }
+                    }}
                     role="button"
                     tabIndex={0}
-                    className="p-3 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 border border-slate-100 dark:border-slate-700/80 hover:border-blue-300 dark:hover:border-blue-700 rounded-xl transition-all cursor-pointer group"
+                    title={`Click to inspect PPM Visit #${visit.visitNumber} for ${visit.clientName} in Dispatch Board`}
+                    className="p-3 bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 border border-slate-100 dark:border-slate-700/80 hover:border-blue-300 dark:hover:border-blue-700 rounded-xl transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
+                          <span className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                             {visit.clientName}
                           </span>
                           <span className={`px-2 py-0.2 rounded-full text-[10px] font-bold border ${getStatusBadge(visit.status)}`}>
@@ -401,9 +435,16 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
                 <div
                   key={ticket.id}
                   onClick={() => onNavigate('services_schedule')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onNavigate('services_schedule');
+                    }
+                  }}
                   role="button"
                   tabIndex={0}
-                  className="p-3 bg-slate-50 dark:bg-slate-800/60 hover:bg-red-50/30 dark:hover:bg-red-950/20 border border-slate-100 dark:border-slate-700/80 hover:border-red-300 dark:hover:border-red-700 rounded-xl transition-all cursor-pointer group"
+                  title={`Click to view Breakdown Ticket for ${ticket.clientName} in Dispatch Board`}
+                  className="p-3 bg-slate-50 dark:bg-slate-800/60 hover:bg-red-50/30 dark:hover:bg-red-950/20 border border-slate-100 dark:border-slate-700/80 hover:border-red-300 dark:hover:border-red-700 rounded-xl transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -411,7 +452,7 @@ export const UpcomingServiceVisitsWidget: React.FC<UpcomingServiceVisitsWidgetPr
                         <span className={`px-2 py-0.2 rounded-full text-[10px] font-bold border ${getPriorityBadge(ticket.priority)}`}>
                           {ticket.priority.toUpperCase()}
                         </span>
-                        <span className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
+                        <span className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
                           {ticket.clientName}
                         </span>
                       </div>

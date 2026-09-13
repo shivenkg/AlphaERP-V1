@@ -617,6 +617,34 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           shortLabel: 'Inventory',
           tooltip: 'Click to open Warehouse Inventory & Stock Levels'
         };
+      case 'kpi_ebitda':
+        return {
+          tab: 'finance',
+          label: 'Operating EBITDA',
+          shortLabel: 'Finance',
+          tooltip: 'Click to open Financial General Ledger & P&L'
+        };
+      case 'kpi_tds':
+        return {
+          tab: 'finance',
+          label: 'Statutory TDS Pending',
+          shortLabel: 'TDS / Tax',
+          tooltip: 'Click to open Statutory TDS Deductions & Tax Ledger'
+        };
+      case 'kpi_staff':
+        return {
+          tab: 'hr',
+          label: 'Staff Deployment',
+          shortLabel: 'HR Staff',
+          tooltip: 'Click to open AlphaHR Staff Directory & Attendance'
+        };
+      case 'kpi_payroll':
+        return {
+          tab: 'hr',
+          label: 'Monthly Payroll / Hiring',
+          shortLabel: 'Payroll',
+          tooltip: 'Click to open Payroll Disbursal & Job Openings'
+        };
       case 'kpi_receivables':
       default:
         return {
@@ -729,6 +757,138 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">Warehouse Stock</span>
               <span className="font-semibold text-cyan-600 dark:text-cyan-400 flex items-center gap-1 group-hover:underline">
+                <span>View Details</span>
+                <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
+              </span>
+            </div>
+          </div>
+        );
+        break;
+
+      case 'kpi_ebitda':
+        content = (
+          <div className="flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Operating EBITDA</span>
+                <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:rotate-[-4deg] group-hover:bg-emerald-100 dark:bg-emerald-950/60 dark:border-emerald-800/60 dark:group-hover:bg-emerald-900/60">
+                  <Landmark className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-emerald-700 dark:text-emerald-400 tracking-tight font-mono transition-transform duration-200 group-hover:translate-x-0.5">
+                  ₹{(ebitda / 100000).toFixed(2)} L
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-100/80 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-bold text-[10px]">
+                    {ebitdaMargin}% Margin
+                  </span>
+                  <span>Rev: ₹{(totalRevenue / 100000).toFixed(1)}L</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">P&L General Ledger</span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 group-hover:underline">
+                <span>View Details</span>
+                <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
+              </span>
+            </div>
+          </div>
+        );
+        break;
+
+      case 'kpi_tds':
+        content = (
+          <div className="flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Statutory TDS Pending</span>
+                <div className="p-2 sm:p-2.5 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:rotate-[-4deg] group-hover:bg-amber-100 dark:bg-amber-950/60 dark:border-amber-800/60 dark:group-hover:bg-amber-900/60">
+                  <CreditCard className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-amber-700 dark:text-amber-400 tracking-tight font-mono transition-transform duration-200 group-hover:translate-x-0.5">
+                  ₹{pendingTdsDeposit.toLocaleString()}
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs text-amber-600 dark:text-amber-400 font-medium">
+                  <span className="px-1.5 py-0.5 rounded bg-amber-100/80 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 font-bold text-[10px]">
+                    Due 7th
+                  </span>
+                  <span>Sec 194C / 194J</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">Tax Dues</span>
+              <span className="font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1 group-hover:underline">
+                <span>View Details</span>
+                <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
+              </span>
+            </div>
+          </div>
+        );
+        break;
+
+      case 'kpi_staff':
+        content = (
+          <div className="flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Staff Deployment</span>
+                <div className="p-2 sm:p-2.5 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:rotate-[-4deg] group-hover:bg-indigo-100 dark:bg-indigo-950/60 dark:border-indigo-800/60 dark:group-hover:bg-indigo-900/60">
+                  <Users className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight font-mono transition-transform duration-200 group-hover:translate-x-0.5">
+                  {activeStaffCount} Engineers
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                  <span className="px-1.5 py-0.5 rounded bg-indigo-100/80 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold text-[10px]">
+                    100% Active
+                  </span>
+                  <span>Field & Execution Crew</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">Talent Hub</span>
+              <span className="font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 group-hover:underline">
+                <span>View Details</span>
+                <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
+              </span>
+            </div>
+          </div>
+        );
+        break;
+
+      case 'kpi_payroll':
+        content = (
+          <div className="flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs sm:text-sm font-medium text-slate-500 truncate">Monthly Payroll / Hiring</span>
+                <div className="p-2 sm:p-2.5 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:rotate-[-4deg] group-hover:bg-purple-100 dark:bg-purple-950/60 dark:border-purple-800/60 dark:group-hover:bg-purple-900/60">
+                  <DollarSign className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <div className="text-xl sm:text-2xl xl:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight font-mono transition-transform duration-200 group-hover:translate-x-0.5">
+                  ₹{(latestPayrollAmount / 100000).toFixed(2)} L
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs text-purple-600 dark:text-purple-400 font-medium">
+                  <span className="px-1.5 py-0.5 rounded bg-purple-100/80 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 font-bold text-[10px]">
+                    {openPositionsCount} Openings
+                  </span>
+                  <span>EPF & Net Disbursal</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">Disbursal & Jobs</span>
+              <span className="font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1 group-hover:underline">
                 <span>View Details</span>
                 <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
               </span>
@@ -943,7 +1103,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <div
                   key={st.stage}
                   onClick={() => onNavigate('crm')}
-                  className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-center cursor-pointer hover:bg-blue-50/50 hover:border-blue-200 transition-colors"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onNavigate('crm');
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  title={`Click to view ${st.stage} deals in CRM`}
+                  className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-center cursor-pointer hover:bg-blue-50/50 hover:border-blue-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <div className="text-xs text-slate-600 dark:text-slate-400 font-medium truncate">{st.stage}</div>
                   <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{st.count}</div>
@@ -1003,7 +1172,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <div
                     key={proj.id}
                     onClick={() => onNavigate('projects')}
-                    className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hover:border-blue-300 rounded-xl cursor-pointer transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onNavigate('projects');
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    title={`Click to inspect BOQ and status for project ${proj.projectNumber}`}
+                    className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hover:border-blue-300 rounded-xl cursor-pointer transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -1090,14 +1268,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <div
                     key={rep.id}
                     onClick={() => onNavigate('sales')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onNavigate('sales');
+                      }
+                    }}
                     role="button"
                     tabIndex={0}
                     title={`Click to view sales quotas and deals for ${rep.name}`}
-                    className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700 space-y-2 cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50/20 transition-all group select-none"
+                    className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700 space-y-2 cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50/20 transition-all group select-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="font-semibold text-xs text-slate-900 dark:text-slate-100">{rep.name}</div>
+                        <div className="font-semibold text-xs text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{rep.name}</div>
                         <div className="text-[11px] text-slate-500">{rep.region}</div>
                       </div>
                       <div className="text-right">
@@ -1131,15 +1315,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {/* Active Projects Shortcut */}
             <div
               onClick={() => onNavigate('projects')}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-300 rounded-2xl p-3.5 sm:p-4 cursor-pointer transition-all shadow-xs flex items-center justify-between gap-3 group min-w-0"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onNavigate('projects');
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              title="Click to view Active HVAC Projects & BOQ Reconciliation"
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 rounded-2xl p-3.5 sm:p-4 cursor-pointer transition-all shadow-xs hover:shadow-md hover:-translate-y-0.5 flex items-center justify-between gap-3 group min-w-0 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="p-2.5 sm:p-3 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900 shrink-0">
+                <div className="p-2.5 sm:p-3 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900 shrink-0 group-hover:scale-105 transition-transform">
                   <Briefcase className="w-5 h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-xs font-medium text-slate-500 truncate">Active HVAC Projects</div>
-                  <div className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5 truncate">
+                  <div className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                     {projects.length} Projects Active
                   </div>
                   <div className="text-[11px] text-blue-600 dark:text-blue-400 font-medium truncate mt-0.5">
@@ -1147,21 +1340,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </div>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors shrink-0" />
+              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0" />
             </div>
 
             {/* Procurement Pipeline */}
             <div
               onClick={() => onNavigate('procurement')}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-amber-300 rounded-2xl p-3.5 sm:p-4 cursor-pointer transition-all shadow-xs flex items-center justify-between gap-3 group min-w-0"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onNavigate('procurement');
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              title="Click to view Purchase Requisitions & Vendor Purchase Orders"
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-500 rounded-2xl p-3.5 sm:p-4 cursor-pointer transition-all shadow-xs hover:shadow-md hover:-translate-y-0.5 flex items-center justify-between gap-3 group min-w-0 focus:outline-none focus:ring-2 focus:ring-amber-500"
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="p-2.5 sm:p-3 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900 shrink-0">
+                <div className="p-2.5 sm:p-3 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900 shrink-0 group-hover:scale-105 transition-transform">
                   <ShoppingCart className="w-5 h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-xs font-medium text-slate-500 truncate">PR & PO Procurement</div>
-                  <div className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5 truncate">
+                  <div className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5 truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                     {pendingPRs.length} PRs • {activePOs.length} POs
                   </div>
                   <div className="text-[11px] text-amber-600 font-medium truncate mt-0.5">
@@ -1169,21 +1371,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </div>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-amber-600 transition-colors shrink-0" />
+              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all shrink-0" />
             </div>
 
             {/* Master Data Center */}
             <div
               onClick={() => onNavigate('masterdata')}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 rounded-2xl p-3.5 sm:p-4 cursor-pointer transition-all shadow-xs flex items-center justify-between gap-3 group min-w-0 md:col-span-2 xl:col-span-1"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onNavigate('masterdata');
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              title="Click to view Master Data Hub (Clients, Vendors, Tax & SKUs)"
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-2xl p-3.5 sm:p-4 cursor-pointer transition-all shadow-xs hover:shadow-md hover:-translate-y-0.5 flex items-center justify-between gap-3 group min-w-0 md:col-span-2 xl:col-span-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="p-2.5 sm:p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900 shrink-0">
+                <div className="p-2.5 sm:p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900 shrink-0 group-hover:scale-105 transition-transform">
                   <Database className="w-5 h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-xs font-medium text-slate-500 truncate">Master Data Hub</div>
-                  <div className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5 truncate">
+                  <div className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                     Clients, Vendors & SKUs
                   </div>
                   <div className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium truncate mt-0.5">
@@ -1191,7 +1402,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </div>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors shrink-0" />
+              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0" />
             </div>
           </div>
         );
@@ -1626,10 +1837,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {/* EBITDA / Net Operating Margin */}
               <div
                 onClick={() => onNavigate('finance')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onNavigate('finance');
+                  }
+                }}
                 role="button"
                 tabIndex={0}
                 title="Click to open Financial General Ledger & P&L"
-                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-600 cursor-pointer transition-all duration-200 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] group flex flex-col justify-between"
+                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-600 cursor-pointer transition-all duration-200 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] group flex flex-col justify-between focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 <div>
                   <div className="flex items-center justify-between">
@@ -1654,10 +1871,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {/* TDS / GST Statutory Dues */}
               <div
                 onClick={() => onNavigate('finance')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onNavigate('finance');
+                  }
+                }}
                 role="button"
                 tabIndex={0}
                 title="Click to open Statutory TDS Deductions & Tax Dues"
-                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-600 cursor-pointer transition-all duration-200 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] group flex flex-col justify-between"
+                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-600 cursor-pointer transition-all duration-200 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] group flex flex-col justify-between focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
                 <div>
                   <div className="flex items-center justify-between">
@@ -1682,10 +1905,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {/* Active Headcount & Attendance */}
               <div
                 onClick={() => onNavigate('hr')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onNavigate('hr');
+                  }
+                }}
                 role="button"
                 tabIndex={0}
                 title="Click to open Staff Directory & Engineering Attendance"
-                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-600 cursor-pointer transition-all duration-200 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] group flex flex-col justify-between"
+                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-600 cursor-pointer transition-all duration-200 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] group flex flex-col justify-between focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <div>
                   <div className="flex items-center justify-between">
@@ -1710,10 +1939,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {/* Monthly Payroll & Open Roles */}
               <div
                 onClick={() => onNavigate('hr')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onNavigate('hr');
+                  }
+                }}
                 role="button"
                 tabIndex={0}
                 title="Click to open Payroll Disbursal & Job Openings"
-                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-purple-400 dark:hover:border-purple-600 cursor-pointer transition-all duration-200 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] group flex flex-col justify-between"
+                className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-purple-400 dark:hover:border-purple-600 cursor-pointer transition-all duration-200 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:scale-[1.015] group flex flex-col justify-between focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 <div>
                   <div className="flex items-center justify-between">

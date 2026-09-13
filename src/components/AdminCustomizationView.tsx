@@ -35,7 +35,8 @@ import {
   ZoomIn,
   ZoomOut,
   Mail,
-  Key
+  Key,
+  Users
 } from 'lucide-react';
 import { SystemSettings, UserRole, UserProfile } from '../types';
 import { FontSizeScaleMode } from '../types/fontSize';
@@ -49,6 +50,10 @@ import { GoogleSheetsAdminSection } from './GoogleSheetsAdminSection';
 import { MongoDbAdminSection } from './MongoDbAdminSection';
 import { EmailSettingsAdminSection } from './EmailSettingsAdminSection';
 import { EnvironmentVariablesAdminSection } from './EnvironmentVariablesAdminSection';
+import { OrganizationLogoCustomizer } from './OrganizationLogoCustomizer';
+import { EnterpriseFunctionsRolesManager } from './EnterpriseFunctionsRolesManager';
+import { SodMatrixManager } from './SodMatrixManager';
+import { BusinessRolesManager } from './BusinessRolesManager';
 import {
   FileSpreadsheet,
   ExternalLink,
@@ -90,7 +95,7 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
   } = useFontSize();
   const [settings, setSettings] = useState<SystemSettings>(storageService.getSystemSettings());
   const [activeSubTab, setActiveSubTab] = useState<
-    'branding' | 'report_templates' | 'commercial' | 'procurement' | 'number_series' | 'banking' | 'modules' | 'roles' | 'role_modules' | 'google_sheets' | 'backup' | 'mongodb' | 'email_settings' | 'env_vars'
+    'branding' | 'report_templates' | 'commercial' | 'procurement' | 'number_series' | 'banking' | 'modules' | 'roles' | 'functions_roles' | 'sod_matrix' | 'business_roles' | 'role_modules' | 'google_sheets' | 'backup' | 'mongodb' | 'email_settings' | 'env_vars'
   >('branding');
 
   // Form states for inclusion/exclusion additions
@@ -496,7 +501,46 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
-          <span>8. Role Access Matrix</span>
+          <span>8. Role Privileges Overview</span>
+        </button>
+
+        <button
+          id="tab-admin-functions-roles"
+          onClick={() => setActiveSubTab('functions_roles')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+            activeSubTab === 'functions_roles'
+              ? 'bg-indigo-600 text-white shadow-xs ring-2 ring-indigo-500/20'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4 text-indigo-200" />
+          <span>9. Functions & Custom Roles</span>
+        </button>
+
+        <button
+          id="tab-admin-sod-matrix"
+          onClick={() => setActiveSubTab('sod_matrix')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+            activeSubTab === 'sod_matrix'
+              ? 'bg-rose-600 text-white shadow-xs ring-2 ring-rose-500/20'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <AlertTriangle className="w-4 h-4 text-rose-500" />
+          <span>10. SoD Governance Matrix</span>
+        </button>
+
+        <button
+          id="tab-admin-business-roles"
+          onClick={() => setActiveSubTab('business_roles')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+            activeSubTab === 'business_roles'
+              ? 'bg-teal-600 text-white shadow-xs ring-2 ring-teal-500/20'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Users className="w-4 h-4 text-teal-500" />
+          <span>11. Business Roles & Users</span>
         </button>
 
         <button
@@ -508,7 +552,7 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
           }`}
         >
           <Sliders className="w-4 h-4" />
-          <span>9. Role Module Visibility</span>
+          <span>12. Role Module Visibility</span>
         </button>
 
         <button
@@ -520,7 +564,7 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
           }`}
         >
           <FileSpreadsheet className="w-4 h-4" />
-          <span>10. Google Sheets & API</span>
+          <span>13. Google Sheets & API</span>
         </button>
 
         <button
@@ -532,7 +576,7 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
           }`}
         >
           <Download className="w-4 h-4" />
-          <span>11. Backup & Restore</span>
+          <span>14. Backup & Restore</span>
         </button>
 
         <button
@@ -544,7 +588,7 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
           }`}
         >
           <Database className="w-4 h-4 text-emerald-400" />
-          <span>12. MongoDB Linked Database</span>
+          <span>15. MongoDB Linked Database</span>
         </button>
 
         <button
@@ -556,7 +600,7 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
           }`}
         >
           <Mail className="w-4 h-4 text-blue-300" />
-          <span>13. Email & SMTP</span>
+          <span>16. Email & SMTP</span>
         </button>
 
         <button
@@ -569,7 +613,7 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
           }`}
         >
           <Key className="w-4 h-4 text-purple-300" />
-          <span>14. Environment Variables</span>
+          <span>17. Environment Variables</span>
         </button>
       </div>
 
@@ -902,6 +946,9 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
               </div>
             </div>
           </div>
+
+          {/* ENTERPRISE BRANDING LOGO CUSTOMIZER */}
+          <OrganizationLogoCustomizer onSaved={() => setSettings(storageService.getSystemSettings())} />
 
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
             <div>
@@ -1483,7 +1530,22 @@ export const AdminCustomizationView: React.FC<AdminCustomizationViewProps> = ({
         </div>
       )}
 
-      {/* TAB 9: ROLE MODULE VISIBILITY CONFIGURATION */}
+      {/* TAB 9: GRANULAR ENTERPRISE FUNCTIONS & CUSTOM ROLES */}
+      {activeSubTab === 'functions_roles' && (
+        <EnterpriseFunctionsRolesManager />
+      )}
+
+      {/* TAB 10: SEGREGATION OF DUTIES (SOD) GOVERNANCE MATRIX */}
+      {activeSubTab === 'sod_matrix' && (
+        <SodMatrixManager />
+      )}
+
+      {/* TAB 11: BUSINESS ROLES & MULTI-USER MAPPING */}
+      {activeSubTab === 'business_roles' && (
+        <BusinessRolesManager />
+      )}
+
+      {/* TAB 12: ROLE MODULE VISIBILITY CONFIGURATION */}
       {activeSubTab === 'role_modules' && (
         <RoleModulePermissionsManager
           onRoleSwitch={(role) => {

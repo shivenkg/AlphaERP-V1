@@ -453,7 +453,27 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
             return (
               <div
                 key={log.id}
-                className="p-3.5 sm:px-5 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors flex items-start justify-between gap-3 group"
+                onClick={() => {
+                  if (onNavigate && meta.targetTab) {
+                    onNavigate(meta.targetTab);
+                  } else {
+                    setSelectedLogForDetail(log);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (onNavigate && meta.targetTab) {
+                      onNavigate(meta.targetTab);
+                    } else {
+                      setSelectedLogForDetail(log);
+                    }
+                  }
+                }}
+                title={meta.targetTab ? `Click to open in ${meta.typeLabel} (${meta.targetTab.toUpperCase()})` : 'Click to inspect audit log details'}
+                className="p-3.5 sm:px-5 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors flex items-start justify-between gap-3 group cursor-pointer focus:outline-none focus:bg-slate-50 dark:focus:bg-slate-800/60"
               >
                 <div className="flex items-start gap-3 min-w-0 flex-1">
                   {/* Action Icon Badge */}
@@ -466,7 +486,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
                   {/* Activity Details */}
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {meta.title}
                       </span>
                       <span className={`text-[10px] px-1.5 py-0.2 rounded-md font-semibold border ${meta.badgeColor}`}>
@@ -500,7 +520,10 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
                 {/* Right Action Trigger */}
                 <div className="flex items-center gap-1 shrink-0 pt-0.5">
                   <button
-                    onClick={() => setSelectedLogForDetail(log)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedLogForDetail(log);
+                    }}
                     className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                     title="Inspect Audit Metadata"
                   >
@@ -509,7 +532,10 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
 
                   {onNavigate && meta.targetTab && (
                     <button
-                      onClick={() => onNavigate(meta.targetTab)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onNavigate(meta.targetTab);
+                      }}
                       className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 rounded-lg transition-colors cursor-pointer group-hover:translate-x-0.5 transition-transform"
                       title={`Open in ${meta.targetTab} module`}
                     >

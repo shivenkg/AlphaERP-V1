@@ -1,4 +1,12 @@
-import { UserRole } from '../types';
+import {
+  UserRole,
+  UserProfile,
+  EnterpriseFunction,
+  CustomRoleDefinition,
+  SodConflictRule,
+  SodViolation,
+  BusinessRole
+} from '../types';
 
 export interface RoleMetadata {
   id: UserRole;
@@ -550,3 +558,657 @@ export const RBAC = {
     return ['executive', 'sales_manager'].includes(role);
   }
 };
+
+// =========================================================================
+// 36 GRANULAR ENTERPRISE FUNCTIONS CATALOG (Across 9 Business Domains)
+// =========================================================================
+
+export const ENTERPRISE_FUNCTIONS: EnterpriseFunction[] = [
+  // 1. CRM & Sales Pipeline
+  {
+    id: 'fn_crm_lead_view',
+    code: 'CRM-01',
+    name: 'View Inbound Leads & Customer Accounts',
+    domain: 'crm_sales',
+    domainLabel: 'CRM & Sales Pipeline',
+    description: 'Read-only access to customer inquiries, company profiles, and CRM deal stages.',
+    riskLevel: 'LOW',
+    defaultRoles: ['executive', 'sales_manager', 'estimator', 'service_manager', 'technician']
+  },
+  {
+    id: 'fn_crm_lead_create',
+    code: 'CRM-02',
+    name: 'Create & Qualify Inbound Leads',
+    domain: 'crm_sales',
+    domainLabel: 'CRM & Sales Pipeline',
+    description: 'Capture new prospect records, contact details, project types, and initial heat load expectations.',
+    riskLevel: 'LOW',
+    defaultRoles: ['executive', 'sales_manager', 'estimator']
+  },
+  {
+    id: 'fn_crm_survey_schedule',
+    code: 'CRM-03',
+    name: 'Schedule & Record Technical Site Surveys',
+    domain: 'crm_sales',
+    domainLabel: 'CRM & Sales Pipeline',
+    description: 'Assign site engineers, schedule physical room dimension surveys, and record ceiling heights.',
+    riskLevel: 'MEDIUM',
+    defaultRoles: ['executive', 'sales_manager', 'estimator', 'service_manager']
+  },
+  {
+    id: 'fn_crm_deal_advance',
+    code: 'CRM-04',
+    name: 'Advance CRM Deal Stages & Negotiations',
+    domain: 'crm_sales',
+    domainLabel: 'CRM & Sales Pipeline',
+    description: 'Progress leads through survey, estimation, quote sent, and commercial negotiations.',
+    riskLevel: 'MEDIUM',
+    defaultRoles: ['executive', 'sales_manager']
+  },
+
+  // 2. Engineering & Quotation
+  {
+    id: 'fn_quote_create',
+    code: 'EST-01',
+    name: 'Draft HVAC Line-Item BOQ & Quotations',
+    domain: 'engineering_quote',
+    domainLabel: 'Engineering & Quotation',
+    description: 'Draft itemized equipment, piping, ducting, grilles, and labor line items with unit costs.',
+    riskLevel: 'MEDIUM',
+    defaultRoles: ['executive', 'sales_manager', 'estimator']
+  },
+  {
+    id: 'fn_quote_pricing_override',
+    code: 'EST-02',
+    name: 'Apply Custom Discounts & Margin Overrides',
+    domain: 'engineering_quote',
+    domainLabel: 'Engineering & Quotation',
+    description: 'Modify standard markup percentages, adjust unit selling rates, and apply client discount amounts.',
+    riskLevel: 'HIGH',
+    defaultRoles: ['executive', 'sales_manager']
+  },
+  {
+    id: 'fn_quote_commercial_approve',
+    code: 'EST-03',
+    name: 'Commercial Approval & Award Quote to Project',
+    domain: 'engineering_quote',
+    domainLabel: 'Engineering & Quotation',
+    description: 'Formally approve commercial quotations and convert awarded bids into live HVAC site projects.',
+    riskLevel: 'HIGH',
+    defaultRoles: ['executive', 'sales_manager']
+  },
+  {
+    id: 'fn_quote_print_export',
+    code: 'EST-04',
+    name: 'Export Formal Client Quotation PDF',
+    domain: 'engineering_quote',
+    domainLabel: 'Engineering & Quotation',
+    description: 'Generate high-resolution printable client quotation sheets with bank terms and GST breakdown.',
+    riskLevel: 'LOW',
+    defaultRoles: ['executive', 'sales_manager', 'estimator']
+  },
+
+  // 3. Project BOQ & Site Execution
+  {
+    id: 'fn_proj_view_workspace',
+    code: 'PRJ-01',
+    name: 'View Project Milestones & BOQ Workspace',
+    domain: 'project_boq',
+    domainLabel: 'Project BOQ & Site Execution',
+    description: 'Access project Gantt timeline, milestone completions, and allocated inventory reserves.',
+    riskLevel: 'LOW',
+    defaultRoles: ['executive', 'sales_manager', 'estimator', 'procurement', 'technician', 'service_manager']
+  },
+  {
+    id: 'fn_proj_reconcile_shortages',
+    code: 'PRJ-02',
+    name: 'Reconcile BOQ Shortages & Stock Allocations',
+    domain: 'project_boq',
+    domainLabel: 'Project BOQ & Site Execution',
+    description: 'Reconcile required vs available warehouse inventory and generate shortage take-off deficit items.',
+    riskLevel: 'HIGH',
+    defaultRoles: ['executive', 'estimator', 'procurement']
+  },
+  {
+    id: 'fn_proj_workorder_release',
+    code: 'PRJ-03',
+    name: 'Release Field Commissioning Work Orders',
+    domain: 'project_boq',
+    domainLabel: 'Project BOQ & Site Execution',
+    description: 'Authorize site installation tickets, piping pressure test checklists, and technician dispatch.',
+    riskLevel: 'MEDIUM',
+    defaultRoles: ['executive', 'technician', 'service_manager']
+  },
+  {
+    id: 'fn_proj_final_handover',
+    code: 'PRJ-04',
+    name: 'Signoff Final Project Handover & DLP Clearance',
+    domain: 'project_boq',
+    domainLabel: 'Project BOQ & Site Execution',
+    description: 'Approve completion certificate, Testing & Balancing (TAB) report, and commence Defect Liability Period.',
+    riskLevel: 'HIGH',
+    defaultRoles: ['executive']
+  },
+
+  // 4. Procurement & Supply Chain
+  {
+    id: 'fn_proc_create_pr',
+    code: 'SCM-01',
+    name: 'Create Purchase Requisition (PR)',
+    domain: 'procurement',
+    domainLabel: 'Procurement & Supply Chain',
+    description: 'Raise formal materials requisitions for project shortage take-offs or warehouse safety-stock replenishments.',
+    riskLevel: 'MEDIUM',
+    defaultRoles: ['executive', 'estimator', 'procurement', 'technician', 'warehouse']
+  },
+  {
+    id: 'fn_proc_approve_pr',
+    code: 'SCM-02',
+    name: 'Management Approval for Purchase Requisition',
+    domain: 'procurement',
+    domainLabel: 'Procurement & Supply Chain',
+    description: 'Authorize PR requests against project budget cost codes and approve release for PO issuance.',
+    riskLevel: 'HIGH',
+    defaultRoles: ['executive', 'procurement']
+  },
+  {
+    id: 'fn_proc_release_po',
+    code: 'SCM-03',
+    name: 'Generate & Authorize Vendor Purchase Order (PO)',
+    domain: 'procurement',
+    domainLabel: 'Procurement & Supply Chain',
+    description: 'Commit binding commercial Purchase Orders with OEM manufacturers, negotiate credit terms & release to vendor.',
+    riskLevel: 'CRITICAL',
+    defaultRoles: ['executive', 'procurement']
+  },
+  {
+    id: 'fn_proc_vendor_transmit',
+    code: 'SCM-04',
+    name: 'Transmit Purchase Orders to Vendors via SMTP/EDI',
+    domain: 'procurement',
+    domainLabel: 'Procurement & Supply Chain',
+    description: 'Dispatch automated PO PDF attachments to vendor dispatch desks with delivery date SLAs.',
+    riskLevel: 'MEDIUM',
+    defaultRoles: ['executive', 'procurement']
+  },
+
+  // 5. Warehouse & Inventory
+  {
+    id: 'fn_inv_view_stock',
+    code: 'WMS-01',
+    name: 'Inspect Multi-Bay Storage Bins & Stock Counts',
+    domain: 'warehouse_inventory',
+    domainLabel: 'Warehouse & Inventory',
+    description: 'Inspect bin locations, available vs allocated physical counts, and unit moving averages.',
+    riskLevel: 'LOW',
+    defaultRoles: ['executive', 'warehouse', 'procurement', 'technician', 'estimator']
+  },
+  {
+    id: 'fn_inv_receive_grn',
+    code: 'WMS-02',
+    name: 'Process Physical Goods Receipt Note (GRN) Inwarding',
+    domain: 'warehouse_inventory',
+    domainLabel: 'Warehouse & Inventory',
+    description: 'Verify incoming shipment deliveries against PO line items, conduct QC check & update warehouse stock ledger.',
+    riskLevel: 'CRITICAL',
+    defaultRoles: ['executive', 'warehouse']
+  },
+  {
+    id: 'fn_inv_stock_adjustment',
+    code: 'WMS-03',
+    name: 'Execute Stock Adjustment, Scrap & Material Write-Off',
+    domain: 'warehouse_inventory',
+    domainLabel: 'Warehouse & Inventory',
+    description: 'Manual corrections, scrap write-offs, physical count reconciliation, and damaged pipe deductions.',
+    riskLevel: 'HIGH',
+    defaultRoles: ['executive', 'warehouse']
+  },
+  {
+    id: 'fn_inv_safety_stock_config',
+    code: 'WMS-04',
+    name: 'Configure Safety-Stock Thresholds & Reorder Alerts',
+    domain: 'warehouse_inventory',
+    domainLabel: 'Warehouse & Inventory',
+    description: 'Set minimum reorder levels, safety buffer days, and trigger automated stock deficit email alerts.',
+    riskLevel: 'MEDIUM',
+    defaultRoles: ['executive', 'warehouse', 'procurement']
+  },
+
+  // 6. Services & AMC Contracts
+  {
+    id: 'fn_svc_create_amc',
+    code: 'SVC-01',
+    name: 'Register Comprehensive AMC Contract & Assets',
+    domain: 'services_amc',
+    domainLabel: 'Services & AMC Contracts',
+    description: 'Create multi-year AMC contracts, define SLA response windows, and register HVAC equipment serials.',
+    riskLevel: 'MEDIUM',
+    defaultRoles: ['executive', 'sales_manager', 'service_manager']
+  },
+  {
+    id: 'fn_svc_schedule_ppm',
+    code: 'SVC-02',
+    name: 'Schedule Quarterly PPM Visits & Route Engineers',
+    domain: 'services_amc',
+    domainLabel: 'Services & AMC Contracts',
+    description: 'Plan preventive maintenance calendar, assign field technicians, and track visit windows.',
+    riskLevel: 'MEDIUM',
+    defaultRoles: ['executive', 'service_manager', 'technician']
+  },
+  {
+    id: 'fn_svc_execute_inspection',
+    code: 'SVC-03',
+    name: 'Execute 4-Point HVAC Inspection Checklist & Telemetry',
+    domain: 'services_amc',
+    domainLabel: 'Services & AMC Contracts',
+    description: 'Record refrigerant suction/discharge pressures, delta-T airflow, motor amps, and signoff visits.',
+    riskLevel: 'LOW',
+    defaultRoles: ['executive', 'service_manager', 'technician']
+  },
+  {
+    id: 'fn_svc_emergency_dispatch',
+    code: 'SVC-04',
+    name: 'Log & Dispatch 24x7 Critical Breakdown Tickets',
+    domain: 'services_amc',
+    domainLabel: 'Services & AMC Contracts',
+    description: 'Receive emergency customer alerts, prioritize cooling failure tickets, and mobilize fast-response crews.',
+    riskLevel: 'HIGH',
+    defaultRoles: ['executive', 'service_manager', 'technician']
+  },
+
+  // 7. Finance & Accounting
+  {
+    id: 'fn_fin_create_invoice',
+    code: 'FIN-01',
+    name: 'Generate Milestone Tax Invoice & Debit Notes',
+    domain: 'finance_accounting',
+    domainLabel: 'Finance & Accounting',
+    description: 'Issue GST-compliant milestone invoices, calculate SGST/CGST/IGST, and record accounts receivable (AR).',
+    riskLevel: 'HIGH',
+    defaultRoles: ['executive', 'finance']
+  },
+  {
+    id: 'fn_fin_record_payment',
+    code: 'FIN-02',
+    name: 'Record Inward Customer Wire Payments & Receipts',
+    domain: 'finance_accounting',
+    domainLabel: 'Finance & Accounting',
+    description: 'Acknowledge bank wire transfers, reconcile customer remittances, and clear outstanding invoice balances.',
+    riskLevel: 'CRITICAL',
+    defaultRoles: ['executive', 'finance']
+  },
+  {
+    id: 'fn_fin_post_jv',
+    code: 'FIN-03',
+    name: 'Create Balanced Double-Entry Journal Voucher (JV)',
+    domain: 'finance_accounting',
+    domainLabel: 'Finance & Accounting',
+    description: 'Post general ledger vouchers with strict Debit === Credit mathematical validation and cost center tagging.',
+    riskLevel: 'HIGH',
+    defaultRoles: ['executive', 'finance']
+  },
+  {
+    id: 'fn_fin_tds_challan',
+    code: 'FIN-04',
+    name: 'Process Statutory TDS Deductions & Deposit Challans',
+    domain: 'finance_accounting',
+    domainLabel: 'Finance & Accounting',
+    description: 'Record Section 194C contractor TDS, monitor withholding thresholds, and record BSR tax payment challans.',
+    riskLevel: 'HIGH',
+    defaultRoles: ['executive', 'finance']
+  },
+
+  // 8. HR & Talent Management
+  {
+    id: 'fn_hr_employee_directory',
+    code: 'HR-01',
+    name: 'Manage Employee Master & Department Positions',
+    domain: 'hr_payroll',
+    domainLabel: 'HR & Talent Management',
+    description: 'Maintain staff employee codes, designation grades, department allocations, and contact data.',
+    riskLevel: 'MEDIUM',
+    defaultRoles: ['executive', 'finance']
+  },
+  {
+    id: 'fn_hr_biometric_attendance',
+    code: 'HR-02',
+    name: 'Manage Biometric Punch Logs & Shift Attendance',
+    domain: 'hr_payroll',
+    domainLabel: 'HR & Talent Management',
+    description: 'Inspect terminal in/out time stamps, authorize attendance regularizations, and calculate overtime.',
+    riskLevel: 'LOW',
+    defaultRoles: ['executive', 'finance']
+  },
+  {
+    id: 'fn_hr_run_payroll',
+    code: 'HR-03',
+    name: 'Calculate & Finalize Monthly Payroll Registers',
+    domain: 'hr_payroll',
+    domainLabel: 'HR & Talent Management',
+    description: 'Execute salary computations with PF, ESI, Professional Tax, and generate monthly payslip registers.',
+    riskLevel: 'CRITICAL',
+    defaultRoles: ['executive', 'finance']
+  },
+  {
+    id: 'fn_hr_exit_settlement',
+    code: 'HR-04',
+    name: 'Authorize Resignations & Full and Final (F&F) Settlements',
+    domain: 'hr_payroll',
+    domainLabel: 'HR & Talent Management',
+    description: 'Conduct multi-stage exit clearances (IT, Facilities, HR) and compute gratuity & leave encashment.',
+    riskLevel: 'HIGH',
+    defaultRoles: ['executive', 'finance']
+  },
+
+  // 9. System Administration & Compliance
+  {
+    id: 'fn_sys_manage_users',
+    code: 'SYS-01',
+    name: 'Provision Staff Credentials & Assign RBAC Roles',
+    domain: 'system_admin',
+    domainLabel: 'System Administration & Security',
+    description: 'Create user profiles, issue temporary passwords, assign system roles, and revoke system access.',
+    riskLevel: 'CRITICAL',
+    defaultRoles: ['executive']
+  },
+  {
+    id: 'fn_sys_configure_sod',
+    code: 'SYS-02',
+    name: 'Configure SoD Policies, Role Functions & Overrides',
+    domain: 'system_admin',
+    domainLabel: 'System Administration & Security',
+    description: 'Maintain the Segregation of Duties matrix, customize enterprise roles, and document audit exceptions.',
+    riskLevel: 'HIGH',
+    defaultRoles: ['executive']
+  },
+  {
+    id: 'fn_sys_audit_logs',
+    code: 'SYS-03',
+    name: 'Inspect Tamper-Evident Security Audit Logs',
+    domain: 'system_admin',
+    domainLabel: 'System Administration & Security',
+    description: 'Review immutable chronological audit trail of all transactions, logins, role changes, and data edits.',
+    riskLevel: 'HIGH',
+    defaultRoles: ['executive', 'finance']
+  },
+  {
+    id: 'fn_sys_cloud_backup',
+    code: 'SYS-04',
+    name: 'Execute Google Sheets Sync & Cloud Database Snapshots',
+    domain: 'system_admin',
+    domainLabel: 'System Administration & Security',
+    description: 'Trigger full 9-tab Google Sheets sync, MongoDB Atlas exports, and local encrypted vault snapshots.',
+    riskLevel: 'HIGH',
+    defaultRoles: ['executive']
+  }
+];
+
+// Default function IDs assigned to standard system roles
+export const DEFAULT_ROLE_FUNCTION_PERMISSIONS: Record<string, string[]> = {
+  executive: ENTERPRISE_FUNCTIONS.map((f) => f.id),
+  sales_manager: [
+    'fn_crm_lead_view',
+    'fn_crm_lead_create',
+    'fn_crm_survey_schedule',
+    'fn_crm_deal_advance',
+    'fn_quote_create',
+    'fn_quote_pricing_override',
+    'fn_quote_commercial_approve',
+    'fn_quote_print_export',
+    'fn_proj_view_workspace',
+    'fn_svc_create_amc',
+    'fn_fin_create_invoice'
+  ],
+  estimator: [
+    'fn_crm_lead_view',
+    'fn_crm_lead_create',
+    'fn_crm_survey_schedule',
+    'fn_quote_create',
+    'fn_quote_print_export',
+    'fn_proj_view_workspace',
+    'fn_proj_reconcile_shortages',
+    'fn_proc_create_pr',
+    'fn_inv_view_stock'
+  ],
+  procurement: [
+    'fn_proj_view_workspace',
+    'fn_proj_reconcile_shortages',
+    'fn_proc_create_pr',
+    'fn_proc_approve_pr',
+    'fn_proc_release_po',
+    'fn_proc_vendor_transmit',
+    'fn_inv_view_stock',
+    'fn_inv_safety_stock_config'
+  ],
+  warehouse: [
+    'fn_proc_create_pr',
+    'fn_inv_view_stock',
+    'fn_inv_receive_grn',
+    'fn_inv_stock_adjustment',
+    'fn_inv_safety_stock_config'
+  ],
+  finance: [
+    'fn_fin_create_invoice',
+    'fn_fin_record_payment',
+    'fn_fin_post_jv',
+    'fn_fin_tds_challan',
+    'fn_hr_employee_directory',
+    'fn_hr_biometric_attendance',
+    'fn_hr_run_payroll',
+    'fn_hr_exit_settlement',
+    'fn_sys_audit_logs'
+  ],
+  technician: [
+    'fn_proj_view_workspace',
+    'fn_proj_workorder_release',
+    'fn_inv_view_stock',
+    'fn_svc_schedule_ppm',
+    'fn_svc_execute_inspection',
+    'fn_svc_emergency_dispatch'
+  ],
+  service_manager: [
+    'fn_crm_lead_view',
+    'fn_crm_survey_schedule',
+    'fn_proj_view_workspace',
+    'fn_proj_workorder_release',
+    'fn_svc_create_amc',
+    'fn_svc_schedule_ppm',
+    'fn_svc_execute_inspection',
+    'fn_svc_emergency_dispatch'
+  ]
+};
+
+// =========================================================================
+// SEGREGATION OF DUTIES (SoD) CONFLICT RULES (Enterprise HVAC / EPC)
+// =========================================================================
+
+export const ENTERPRISE_SOD_RULES: SodConflictRule[] = [
+  {
+    id: 'SOD-01',
+    code: 'SOD-PR-01',
+    title: 'PR Requisition Generation vs Management Approval',
+    functionAId: 'fn_proc_create_pr',
+    functionAName: 'Create Purchase Requisition (PR)',
+    functionBId: 'fn_proc_approve_pr',
+    functionBName: 'Management Approval for Purchase Requisition',
+    severity: 'HIGH',
+    riskDescription: 'A single individual can create and approve their own requisitions, bypassing budgetary verification.',
+    mitigatingControl: 'Dual sign-off matrix requires separate technical estimator creation and procurement manager sign-off.'
+  },
+  {
+    id: 'SOD-02',
+    code: 'SOD-PO-GRN',
+    title: 'Purchase Order Release vs Physical GRN Inwarding',
+    functionAId: 'fn_proc_release_po',
+    functionAName: 'Generate & Authorize Vendor Purchase Order (PO)',
+    functionBId: 'fn_inv_receive_grn',
+    functionBName: 'Process Physical Goods Receipt Note (GRN) Inwarding',
+    severity: 'CRITICAL',
+    riskDescription: 'A single user can create fictitious purchase orders and acknowledge fake receipt of physical goods (phantom orders).',
+    mitigatingControl: 'Independent physical warehouse bay custodian verification with mandatory supplier delivery challan upload.'
+  },
+  {
+    id: 'SOD-03',
+    code: 'SOD-FIN-AR',
+    title: 'Tax Invoice Billing vs Payment Receipt Collection',
+    functionAId: 'fn_fin_create_invoice',
+    functionAName: 'Generate Milestone Tax Invoice & Debit Notes',
+    functionBId: 'fn_fin_record_payment',
+    functionBName: 'Record Inward Customer Wire Payments & Receipts',
+    severity: 'HIGH',
+    riskDescription: 'Risk of teeming and lading fraud where incoming remittances are misdirected against unapproved invoices.',
+    mitigatingControl: 'Direct bank statement reconciliation API feed and separate collection verification by chief accountant.'
+  },
+  {
+    id: 'SOD-04',
+    code: 'SOD-QTE-PRC',
+    title: 'Quotation Discount Override vs Final Award Approval',
+    functionAId: 'fn_quote_pricing_override',
+    functionAName: 'Apply Custom Discounts & Margin Overrides',
+    functionBId: 'fn_quote_commercial_approve',
+    functionBName: 'Commercial Approval & Award Quote to Project',
+    severity: 'MEDIUM',
+    riskDescription: 'Estimator applies unverified discounts and approves quote, causing gross margin erosion.',
+    mitigatingControl: 'Executive Managing Director sign-off mandatory on all contracts with gross margin below 15%.'
+  },
+  {
+    id: 'SOD-05',
+    code: 'SOD-INV-ADJ',
+    title: 'Physical Goods Inwarding vs Stock Adjustment & Write-Off',
+    functionAId: 'fn_inv_receive_grn',
+    functionAName: 'Process Physical Goods Receipt Note (GRN) Inwarding',
+    functionBId: 'fn_inv_stock_adjustment',
+    functionBName: 'Execute Stock Adjustment, Scrap & Material Write-Off',
+    severity: 'HIGH',
+    riskDescription: 'Risk of inventory theft covered up by unilateral manual stock write-offs and scrap deductions.',
+    mitigatingControl: 'Annual third-party inventory count and managerial counter-signature for write-offs exceeding ₹25,000.'
+  },
+  {
+    id: 'SOD-06',
+    code: 'SOD-HR-PAY',
+    title: 'Monthly Payroll Run vs Finance Payout Disbursal',
+    functionAId: 'fn_hr_run_payroll',
+    functionAName: 'Calculate & Finalize Monthly Payroll Registers',
+    functionBId: 'fn_fin_record_payment',
+    functionBName: 'Record Inward Customer Wire Payments & Receipts',
+    severity: 'CRITICAL',
+    riskDescription: 'Adding fictitious employees to monthly payroll register with direct payout authorization.',
+    mitigatingControl: 'HR submits salary sheet to Finance Controller; biometric attendance records cross-verified before disbursement.'
+  },
+  {
+    id: 'SOD-07',
+    code: 'SOD-SYS-AUD',
+    title: 'User Credentials Administration vs Security Audit Log Inspection',
+    functionAId: 'fn_sys_manage_users',
+    functionAName: 'Provision Staff Credentials & Assign RBAC Roles',
+    functionBId: 'fn_sys_audit_logs',
+    functionBName: 'Inspect Tamper-Evident Security Audit Logs',
+    severity: 'HIGH',
+    riskDescription: 'System administrator creates illicit access privileges and modifies or suppresses audit detection.',
+    mitigatingControl: 'Immutable append-only cloud audit trail mirroring to Google Sheets and independent compliance review.'
+  },
+  {
+    id: 'SOD-08',
+    code: 'SOD-BOQ-PR',
+    title: 'BOQ Shortage Reconciliation vs Purchase Requisition Approval',
+    functionAId: 'fn_proj_reconcile_shortages',
+    functionAName: 'Reconcile BOQ Shortages & Stock Allocations',
+    functionBId: 'fn_proc_approve_pr',
+    functionBName: 'Management Approval for Purchase Requisition',
+    severity: 'MEDIUM',
+    riskDescription: 'Project engineer computes site shortages and self-approves purchase requisitions without oversight.',
+    mitigatingControl: 'Central procurement head independently verifies warehouse stock availability before PR sign-off.'
+  }
+];
+
+/**
+ * Checks a specific list of function IDs against all standard SoD conflict rules.
+ * Returns an array of rules that have been violated.
+ */
+export function evaluateSodConflicts(functionIds: string[]): SodConflictRule[] {
+  const set = new Set(functionIds);
+  return ENTERPRISE_SOD_RULES.filter((rule) => set.has(rule.functionAId) && set.has(rule.functionBId));
+}
+
+/**
+ * Scans all Business Roles, Role-Function Mappings, and Users to generate a comprehensive
+ * list of active SoD violations across the organization.
+ */
+export function evaluateAllSodViolations(
+  businessRoles: BusinessRole[],
+  roleFunctionMap: Record<string, string[]>,
+  users: UserProfile[],
+  overrides: Record<string, { notes: string; approvedBy: string; approvedAt: string }> = {}
+): SodViolation[] {
+  const violations: SodViolation[] = [];
+
+  // 1. Role-Level SoD Evaluation
+  Object.entries(roleFunctionMap).forEach(([roleKey, functions]) => {
+    // Skip executive super admin as they naturally hold all rights
+    if (roleKey === 'executive') return;
+
+    const conflicts = evaluateSodConflicts(functions);
+    conflicts.forEach((rule) => {
+      const violationKey = `role_${roleKey}_${rule.id}`;
+      const override = overrides[violationKey];
+      violations.push({
+        id: violationKey,
+        ruleId: rule.id,
+        ruleTitle: rule.title,
+        severity: rule.severity,
+        violatorType: 'role',
+        violatorId: roleKey,
+        violatorName: `Role: ${ROLE_DEFINITIONS[roleKey as UserRole]?.name || roleKey}`,
+        functionA: rule.functionAName,
+        functionB: rule.functionBName,
+        status: override ? 'mitigated' : 'active',
+        mitigationNotes: override?.notes,
+        approvedBy: override?.approvedBy,
+        detectedAt: override?.approvedAt || new Date().toISOString()
+      });
+    });
+  });
+
+  // 2. User-Level SoD Evaluation across multiple assigned Business Roles
+  users.forEach((user) => {
+    // Skip executive super admin
+    if (user.role === 'executive') return;
+
+    // Collect all functions assigned to this user through business roles and their primary system role
+    const userFunctions = new Set<string>();
+    
+    // Add primary system role functions
+    const primaryFunctions = roleFunctionMap[user.role] || DEFAULT_ROLE_FUNCTION_PERMISSIONS[user.role] || [];
+    primaryFunctions.forEach((f) => userFunctions.add(f));
+
+    // Add business role functions
+    const userBusinessRoles = businessRoles.filter((br) => br.assignedUserIds?.includes(user.id) && br.status === 'active');
+    userBusinessRoles.forEach((br) => {
+      br.assignedFunctions?.forEach((f) => userFunctions.add(f));
+    });
+
+    const userConflicts = evaluateSodConflicts(Array.from(userFunctions));
+    userConflicts.forEach((rule) => {
+      const violationKey = `user_${user.id}_${rule.id}`;
+      const override = overrides[violationKey];
+      violations.push({
+        id: violationKey,
+        ruleId: rule.id,
+        ruleTitle: rule.title,
+        severity: rule.severity,
+        violatorType: 'user',
+        violatorId: user.id,
+        violatorName: `${user.name} (${user.email})`,
+        functionA: rule.functionAName,
+        functionB: rule.functionBName,
+        status: override ? 'mitigated' : 'active',
+        mitigationNotes: override?.notes,
+        approvedBy: override?.approvedBy,
+        detectedAt: override?.approvedAt || new Date().toISOString()
+      });
+    });
+  });
+
+  return violations;
+}
+

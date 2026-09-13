@@ -173,10 +173,17 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
         {/* Metric 1: New Leads */}
         <div
           onClick={() => (onNavigate ? onNavigate('crm') : onOpenFullModal())}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (onNavigate) onNavigate('crm');
+              else onOpenFullModal();
+            }
+          }}
           title="Click to view CRM Deals & Inbound Leads"
           role="button"
           tabIndex={0}
-          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-blue-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none"
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-blue-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
@@ -204,10 +211,17 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
         {/* Metric 2: Total Collection */}
         <div
           onClick={() => (onNavigate ? onNavigate('payments') : onOpenFullModal())}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (onNavigate) onNavigate('payments');
+              else onOpenFullModal();
+            }
+          }}
           title="Click to view Payments & Collections"
           role="button"
           tabIndex={0}
-          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-emerald-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none"
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-emerald-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
@@ -235,10 +249,17 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
         {/* Metric 3: Pending Aging Buckets */}
         <div
           onClick={() => (onNavigate ? onNavigate('payments') : onOpenFullModal())}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (onNavigate) onNavigate('payments');
+              else onOpenFullModal();
+            }
+          }}
           title="Click to view Receivables & Aging Buckets"
           role="button"
           tabIndex={0}
-          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-amber-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none"
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-amber-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none focus:outline-none focus:ring-2 focus:ring-amber-500"
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
@@ -266,10 +287,17 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
         {/* Metric 4: Total Payment Done */}
         <div
           onClick={() => (onNavigate ? onNavigate('payments') : onOpenFullModal())}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (onNavigate) onNavigate('payments');
+              else onOpenFullModal();
+            }
+          }}
           title="Click to view Disbursements & Vendor PO Payouts"
           role="button"
           tabIndex={0}
-          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-purple-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none"
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-purple-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none focus:outline-none focus:ring-2 focus:ring-purple-500"
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
@@ -297,10 +325,17 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
         {/* Metric 5: Net Revenue Generated */}
         <div
           onClick={() => (onNavigate ? onNavigate('quotes') : onOpenFullModal())}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (onNavigate) onNavigate('quotes');
+              else onOpenFullModal();
+            }
+          }}
           title="Click to view Awarded Quotes & Won Bookings"
           role="button"
           tabIndex={0}
-          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-indigo-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none"
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-indigo-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">
@@ -328,10 +363,17 @@ export const WhatsAppKpiWidgetCard: React.FC<WhatsAppKpiWidgetCardProps> = ({
         {/* Metric 6: Delayed Projects with Reason */}
         <div
           onClick={() => (onNavigate ? onNavigate('projects') : onOpenFullModal())}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (onNavigate) onNavigate('projects');
+              else onOpenFullModal();
+            }
+          }}
           title="Click to view Delayed HVAC Projects"
           role="button"
           tabIndex={0}
-          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-red-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none"
+          className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between hover:border-red-400 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 cursor-pointer group select-none focus:outline-none focus:ring-2 focus:ring-red-500"
         >
           <div>
             <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold mb-1">

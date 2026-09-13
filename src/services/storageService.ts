@@ -69,7 +69,12 @@ import {
   DailyKpiSnapshot,
   BiometricDevice,
   AttendancePunchLog,
-  EmailSmtpConfig
+  EmailSmtpConfig,
+  BusinessRole,
+  CustomRoleDefinition,
+  SodViolation,
+  SodConflictRule,
+  EnterpriseFunction
 } from '../types';
 import { FontSizeScaleMode } from '../types/fontSize';
 
@@ -83,7 +88,13 @@ import {
   getResolvedReportTemplate
 } from '../utils/reportTemplates';
 
-import { DEFAULT_ROLE_MODULE_PERMISSIONS } from '../utils/rbac';
+import {
+  DEFAULT_ROLE_MODULE_PERMISSIONS,
+  DEFAULT_ROLE_FUNCTION_PERMISSIONS,
+  ENTERPRISE_FUNCTIONS,
+  ENTERPRISE_SOD_RULES,
+  evaluateAllSodViolations
+} from '../utils/rbac';
 import {
   validateEmail,
   validateMobile,
@@ -116,7 +127,8 @@ import {
   DEFAULT_EMAIL_CONFIG,
   INITIAL_AMC_CONTRACTS,
   INITIAL_PPM_VISITS,
-  INITIAL_BREAKDOWN_TICKETS
+  INITIAL_BREAKDOWN_TICKETS,
+  INITIAL_BUSINESS_ROLES
 } from '../data/initialData';
 
 import {
@@ -236,7 +248,13 @@ const STORAGE_KEYS = {
   BIOMETRIC_PUNCH_LOGS: 'alpha_erp_biometric_punch_logs',
   DASHBOARD_LAYOUT: 'alpha_erp_dashboard_layout',
   LOCAL_BACKUP_SNAPSHOTS: 'alpha_erp_backup_snapshots',
-  LOCAL_BACKUP_CONFIG: 'alpha_erp_backup_config'
+  LOCAL_BACKUP_CONFIG: 'alpha_erp_backup_config',
+
+  // Enterprise Customization: Roles, Functions, SoD
+  BUSINESS_ROLES: 'alpha_erp_business_roles',
+  CUSTOM_ROLES: 'alpha_erp_custom_roles',
+  ROLE_FUNCTIONS: 'alpha_erp_role_functions',
+  SOD_OVERRIDES: 'alpha_erp_sod_overrides'
 };
 
 const DEFAULT_BACKUP_CONFIG: BackupConfig = {
@@ -397,6 +415,12 @@ class StorageService {
   private biometricPunchLogs: AttendancePunchLog[] = load(STORAGE_KEYS.BIOMETRIC_PUNCH_LOGS, INITIAL_BIOMETRIC_PUNCH_LOGS);
   private backupSnapshots: LocalBackupSnapshot[] = load(STORAGE_KEYS.LOCAL_BACKUP_SNAPSHOTS, []);
   private backupConfig: BackupConfig = load(STORAGE_KEYS.LOCAL_BACKUP_CONFIG, DEFAULT_BACKUP_CONFIG);
+
+  // Enterprise Customization: Roles, Functions, SoD
+  private businessRoles: BusinessRole[] = load(STORAGE_KEYS.BUSINESS_ROLES, INITIAL_BUSINESS_ROLES);
+  private customRoles: CustomRoleDefinition[] = load(STORAGE_KEYS.CUSTOM_ROLES, []);
+  private roleFunctionPermissions: Record<string, string[]> = load(STORAGE_KEYS.ROLE_FUNCTIONS, JSON.parse(JSON.stringify(DEFAULT_ROLE_FUNCTION_PERMISSIONS)));
+  private sodOverrides: { ruleId: string; targetId: string; targetType: 'role' | 'user'; approvedBy: string; approvedAt: string; reason: string }[] = load(STORAGE_KEYS.SOD_OVERRIDES, []);
 
   private listeners: Array<() => void> = [];
   private backupListeners: Array<(event: BackupNotificationEvent) => void> = [];
@@ -2542,7 +2566,7 @@ class StorageService {
   // ==========================================
   // Bump this version any time a new module is added to DEFAULT_ROLE_MODULE_PERMISSIONS
   // so cached localStorage permissions are rebuilt from the latest defaults.
-  private static readonly PERMISSIONS_SCHEMA_VERSION = '3';
+  private static readonly PERMISSIONS_SCHEMA_VERSION = '4';
 
   public getRoleModulePermissions(): Record<UserRole, string[]> {
     // Force-refresh if the stored schema version is outdated (handles stale localStorage)
@@ -2667,6 +2691,297 @@ class StorageService {
   public canRoleAccessModule(role: UserRole, moduleId: string): boolean {
     const modules = this.getModulesForRole(role);
     return modules.includes(moduleId);
+  }
+
+  // ==========================================
+  // ENTERPRISE BRANDING & ORGANIZATION LOGO
+  // ==========================================
+  public setOrganizationLogo(logoBase64OrUrl: string, altText?: string): SystemSettings {
+    this.systemSettings = {
+      ...this.systemSettings,
+      organizationLogo: logoBase64OrUrl,
+      organizationLogoAlt: altText || this.systemSettings.organizationLogoAlt || 'Company Logo'
+    };
+    save(STORAGE_KEYS.SYSTEM_SETTINGS, this.systemSettings);
+    this.logAudit('UPDATE', 'SYSTEM', this.user.id, 'Updated enterprise organization branding logo');
+    this.addNotification('Branding Updated', 'Organization logo has been successfully updated.', 'success', 'customization');
+    this.notify();
+    return this.systemSettings;
+  }
+
+  public resetOrganizationLogo(): SystemSettings {
+    const updated = { ...this.systemSettings };
+    delete updated.organizationLogo;
+    delete updated.organizationLogoAlt;
+    this.systemSettings = updated;
+    save(STORAGE_KEYS.SYSTEM_SETTINGS, this.systemSettings);
+    this.logAudit('UPDATE', 'SYSTEM', this.user.id, 'Reset enterprise organization branding logo to default');
+    this.addNotification('Branding Reset', 'Organization logo restored to system default.', 'info', 'customization');
+    this.notify();
+    return this.systemSettings;
+  }
+
+  // ==========================================
+  // ENTERPRISE FUNCTION & ROLE PERMISSIONS
+  // ==========================================
+  public getRoleFunctionPermissions(): Record<string, string[]> {
+    if (!this.roleFunctionPermissions || Object.keys(this.roleFunctionPermissions).length === 0) {
+      this.roleFunctionPermissions = JSON.parse(JSON.stringify(DEFAULT_ROLE_FUNCTION_PERMISSIONS));
+      save(STORAGE_KEYS.ROLE_FUNCTIONS, this.roleFunctionPermissions);
+    }
+    return this.roleFunctionPermissions;
+  }
+
+  public saveRoleFunctionPermissions(permissions: Record<string, string[]>): Record<string, string[]> {
+    this.roleFunctionPermissions = permissions;
+    save(STORAGE_KEYS.ROLE_FUNCTIONS, this.roleFunctionPermissions);
+    this.logAudit('UPDATE', 'USER', this.user.id, 'Updated enterprise role-to-function permissions mapping');
+    this.notify();
+    return this.roleFunctionPermissions;
+  }
+
+  public toggleRoleFunction(roleId: string, functionId: string, granted: boolean): Record<string, string[]> {
+    const current = { ...this.getRoleFunctionPermissions() };
+    const roleFuncs = current[roleId] ? [...current[roleId]] : [];
+    if (granted) {
+      if (!roleFuncs.includes(functionId)) {
+        roleFuncs.push(functionId);
+      }
+    } else {
+      const idx = roleFuncs.indexOf(functionId);
+      if (idx > -1) {
+        roleFuncs.splice(idx, 1);
+      }
+    }
+    current[roleId] = roleFuncs;
+    this.roleFunctionPermissions = current;
+    save(STORAGE_KEYS.ROLE_FUNCTIONS, this.roleFunctionPermissions);
+    this.logAudit('UPDATE', 'USER', this.user.id, `Toggled function [${functionId}] to [${granted ? 'GRANT' : 'REVOKE'}] for role [${roleId}]`);
+    this.notify();
+    return this.roleFunctionPermissions;
+  }
+
+  public resetRoleFunctionPermissions(roleId?: string): Record<string, string[]> {
+    const current = { ...this.getRoleFunctionPermissions() };
+    if (roleId) {
+      if (DEFAULT_ROLE_FUNCTION_PERMISSIONS[roleId]) {
+        current[roleId] = [...DEFAULT_ROLE_FUNCTION_PERMISSIONS[roleId]];
+      } else {
+        current[roleId] = [];
+      }
+    } else {
+      Object.assign(current, JSON.parse(JSON.stringify(DEFAULT_ROLE_FUNCTION_PERMISSIONS)));
+    }
+    this.roleFunctionPermissions = current;
+    save(STORAGE_KEYS.ROLE_FUNCTIONS, this.roleFunctionPermissions);
+    this.logAudit('UPDATE', 'USER', this.user.id, roleId ? `Reset role function permissions for [${roleId}]` : 'Reset all role function permissions to default');
+    this.notify();
+    return this.roleFunctionPermissions;
+  }
+
+  // ==========================================
+  // CUSTOM ROLES DEFINITIONS
+  // ==========================================
+  public getCustomRoles(): CustomRoleDefinition[] {
+    return this.customRoles || [];
+  }
+
+  public saveCustomRoles(roles: CustomRoleDefinition[]): void {
+    this.customRoles = roles;
+    save(STORAGE_KEYS.CUSTOM_ROLES, this.customRoles);
+    this.notify();
+  }
+
+  public addCustomRole(roleData: Omit<CustomRoleDefinition, 'id' | 'createdAt' | 'updatedAt'>): CustomRoleDefinition {
+    const code = roleData.code || `ROLE_${roleData.name.toUpperCase().replace(/[^A-Z0-9]/g, '_').slice(0, 8)}`;
+    const newRole: CustomRoleDefinition = {
+      ...roleData,
+      id: `custom_${roleData.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${Date.now().toString(36)}`,
+      code,
+      badge: roleData.badge || 'CUSTOM',
+      badgeColor: roleData.badgeColor || 'bg-purple-100 text-purple-800 border-purple-200',
+      baseRole: roleData.baseRole || 'estimator',
+      assignedFunctions: roleData.assignedFunctions || [],
+      assignedModuleIds: roleData.assignedModuleIds || [],
+      status: roleData.status || 'active',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    this.customRoles.push(newRole);
+    save(STORAGE_KEYS.CUSTOM_ROLES, this.customRoles);
+
+    // Initialize function permissions for custom role
+    const currentPerms = { ...this.getRoleFunctionPermissions() };
+    currentPerms[newRole.id] = newRole.assignedFunctions;
+    this.saveRoleFunctionPermissions(currentPerms);
+
+    this.logAudit('CREATE', 'USER', this.user.id, `Created custom enterprise role: ${newRole.name} (${newRole.id})`);
+    this.addNotification('Custom Role Created', `Role "${newRole.name}" successfully created with ${newRole.assignedFunctions.length} functions.`, 'success', 'customization');
+    this.notify();
+    return newRole;
+  }
+
+  public updateCustomRole(id: string, updates: Partial<CustomRoleDefinition>): CustomRoleDefinition | null {
+    const idx = this.customRoles.findIndex((r) => r.id === id);
+    if (idx === -1) return null;
+    const updated: CustomRoleDefinition = {
+      ...this.customRoles[idx],
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+    this.customRoles[idx] = updated;
+    save(STORAGE_KEYS.CUSTOM_ROLES, this.customRoles);
+
+    // If assignedFunctions were updated, sync role functions
+    if (updates.assignedFunctions) {
+      const currentPerms = { ...this.getRoleFunctionPermissions() };
+      currentPerms[id] = updates.assignedFunctions;
+      this.saveRoleFunctionPermissions(currentPerms);
+    }
+
+    this.logAudit('UPDATE', 'USER', this.user.id, `Updated custom role: ${updated.name}`);
+    this.notify();
+    return updated;
+  }
+
+  public deleteCustomRole(id: string): boolean {
+    const idx = this.customRoles.findIndex((r) => r.id === id);
+    if (idx === -1) return false;
+    const removed = this.customRoles.splice(idx, 1)[0];
+    save(STORAGE_KEYS.CUSTOM_ROLES, this.customRoles);
+
+    // Remove from permissions
+    const currentPerms = { ...this.getRoleFunctionPermissions() };
+    delete currentPerms[id];
+    this.saveRoleFunctionPermissions(currentPerms);
+
+    this.logAudit('DELETE', 'USER', this.user.id, `Deleted custom role: ${removed.name}`);
+    this.addNotification('Custom Role Deleted', `Role "${removed.name}" has been deleted.`, 'warning', 'customization');
+    this.notify();
+    return true;
+  }
+
+  // ==========================================
+  // BUSINESS ROLES & MULTI-USER MAPPING
+  // ==========================================
+  public getBusinessRoles(): BusinessRole[] {
+    return this.businessRoles || [];
+  }
+
+  public saveBusinessRoles(roles: BusinessRole[]): void {
+    this.businessRoles = roles;
+    save(STORAGE_KEYS.BUSINESS_ROLES, this.businessRoles);
+    this.notify();
+  }
+
+  public addBusinessRole(roleData: Omit<BusinessRole, 'id'>): BusinessRole {
+    const newRole: BusinessRole = {
+      ...roleData,
+      id: `br-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
+      code: roleData.code || `BR_${roleData.name.toUpperCase().replace(/[^A-Z0-9]/g, '_').slice(0, 8)}`,
+      associatedSystemRole: roleData.associatedSystemRole || 'estimator',
+      assignedUserIds: roleData.assignedUserIds || [],
+      assignedFunctions: roleData.assignedFunctions || [],
+      status: roleData.status || 'active',
+      createdAt: roleData.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    this.businessRoles.push(newRole);
+    save(STORAGE_KEYS.BUSINESS_ROLES, this.businessRoles);
+    this.logAudit('CREATE', 'USER', this.user.id, `Created business role: ${newRole.name}`);
+    this.addNotification('Business Role Created', `Business role "${newRole.name}" created with ${newRole.assignedUserIds.length} users mapped.`, 'success', 'customization');
+    this.notify();
+    return newRole;
+  }
+
+  public updateBusinessRole(id: string, updates: Partial<BusinessRole>): BusinessRole | null {
+    const idx = this.businessRoles.findIndex((r) => r.id === id);
+    if (idx === -1) return null;
+    const updated: BusinessRole = {
+      ...this.businessRoles[idx],
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+    this.businessRoles[idx] = updated;
+    save(STORAGE_KEYS.BUSINESS_ROLES, this.businessRoles);
+    this.logAudit('UPDATE', 'USER', this.user.id, `Updated business role: ${updated.name}`);
+    this.notify();
+    return updated;
+  }
+
+  public deleteBusinessRole(id: string): boolean {
+    const idx = this.businessRoles.findIndex((r) => r.id === id);
+    if (idx === -1) return false;
+    const removed = this.businessRoles.splice(idx, 1)[0];
+    save(STORAGE_KEYS.BUSINESS_ROLES, this.businessRoles);
+    this.logAudit('DELETE', 'USER', this.user.id, `Deleted business role: ${removed.name}`);
+    this.addNotification('Business Role Deleted', `Business role "${removed.name}" has been deleted.`, 'warning', 'customization');
+    this.notify();
+    return true;
+  }
+
+  public assignUsersToBusinessRole(roleId: string, userIds: string[]): BusinessRole | null {
+    const role = this.businessRoles.find((r) => r.id === roleId);
+    if (!role) return null;
+    role.assignedUserIds = userIds;
+    save(STORAGE_KEYS.BUSINESS_ROLES, this.businessRoles);
+    this.logAudit('UPDATE', 'USER', this.user.id, `Updated user assignment for business role "${role.name}" (${userIds.length} users mapped)`);
+    this.addNotification('User Mapping Updated', `Updated user mapping for "${role.name}" (${userIds.length} users).`, 'info', 'customization');
+    this.notify();
+    return role;
+  }
+
+  // ==========================================
+  // SEGREGATION OF DUTIES (SoD) & MITIGATIONS
+  // ==========================================
+  public getSodOverrides(): { ruleId: string; targetId: string; targetType: 'role' | 'user'; approvedBy: string; approvedAt: string; reason: string }[] {
+    return this.sodOverrides || [];
+  }
+
+  public addSodOverride(override: { ruleId: string; targetId: string; targetType: 'role' | 'user'; approvedBy: string; reason: string }): void {
+    const existingIdx = this.sodOverrides.findIndex(
+      (o) => o.ruleId === override.ruleId && o.targetId === override.targetId
+    );
+    const item = {
+      ...override,
+      approvedAt: new Date().toISOString()
+    };
+    if (existingIdx > -1) {
+      this.sodOverrides[existingIdx] = item;
+    } else {
+      this.sodOverrides.push(item);
+    }
+    save(STORAGE_KEYS.SOD_OVERRIDES, this.sodOverrides);
+    this.logAudit('UPDATE', 'SYSTEM', this.user.id, `SoD Mitigation Override granted for rule [${override.ruleId}] on [${override.targetId}]: "${override.reason}"`);
+    this.addNotification('SoD Override Recorded', `Mitigation control recorded for rule ${override.ruleId}.`, 'warning', 'customization');
+    this.notify();
+  }
+
+  public removeSodOverride(ruleId: string, targetId: string): void {
+    this.sodOverrides = this.sodOverrides.filter(
+      (o) => !(o.ruleId === ruleId && o.targetId === targetId)
+    );
+    save(STORAGE_KEYS.SOD_OVERRIDES, this.sodOverrides);
+    this.logAudit('DELETE', 'SYSTEM', this.user.id, `Removed SoD Mitigation Override for rule [${ruleId}] on [${targetId}]`);
+    this.notify();
+  }
+
+  public getAllSodViolations(): SodViolation[] {
+    const overridesMap: Record<string, { notes: string; approvedBy: string; approvedAt: string }> = {};
+    (this.sodOverrides || []).forEach((o) => {
+      overridesMap[`${o.targetType}_${o.targetId}_${o.ruleId}`] = {
+        notes: o.reason,
+        approvedBy: o.approvedBy,
+        approvedAt: o.approvedAt
+      };
+    });
+
+    return evaluateAllSodViolations(
+      this.getBusinessRoles(),
+      this.getRoleFunctionPermissions(),
+      this.getUsers(),
+      overridesMap
+    );
   }
 
   // ==========================================

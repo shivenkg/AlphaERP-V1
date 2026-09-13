@@ -46,18 +46,16 @@ export const UomConversionCalculatorModal: React.FC<UomConversionCalculatorModal
   preselectedItem,
   onApplyConversionToItem
 }) => {
-  if (!isOpen) return null;
-
   // Active view tab: 'item' (item-linked) | 'quick' (engineering quick converter) | 'matrix' (full unit matrix cheat sheet)
   const [activeTab, setActiveTab] = useState<'item' | 'quick' | 'matrix'>('item');
 
   // Selected Inventory Item
-  const [selectedSku, setSelectedSku] = useState<string>(preselectedItem?.sku || (inventory[0]?.sku || ''));
+  const [selectedSku, setSelectedSku] = useState<string>(preselectedItem?.sku || (inventory?.[0]?.sku || ''));
   const [itemSearch, setItemSearch] = useState<string>('');
   const [showItemDropdown, setShowItemDropdown] = useState<boolean>(false);
 
   const currentItem = useMemo(() => {
-    return inventory.find((i) => i.sku === selectedSku) || preselectedItem || inventory[0] || null;
+    return (inventory || []).find((i) => i.sku === selectedSku) || preselectedItem || inventory?.[0] || null;
   }, [inventory, selectedSku, preselectedItem]);
 
   // Detected or selected Category
@@ -185,6 +183,8 @@ export const UomConversionCalculatorModal: React.FC<UomConversionCalculatorModal
         return Calculator;
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">

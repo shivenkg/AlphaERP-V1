@@ -468,6 +468,28 @@ export function App() {
     }
   }, [data.currentUser?.role]);
 
+  // Memoized badge counts to prevent unnecessary array traversal on every re-render
+  const openShortagesCount = useMemo(
+    () => (data?.projects || []).reduce((sum, p) => sum + (p.totalShortageItemsCount || 0), 0),
+    [data?.projects]
+  );
+  const pendingPRCount = useMemo(
+    () => (data?.prs || []).filter((p) => p.status === 'Pending Approval').length,
+    [data?.prs]
+  );
+  const pendingPOCount = useMemo(
+    () => (data?.pos || []).filter((p) => p.status === 'Sent to Vendor').length,
+    [data?.pos]
+  );
+  const lowStockCount = useMemo(
+    () => (data?.inventory || []).filter((i) => i.availableStock <= i.reorderLevel).length,
+    [data?.inventory]
+  );
+  const pendingInvoicesCount = useMemo(
+    () => (data?.payments || []).filter((p) => p.status !== 'Paid').length,
+    [data?.payments]
+  );
+
   // If user is not authenticated, show the dedicated full-screen login / OTP verification page
   if (!data.isAuthenticated) {
     return (
@@ -481,30 +503,8 @@ export function App() {
     );
   }
 
-  // Memoized badge counts to prevent unnecessary array traversal on every re-render
-  const openShortagesCount = useMemo(
-    () => data.projects.reduce((sum, p) => sum + p.totalShortageItemsCount, 0),
-    [data.projects]
-  );
-  const pendingPRCount = useMemo(
-    () => data.prs.filter((p) => p.status === 'Pending Approval').length,
-    [data.prs]
-  );
-  const pendingPOCount = useMemo(
-    () => data.pos.filter((p) => p.status === 'Sent to Vendor').length,
-    [data.pos]
-  );
-  const lowStockCount = useMemo(
-    () => data.inventory.filter((i) => i.availableStock <= i.reorderLevel).length,
-    [data.inventory]
-  );
-  const pendingInvoicesCount = useMemo(
-    () => data.payments.filter((p) => p.status !== 'Paid').length,
-    [data.payments]
-  );
-
   return (
-    <div className="h-screen w-full max-w-full overflow-hidden bg-[#FAF9F5] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-blue-500 selection:text-white transition-colors duration-200">
+    <div className="h-screen w-full max-w-full overflow-hidden bg-[var(--page-bg,#FAFBFC)] text-[var(--text-primary,#1F2937)] flex flex-col font-sans selection:bg-blue-500 selection:text-white transition-colors duration-200">
       {/* Top Application Header */}
       <Header
         currentUser={data.currentUser}
@@ -558,7 +558,7 @@ export function App() {
         />
 
         {/* Viewport */}
-        <main className="flex-1 h-full min-w-0 overflow-y-auto overflow-x-hidden p-3.5 sm:p-4 lg:p-6 bg-[#FAF9F5] dark:bg-slate-950 transition-colors duration-200">
+        <main className="flex-1 h-full min-w-0 overflow-y-auto overflow-x-hidden p-3.5 sm:p-4 lg:p-6 bg-[var(--page-bg,#FAFBFC)] transition-colors duration-200">
           <div className="max-w-7xl mx-auto w-full min-w-0">
             <Suspense fallback={<ViewLoadingFallback moduleName={activeTab.toUpperCase()} />}>
               {/* View: Global ERP Search & Lookup */}

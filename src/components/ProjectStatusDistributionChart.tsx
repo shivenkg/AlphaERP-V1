@@ -355,7 +355,16 @@ export const ProjectStatusDistributionChart: React.FC<ProjectStatusDistributionC
                 onMouseEnter={() => setActiveIndex(idx)}
                 onMouseLeave={() => setActiveIndex(null)}
                 onClick={() => onNavigate && onNavigate('projects')}
-                className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (onNavigate) onNavigate('projects');
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                title={`Click to inspect ${item.name || item.statusKey} projects in Projects & BOQ`}
+                className={`p-3 rounded-xl border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   activeIndex === idx
                     ? 'bg-slate-50 border-slate-300 shadow-xs ring-1 ring-slate-300/50'
                     : 'bg-white border-slate-200 hover:border-slate-300'

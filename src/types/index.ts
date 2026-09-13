@@ -661,6 +661,8 @@ export interface SystemSettings {
   companyName: string;
   appTitle: string;
   tagline: string;
+  organizationLogo?: string;
+  organizationLogoAlt?: string;
   gstin: string;
   pan: string;
   cin: string;
@@ -758,6 +760,92 @@ export interface EmailSmtpConfig {
   lastTestedAt?: string;
   lastTestStatus?: 'SUCCESS' | 'FAILED';
   lastTestMessage?: string;
+}
+
+// ==========================================
+// Enterprise Governance, SoD & Business Roles
+// ==========================================
+
+export type EnterpriseFunctionDomain =
+  | 'crm_sales'
+  | 'engineering_quote'
+  | 'project_boq'
+  | 'procurement'
+  | 'warehouse_inventory'
+  | 'services_amc'
+  | 'finance_accounting'
+  | 'hr_payroll'
+  | 'system_admin';
+
+export interface EnterpriseFunction {
+  id: string;
+  code: string;
+  name: string;
+  domain: EnterpriseFunctionDomain;
+  domainLabel: string;
+  description: string;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  defaultRoles: UserRole[];
+}
+
+export interface CustomRoleDefinition {
+  id: string;
+  name: string;
+  code: string;
+  department: string;
+  badge: string;
+  badgeColor: string;
+  description: string;
+  baseRole: UserRole;
+  isSystem?: boolean;
+  assignedFunctions: string[];
+  assignedModuleIds: string[];
+  status?: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SodConflictRule {
+  id: string;
+  code: string;
+  title: string;
+  functionAId: string;
+  functionAName: string;
+  functionBId: string;
+  functionBName: string;
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM';
+  riskDescription: string;
+  mitigatingControl: string;
+}
+
+export interface SodViolation {
+  id: string;
+  ruleId: string;
+  ruleTitle: string;
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM';
+  violatorType: 'role' | 'user';
+  violatorId: string;
+  violatorName: string;
+  functionA: string;
+  functionB: string;
+  status: 'active' | 'mitigated';
+  mitigationNotes?: string;
+  approvedBy?: string;
+  detectedAt: string;
+}
+
+export interface BusinessRole {
+  id: string;
+  code: string;
+  name: string;
+  department: string;
+  description: string;
+  associatedSystemRole: UserRole | string;
+  assignedFunctions: string[];
+  assignedUserIds: string[];
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type ReportType = 'invoice' | 'po' | 'pr' | 'quotation' | 'workorder';

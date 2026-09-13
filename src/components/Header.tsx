@@ -100,6 +100,21 @@ export const Header: React.FC<HeaderProps> = ({
   const [quickSyncError, setQuickSyncError] = useState<string | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
+  // Enterprise Customization: Organization Logo reactive state
+  const [orgLogo, setOrgLogo] = useState<string | undefined>(() => storageService.getSystemSettings()?.organizationLogo);
+  const [orgLogoAlt, setOrgLogoAlt] = useState<string | undefined>(() => storageService.getSystemSettings()?.organizationLogoAlt);
+
+  useEffect(() => {
+    const unsubscribe = storageService.subscribe(() => {
+      const s = storageService.getSystemSettings();
+      setOrgLogo(s?.organizationLogo);
+      setOrgLogoAlt(s?.organizationLogoAlt);
+    });
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, []);
+
   // Close search preview dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -374,7 +389,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-xs w-full max-w-full transition-colors duration-200">
+    <header className="bg-[var(--content-bg,#FFFFFF)] text-[var(--text-primary,#1F2937)] border-b border-[var(--border-default,#E5E7EB)] sticky top-0 z-30 shadow-xs w-full max-w-full transition-colors duration-200">
       <div className="px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4 w-full max-w-full">
         {/* Left: Brand & Sidebar Toggle */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-fit">
@@ -421,7 +436,15 @@ export const Header: React.FC<HeaderProps> = ({
             title="Go to Executive Dashboard"
             aria-label="HVAC Biz - Go to Executive Dashboard"
           >
-            <JSAlphaSoftLogo size="sm" variant="icon" isDarkTheme={isDark} />
+            {orgLogo ? (
+              <img
+                src={orgLogo}
+                alt={orgLogoAlt || 'Organization Logo'}
+                className="h-8 max-w-[120px] object-contain rounded drop-shadow-sm"
+              />
+            ) : (
+              <JSAlphaSoftLogo size="sm" variant="icon" isDarkTheme={isDark} />
+            )}
             <div className="flex items-center gap-1.5 leading-none select-none">
               <span className="text-base sm:text-lg font-black tracking-tight flex items-baseline">
                 <span className="text-[#0B3B95] dark:text-[#3B82F6]">HVAC</span>

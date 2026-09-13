@@ -24,6 +24,11 @@ import {
   validatePositiveNumber,
   formatMobileInput
 } from '../src/utils/validation';
+import {
+  ENTERPRISE_FUNCTIONS,
+  ENTERPRISE_SOD_RULES,
+  evaluateSodConflicts
+} from '../src/utils/rbac';
 import type {
   Lead,
   Quote,
@@ -2073,6 +2078,123 @@ export async function executeAllUATTests() {
           assert(Boolean(l.action), `Audit log #${idx} must specify an Action`);
           assert(Boolean(l.entityType), `Audit log #${idx} must specify an Entity Type`);
         });
+      });
+    }
+  );
+
+  // ==========================================================================
+  // USE CASE 23: Enterprise Customization, Granular Functions, Custom Roles, SoD Matrix & Business Roles
+  // ==========================================================================
+  await runTestCase(
+    'UAT-CASE-23',
+    'Enterprise Customization: Branding Logo, Granular Functions, Custom Roles, SoD Governance Matrix & Multi-User Mapping',
+    'Enterprise Governance & Customization',
+    async (step) => {
+      await step('23.1 Organization Branding Logo Configuration, Persistence & Reset', async () => {
+        const testLogoData = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg==';
+        const testAlt = 'Test Corporation HVAC Division';
+        
+        const updatedSettings = storageService.setOrganizationLogo(testLogoData, testAlt);
+        assert(updatedSettings.organizationLogo === testLogoData, 'Organization logo data must be persisted');
+        assert(updatedSettings.organizationLogoAlt === testAlt, 'Organization logo alt text must be persisted');
+        
+        const retrieved = storageService.getSystemSettings();
+        assert(retrieved.organizationLogo === testLogoData, 'Retrieved system settings must include new organization logo');
+        
+        // Reset logo
+        const resetSettings = storageService.resetOrganizationLogo();
+        assert(!resetSettings.organizationLogo, 'Organization logo must be removed upon reset');
+      });
+
+      await step('23.2 Granular Enterprise Functions Catalog (36 Functions across 9 Domains)', async () => {
+        const funcs = ENTERPRISE_FUNCTIONS;
+        assert(funcs.length === 36, `Expected 36 enterprise functions, found ${funcs.length}`);
+        
+        const domains = new Set(funcs.map((f) => f.domain));
+        assert(domains.size === 9, `Expected 9 business domains, found ${domains.size}`);
+        
+        const perms = storageService.getRoleFunctionPermissions();
+        assert(Boolean(perms.executive), 'Executive role must have function permissions configured');
+        assert(perms.executive.length === 36, 'Executive super-admin role must hold all 36 enterprise functions');
+      });
+
+      await step('23.3 Custom Role Definition, Function Assignment, Modification & Deletion', async () => {
+        const initialCustomRolesCount = storageService.getCustomRoles().length;
+        
+        const createdRole = storageService.addCustomRole({
+          name: 'Chief HVAC Commissioning Inspector',
+          code: 'ROLE_CHIEF_COMM',
+          department: 'Field Engineering & Commissioning',
+          badge: 'CHIEF_COMM',
+          badgeColor: 'bg-teal-100 text-teal-800 border-teal-200',
+          description: 'Specialist custom role for commissioning sign-offs and sensor calibration',
+          baseRole: 'technician',
+          assignedFunctions: ['fn_eng_heatload_calc', 'fn_proj_manage_lifecycle', 'fn_svc_inspection_telemetry'],
+          assignedModuleIds: ['projects', 'workorders', 'services_amc'],
+          status: 'active'
+        });
+        
+        assert(Boolean(createdRole.id), 'Created custom role must have an ID');
+        assert(createdRole.assignedFunctions.length === 3, 'Created role must have 3 assigned functions');
+        assert(storageService.getCustomRoles().length === initialCustomRolesCount + 1, 'Custom roles list must increment');
+        
+        // Update custom role
+        const updated = storageService.updateCustomRole(createdRole.id, {
+          name: 'Principal HVAC Commissioning Inspector',
+          assignedFunctions: ['fn_eng_heatload_calc', 'fn_proj_manage_lifecycle', 'fn_svc_inspection_telemetry', 'fn_svc_emergency_dispatch']
+        });
+        assert(updated?.name === 'Principal HVAC Commissioning Inspector', 'Role name update must persist');
+        assert(updated?.assignedFunctions.length === 4, 'Updated assigned functions must persist');
+        
+        // Delete custom role
+        const deleted = storageService.deleteCustomRole(createdRole.id);
+        assert(deleted, 'Custom role must be deleted successfully');
+        assert(storageService.getCustomRoles().length === initialCustomRolesCount, 'Custom roles list must decrement back');
+      });
+
+      await step('23.4 Segregation of Duties (SoD) Conflict Evaluation & Compensating Control Overrides', async () => {
+        // Evaluate conflict between PR creation and PR approval
+        const conflictRule = evaluateSodConflicts(['fn_proc_create_pr', 'fn_proc_approve_pr']);
+        assert(conflictRule.length >= 1, 'Opposing functions fn_proc_create_pr and fn_proc_approve_pr must trigger an SoD conflict');
+        assert(conflictRule.some((r) => r.id === 'SOD-01'), 'Rule SOD-01 must be triggered');
+        
+        // Test recording a compensating control override
+        storageService.addSodOverride({
+          ruleId: 'SOD-01',
+          targetId: 'usr-004',
+          targetType: 'user',
+          approvedBy: 'Chief Internal Auditor',
+          reason: 'Emergency interim dual authorization approved by Audit Committee'
+        });
+        
+        const overrides = storageService.getSodOverrides();
+        const found = overrides.find((o) => o.ruleId === 'SOD-01' && o.targetId === 'usr-004');
+        assert(Boolean(found), 'Compensating control override must be saved in storage');
+        assert(found?.approvedBy === 'Chief Internal Auditor', 'Approver name must match');
+        
+        // Clean up override
+        storageService.removeSodOverride('SOD-01', 'usr-004');
+        const afterRemove = storageService.getSodOverrides().find((o) => o.ruleId === 'SOD-01' && o.targetId === 'usr-004');
+        assert(!afterRemove, 'Override must be removed');
+      });
+
+      await step('23.5 Business Roles Directory & Multi-User Mapping from User Roster', async () => {
+        const businessRoles = storageService.getBusinessRoles();
+        assert(businessRoles.length >= 7, 'System must maintain standard HVAC business roles');
+        
+        const targetRole = businessRoles[0];
+        assert(Boolean(targetRole.id), 'Business role must have unique ID');
+        
+        // Test multi-user assignment
+        const testUserIds = ['usr-002', 'usr-003', 'usr-004'];
+        const updatedRole = storageService.assignUsersToBusinessRole(targetRole.id, testUserIds);
+        assert(updatedRole !== null, 'assignUsersToBusinessRole must return updated role');
+        assert(updatedRole?.assignedUserIds.length === 3, 'Assigned user IDs count must equal 3');
+        assert(updatedRole?.assignedUserIds.includes('usr-002'), 'Assigned user usr-002 must be included');
+        
+        // Verify via getBusinessRoles
+        const refreshed = storageService.getBusinessRoles().find((r) => r.id === targetRole.id);
+        assert(refreshed?.assignedUserIds.length === 3, 'Refreshed business role must reflect multi-user assignment');
       });
     }
   );

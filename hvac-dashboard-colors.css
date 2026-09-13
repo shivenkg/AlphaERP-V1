@@ -1,0 +1,1057 @@
+/* ================================================
+   HVAC Dashboard - Professional Color Scheme
+   Light & Dark Mode CSS
+   ================================================ */
+
+/* ================================================
+   ROOT VARIABLES - LIGHT MODE (DEFAULT)
+   ================================================ */
+
+:root {
+  /* Sidebar Colors - Light Mode */
+  --sidebar-bg: #F8FAFB;
+  --sidebar-border: #E5E7EB;
+  --sidebar-text: #374151;
+  --sidebar-text-muted: #6B7280;
+  --sidebar-text-hover: #1F2937;
+
+  /* Sidebar Active State */
+  --sidebar-active-bg: #EFF6FF;
+  --sidebar-active-text: #1F2937;
+  --sidebar-active-border: #3B82F6;
+
+  /* Sidebar Hover State */
+  --sidebar-hover-bg: #F3F4F6;
+  --sidebar-hover-text: #1F2937;
+
+  /* Main Content Colors - Light Mode */
+  --content-bg: #FFFFFF;
+  --page-bg: #FAFBFC;
+  --card-bg: #FFFFFF;
+  --card-border: #E5E7EB;
+  --card-shadow: rgba(0, 0, 0, 0.04);
+
+  /* Text Colors - Light Mode */
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --text-disabled: #D1D5DB;
+
+  /* Border Colors - Light Mode */
+  --border-default: #E5E7EB;
+  --border-strong: #D1D5DB;
+
+  /* Primary Action Colors */
+  --primary-color: #3B82F6;
+  --primary-color-hover: #2563EB;
+  --primary-color-active: #1D4ED8;
+  --primary-color-light: #EFF6FF;
+  --primary-text-on-primary: #FFFFFF;
+
+  /* Secondary Action Colors */
+  --secondary-color: #8B5CF6;
+  --secondary-color-hover: #7C3AED;
+  --secondary-color-light: #F5F3FF;
+
+  /* Status Colors - Light Mode */
+  --success-color: #10B981;
+  --success-color-light: #D1FAE5;
+  --success-text: #065F46;
+
+  --warning-color: #F59E0B;
+  --warning-color-light: #FEF3C7;
+  --warning-text: #78350F;
+
+  --danger-color: #EF4444;
+  --danger-color-light: #FEE2E2;
+  --danger-text: #7F1D1D;
+
+  --info-color: #0EA5E9;
+  --info-color-light: #CFFAFE;
+  --info-text: #0C4A6E;
+
+  /* Logo/Brand Colors */
+  --logo-orange: #F97316;
+  --logo-orange-hover: #EA580C;
+
+  /* Input/Field Colors - Light Mode */
+  --input-bg: #FFFFFF;
+  --input-border: #D1D5DB;
+  --input-border-hover: #9CA3AF;
+  --input-border-focus: #3B82F6;
+  --input-placeholder: #9CA3AF;
+  --input-shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.1);
+
+  /* Divider/Separator Colors */
+  --divider-color: #E5E7EB;
+  --divider-strong: #D1D5DB;
+
+  /* Badge/Pill Colors */
+  --badge-bg: #F3F4F6;
+  --badge-text: #374151;
+
+  /* Tooltip Colors - Light Mode */
+  --tooltip-bg: #1F2937;
+  --tooltip-text: #FFFFFF;
+
+  /* Overlay Colors - Light Mode */
+  --overlay-dark: rgba(0, 0, 0, 0.5);
+  --overlay-light: rgba(0, 0, 0, 0.1);
+}
+
+/* ================================================
+   DARK MODE VARIABLES
+   ================================================ */
+
+[data-mode="dark"],
+html.dark,
+.dark {
+  /* Sidebar Colors - Dark Mode */
+  --sidebar-bg: #1F2937;
+  --sidebar-border: #374151;
+  --sidebar-text: #F3F4F6;
+  --sidebar-text-muted: #D1D5DB;
+  --sidebar-text-hover: #FFFFFF;
+
+  /* Sidebar Active State */
+  --sidebar-active-bg: #374151;
+  --sidebar-active-text: #FFFFFF;
+  --sidebar-active-border: #60A5FA;
+
+  /* Sidebar Hover State */
+  --sidebar-hover-bg: #2D3748;
+  --sidebar-hover-text: #E5E7EB;
+
+  /* Main Content Colors - Dark Mode */
+  --content-bg: #111827;
+  --page-bg: #0F172A;
+  --card-bg: #1F2937;
+  --card-border: #374151;
+  --card-shadow: rgba(0, 0, 0, 0.3);
+
+  /* Text Colors - Dark Mode */
+  --text-primary: #F3F4F6;
+  --text-secondary: #D1D5DB;
+  --text-muted: #9CA3AF;
+  --text-disabled: #6B7280;
+
+  /* Border Colors - Dark Mode */
+  --border-default: #374151;
+  --border-strong: #4B5563;
+
+  /* Primary Action Colors - Dark Mode */
+  --primary-color: #60A5FA;
+  --primary-color-hover: #93C5FD;
+  --primary-color-active: #3B82F6;
+  --primary-color-light: #1E3A8A;
+  --primary-text-on-primary: #0F172A;
+
+  /* Secondary Action Colors - Dark Mode */
+  --secondary-color: #A78BFA;
+  --secondary-color-hover: #C4B5FD;
+  --secondary-color-light: #4C1D95;
+
+  /* Status Colors - Dark Mode */
+  --success-color: #34D399;
+  --success-color-light: #064E3B;
+  --success-text: #D1FAE5;
+
+  --warning-color: #FBBF24;
+  --warning-color-light: #78350F;
+  --warning-text: #FEF3C7;
+
+  --danger-color: #F87171;
+  --danger-color-light: #7F1D1D;
+  --danger-text: #FEE2E2;
+
+  --info-color: #06B6D4;
+  --info-color-light: #0C4A6E;
+  --info-text: #CFFAFE;
+
+  /* Logo/Brand Colors */
+  --logo-orange: #FB923C;
+  --logo-orange-hover: #FDBA74;
+
+  /* Input/Field Colors - Dark Mode */
+  --input-bg: #374151;
+  --input-border: #4B5563;
+  --input-border-hover: #6B7280;
+  --input-border-focus: #60A5FA;
+  --input-placeholder: #9CA3AF;
+  --input-shadow-focus: 0 0 0 3px rgba(96, 165, 250, 0.1);
+
+  /* Divider/Separator Colors */
+  --divider-color: #374151;
+  --divider-strong: #4B5563;
+
+  /* Badge/Pill Colors */
+  --badge-bg: #374151;
+  --badge-text: #E5E7EB;
+
+  /* Tooltip Colors - Dark Mode */
+  --tooltip-bg: #F3F4F6;
+  --tooltip-text: #1F2937;
+
+  /* Overlay Colors - Dark Mode */
+  --overlay-dark: rgba(0, 0, 0, 0.7);
+  --overlay-light: rgba(0, 0, 0, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) {
+    /* Sidebar Colors - Dark Mode */
+    --sidebar-bg: #1F2937;
+    --sidebar-border: #374151;
+    --sidebar-text: #F3F4F6;
+    --sidebar-text-muted: #D1D5DB;
+    --sidebar-text-hover: #FFFFFF;
+
+    /* Sidebar Active State */
+    --sidebar-active-bg: #374151;
+    --sidebar-active-text: #FFFFFF;
+    --sidebar-active-border: #60A5FA;
+
+    /* Sidebar Hover State */
+    --sidebar-hover-bg: #2D3748;
+    --sidebar-hover-text: #E5E7EB;
+
+    /* Main Content Colors - Dark Mode */
+    --content-bg: #111827;
+    --page-bg: #0F172A;
+    --card-bg: #1F2937;
+    --card-border: #374151;
+    --card-shadow: rgba(0, 0, 0, 0.3);
+
+    /* Text Colors - Dark Mode */
+    --text-primary: #F3F4F6;
+    --text-secondary: #D1D5DB;
+    --text-muted: #9CA3AF;
+    --text-disabled: #6B7280;
+
+    /* Border Colors - Dark Mode */
+    --border-default: #374151;
+    --border-strong: #4B5563;
+
+    /* Primary Action Colors - Dark Mode */
+    --primary-color: #60A5FA;
+    --primary-color-hover: #93C5FD;
+    --primary-color-active: #3B82F6;
+    --primary-color-light: #1E3A8A;
+    --primary-text-on-primary: #0F172A;
+
+    /* Secondary Action Colors - Dark Mode */
+    --secondary-color: #A78BFA;
+    --secondary-color-hover: #C4B5FD;
+    --secondary-color-light: #4C1D95;
+
+    /* Status Colors - Dark Mode */
+    --success-color: #34D399;
+    --success-color-light: #064E3B;
+    --success-text: #D1FAE5;
+
+    --warning-color: #FBBF24;
+    --warning-color-light: #78350F;
+    --warning-text: #FEF3C7;
+
+    --danger-color: #F87171;
+    --danger-color-light: #7F1D1D;
+    --danger-text: #FEE2E2;
+
+    --info-color: #06B6D4;
+    --info-color-light: #0C4A6E;
+    --info-text: #CFFAFE;
+
+    /* Logo/Brand Colors */
+    --logo-orange: #FB923C;
+    --logo-orange-hover: #FDBA74;
+
+    /* Input/Field Colors - Dark Mode */
+    --input-bg: #374151;
+    --input-border: #4B5563;
+    --input-border-hover: #6B7280;
+    --input-border-focus: #60A5FA;
+    --input-placeholder: #9CA3AF;
+    --input-shadow-focus: 0 0 0 3px rgba(96, 165, 250, 0.1);
+
+    /* Divider/Separator Colors */
+    --divider-color: #374151;
+    --divider-strong: #4B5563;
+
+    /* Badge/Pill Colors */
+    --badge-bg: #374151;
+    --badge-text: #E5E7EB;
+
+    /* Tooltip Colors - Dark Mode */
+    --tooltip-bg: #F3F4F6;
+    --tooltip-text: #1F2937;
+
+    /* Overlay Colors - Dark Mode */
+    --overlay-dark: rgba(0, 0, 0, 0.7);
+    --overlay-light: rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ================================================
+   SIDEBAR STYLING
+   ================================================ */
+
+.sidebar {
+  background-color: var(--sidebar-bg);
+  border-right: 0.5px solid var(--sidebar-border);
+  color: var(--sidebar-text);
+  transition: all 0.2s ease;
+}
+
+.sidebar-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--logo-orange);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-logo-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--logo-orange);
+}
+
+.sidebar-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--sidebar-text-muted);
+  margin-top: 16px;
+  margin-bottom: 8px;
+  padding: 0 12px;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background-color: var(--sidebar-border);
+  margin: 12px 0;
+}
+
+.sidebar-nav-item {
+  padding: 10px 12px;
+  margin: 4px 0;
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--sidebar-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-nav-item:hover {
+  background-color: var(--sidebar-hover-bg);
+  color: var(--sidebar-hover-text);
+}
+
+.sidebar-nav-item.active {
+  background-color: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  border-left-color: var(--sidebar-active-border);
+  font-weight: 500;
+}
+
+.sidebar-nav-item.active:hover {
+  background-color: var(--sidebar-active-bg);
+}
+
+.sidebar-nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.sidebar-quick-action {
+  margin-top: auto;
+  padding: 12px;
+  background-color: var(--primary-color-light);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--primary-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--primary-color);
+  text-align: center;
+}
+
+.sidebar-quick-action:hover {
+  background-color: var(--primary-color);
+  color: var(--primary-text-on-primary);
+}
+
+/* ================================================
+   MAIN CONTENT AREA
+   ================================================ */
+
+.main-content {
+  background-color: var(--page-bg);
+  color: var(--text-primary);
+}
+
+.content-wrapper {
+  background-color: var(--content-bg);
+}
+
+/* ================================================
+   CARD STYLING
+   ================================================ */
+
+.card {
+  background-color: var(--card-bg);
+  border: 0.5px solid var(--card-border);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px var(--card-shadow);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px var(--card-shadow);
+  border-color: var(--primary-color);
+}
+
+.card-header {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-subheader {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.card-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+/* ================================================
+   TEXT STYLES
+   ================================================ */
+
+body {
+  color: var(--text-primary);
+  background-color: var(--page-bg);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text-primary);
+}
+
+p {
+  color: var(--text-secondary);
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-disabled {
+  color: var(--text-disabled);
+}
+
+/* ================================================
+   BUTTON STYLING
+   ================================================ */
+
+.btn {
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--primary-text-on-primary);
+  border: 1px solid var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-color-hover);
+  border-color: var(--primary-color-hover);
+}
+
+.btn-primary:active {
+  background-color: var(--primary-color-active);
+  border-color: var(--primary-color-active);
+}
+
+.btn-primary:disabled {
+  background-color: var(--text-disabled);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+}
+
+.btn-secondary:hover {
+  background-color: var(--sidebar-hover-bg);
+  border-color: var(--border-strong);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: none;
+  padding: 8px 12px;
+}
+
+.btn-ghost:hover {
+  background-color: var(--sidebar-hover-bg);
+}
+
+.btn-success {
+  background-color: var(--success-color);
+  color: #FFFFFF;
+  border: 1px solid var(--success-color);
+}
+
+.btn-success:hover {
+  background-color: #059669;
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  color: #FFFFFF;
+  border: 1px solid var(--danger-color);
+}
+
+.btn-danger:hover {
+  background-color: #DC2626;
+}
+
+.btn-warning {
+  background-color: var(--warning-color);
+  color: #FFFFFF;
+  border: 1px solid var(--warning-color);
+}
+
+.btn-warning:hover {
+  background-color: #D97706;
+}
+
+/* ================================================
+   INPUT FIELD STYLING
+   ================================================ */
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="password"]::placeholder,
+textarea::placeholder {
+  color: var(--input-placeholder);
+}
+
+input[type="text"]:hover,
+input[type="email"]:hover,
+input[type="password"]:hover,
+textarea:hover,
+select:hover {
+  border-color: var(--input-border-hover);
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--input-border-focus);
+  box-shadow: var(--input-shadow-focus);
+}
+
+input[type="text"]:disabled,
+input[type="email"]:disabled,
+textarea:disabled,
+select:disabled {
+  background-color: var(--sidebar-hover-bg);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ================================================
+   BADGE & PILL STYLING
+   ================================================ */
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: var(--badge-bg);
+  color: var(--badge-text);
+}
+
+.badge-success {
+  background-color: var(--success-color-light);
+  color: var(--success-text);
+}
+
+.badge-warning {
+  background-color: var(--warning-color-light);
+  color: var(--warning-text);
+}
+
+.badge-danger {
+  background-color: var(--danger-color-light);
+  color: var(--danger-text);
+}
+
+.badge-info {
+  background-color: var(--info-color-light);
+  color: var(--info-text);
+}
+
+.badge-primary {
+  background-color: var(--primary-color-light);
+  color: var(--primary-color);
+}
+
+/* ================================================
+   STATUS INDICATORS
+   ================================================ */
+
+.status-success {
+  color: var(--success-color);
+}
+
+.status-warning {
+  color: var(--warning-color);
+}
+
+.status-danger {
+  color: var(--danger-color);
+}
+
+.status-info {
+  color: var(--info-color);
+}
+
+/* ================================================
+   TABLE STYLING
+   ================================================ */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--text-primary);
+}
+
+table thead {
+  background-color: var(--sidebar-hover-bg);
+  color: var(--text-primary);
+}
+
+table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+table td {
+  padding: 12px 16px;
+  border-bottom: 0.5px solid var(--border-default);
+  font-size: 14px;
+}
+
+table tbody tr:hover {
+  background-color: var(--sidebar-hover-bg);
+}
+
+table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ================================================
+   DROPDOWN & SELECT STYLING
+   ================================================ */
+
+.dropdown-menu {
+  background-color: var(--card-bg);
+  border: 0.5px solid var(--card-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px var(--card-shadow);
+  min-width: 160px;
+  z-index: 100;
+}
+
+.dropdown-item {
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: var(--sidebar-hover-bg);
+  color: var(--primary-color);
+}
+
+.dropdown-item.active {
+  background-color: var(--primary-color-light);
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: var(--border-default);
+  margin: 4px 0;
+}
+
+/* ================================================
+   MODAL & OVERLAY STYLING
+   ================================================ */
+
+.modal-overlay {
+  background-color: var(--overlay-dark);
+}
+
+.modal-content {
+  background-color: var(--card-bg);
+  border: 0.5px solid var(--card-border);
+  border-radius: 8px;
+  box-shadow: 0 10px 40px var(--card-shadow);
+  color: var(--text-primary);
+}
+
+.modal-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-default);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 16px;
+  color: var(--text-primary);
+}
+
+.modal-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border-default);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* ================================================
+   ALERT & NOTIFICATION STYLING
+   ================================================ */
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 6px;
+  border-left: 4px solid;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.alert-success {
+  background-color: var(--success-color-light);
+  border-left-color: var(--success-color);
+  color: var(--success-text);
+}
+
+.alert-warning {
+  background-color: var(--warning-color-light);
+  border-left-color: var(--warning-color);
+  color: var(--warning-text);
+}
+
+.alert-danger {
+  background-color: var(--danger-color-light);
+  border-left-color: var(--danger-color);
+  color: var(--danger-text);
+}
+
+.alert-info {
+  background-color: var(--info-color-light);
+  border-left-color: var(--info-color);
+  color: var(--info-text);
+}
+
+/* ================================================
+   TOOLTIP STYLING
+   ================================================ */
+
+.tooltip {
+  background-color: var(--tooltip-bg);
+  color: var(--tooltip-text);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px var(--card-shadow);
+}
+
+/* ================================================
+   SEPARATOR & DIVIDER STYLING
+   ================================================ */
+
+.divider {
+  border: none;
+  height: 1px;
+  background-color: var(--divider-color);
+  margin: 16px 0;
+}
+
+.divider-strong {
+  background-color: var(--divider-strong);
+  margin: 20px 0;
+}
+
+hr {
+  border: none;
+  height: 1px;
+  background-color: var(--divider-color);
+  margin: 16px 0;
+}
+
+/* ================================================
+   LINK STYLING
+   ================================================ */
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  color: var(--primary-color-hover);
+  text-decoration: underline;
+}
+
+a:active {
+  color: var(--primary-color-active);
+}
+
+a:visited {
+  color: var(--secondary-color);
+}
+
+/* ================================================
+   SCROLL BAR STYLING
+   ================================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-muted);
+}
+
+/* ================================================
+   ACCESSIBILITY & FOCUS STATES
+   ================================================ */
+
+*:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* ================================================
+   UTILITY CLASSES
+   ================================================ */
+
+.bg-primary {
+  background-color: var(--primary-color);
+  color: var(--primary-text-on-primary);
+}
+
+.bg-success {
+  background-color: var(--success-color);
+  color: #FFFFFF;
+}
+
+.bg-warning {
+  background-color: var(--warning-color);
+  color: #FFFFFF;
+}
+
+.bg-danger {
+  background-color: var(--danger-color);
+  color: #FFFFFF;
+}
+
+.bg-light {
+  background-color: var(--sidebar-hover-bg);
+  color: var(--text-primary);
+}
+
+.border-primary {
+  border-color: var(--primary-color);
+}
+
+.border-success {
+  border-color: var(--success-color);
+}
+
+.border-warning {
+  border-color: var(--warning-color);
+}
+
+.border-danger {
+  border-color: var(--danger-color);
+}
+
+.opacity-50 {
+  opacity: 0.5;
+}
+
+.opacity-75 {
+  opacity: 0.75;
+}
+
+.shadow {
+  box-shadow: 0 1px 3px var(--card-shadow);
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 40px var(--card-shadow);
+}
+
+.rounded {
+  border-radius: 6px;
+}
+
+.rounded-lg {
+  border-radius: 8px;
+}
+
+.rounded-full {
+  border-radius: 9999px;
+}
+
+/* ================================================
+   RESPONSIVE ADJUSTMENTS
+   ================================================ */
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -100%;
+    top: 0;
+    width: 280px;
+    height: 100vh;
+    transition: left 0.3s ease;
+    z-index: 999;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .card {
+    margin-bottom: 12px;
+  }
+}
+
+/* ================================================
+   PRINT STYLES
+   ================================================ */
+
+@media print {
+
+  .sidebar,
+  .btn,
+  .modal-overlay {
+    display: none;
+  }
+
+  body {
+    background-color: #FFFFFF;
+    color: #000000;
+  }
+}

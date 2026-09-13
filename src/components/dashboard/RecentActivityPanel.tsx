@@ -314,8 +314,27 @@ export const RecentActivityPanel: React.FC<RecentActivityPanelProps> = ({
                 <div
                   key={log.id || `recent-log-${index}`}
                   id={`recent-log-entry-${index}`}
-                  onClick={() => setSelectedLog(log)}
-                  className="py-3 first:pt-1 last:pb-1 group hover:bg-slate-50/90 dark:hover:bg-slate-800/60 hover:translate-x-1.5 hover:shadow-xs rounded-xl px-2 -mx-2 transition-all duration-200 cursor-pointer"
+                  onClick={() => {
+                    if (onNavigate && styling.targetTab) {
+                      onNavigate(styling.targetTab);
+                    } else {
+                      setSelectedLog(log);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (onNavigate && styling.targetTab) {
+                        onNavigate(styling.targetTab);
+                      } else {
+                        setSelectedLog(log);
+                      }
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  title={styling.targetTab ? `Click to open in ${styling.targetTab.toUpperCase()}` : 'Click to inspect audit log details'}
+                  className="py-3 first:pt-1 last:pb-1 group hover:bg-slate-50/90 dark:hover:bg-slate-800/60 hover:translate-x-1.5 hover:shadow-xs rounded-xl px-2 -mx-2 transition-all duration-200 cursor-pointer focus:outline-none focus:bg-slate-50 dark:focus:bg-slate-800/60"
                 >
                   <div className="flex items-start gap-3">
                     {/* Event Icon with Badge Style */}

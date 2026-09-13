@@ -17,7 +17,8 @@ import {
   EmailSmtpConfig,
   AmcContract,
   PpmScheduleVisit,
-  BreakdownTicket
+  BreakdownTicket,
+  BusinessRole
 } from '../types';
 import { DEFAULT_NUMBER_SERIES } from '../utils/numberSeries';
 import { DEFAULT_ROLE_MODULE_PERMISSIONS } from '../utils/rbac';
@@ -2748,5 +2749,161 @@ export const INITIAL_BREAKDOWN_TICKETS: BreakdownTicket[] = [
     billableAmount: 0
   }
 ];
+
+export const INITIAL_BUSINESS_ROLES: BusinessRole[] = [
+  {
+    id: 'brole-01',
+    code: 'BR-EST-01',
+    name: 'Lead Commercial Estimator',
+    department: 'Engineering & Estimations',
+    description: 'Responsible for BOQ cost estimating, heat load assessments, supplier quotation evaluation, and margin structuring.',
+    associatedSystemRole: 'estimator',
+    assignedFunctions: [
+      'fn_crm_lead_view',
+      'fn_crm_lead_create',
+      'fn_crm_survey_schedule',
+      'fn_quote_create',
+      'fn_quote_pricing_override',
+      'fn_quote_print_export',
+      'fn_proj_view_workspace',
+      'fn_proj_reconcile_shortages',
+      'fn_proc_create_pr',
+      'fn_inv_view_stock'
+    ],
+    assignedUserIds: ['usr-004'],
+    status: 'active',
+    createdAt: '2026-01-18T10:00:00Z',
+    updatedAt: '2026-01-18T10:00:00Z'
+  },
+  {
+    id: 'brole-02',
+    code: 'BR-PRJ-01',
+    name: 'Senior HVAC Project Manager',
+    department: 'Projects & Site Operations',
+    description: 'Directs turnkey HVAC site execution, ducting/piping erection milestones, customer approvals, and commissioning.',
+    associatedSystemRole: 'sales_manager',
+    assignedFunctions: [
+      'fn_crm_lead_view',
+      'fn_crm_deal_advance',
+      'fn_quote_create',
+      'fn_quote_commercial_approve',
+      'fn_proj_view_workspace',
+      'fn_proj_workorder_release',
+      'fn_svc_create_amc',
+      'fn_fin_create_invoice'
+    ],
+    assignedUserIds: ['usr-003'],
+    status: 'active',
+    createdAt: '2026-01-15T10:00:00Z',
+    updatedAt: '2026-01-15T10:00:00Z'
+  },
+  {
+    id: 'brole-03',
+    code: 'BR-SCM-01',
+    name: 'Central Procurement Head',
+    department: 'Procurement & Supply Chain',
+    description: 'Manages OEM manufacturer negotiations (Daikin, Voltas, Blue Star), releases Purchase Orders, and sets credit terms.',
+    associatedSystemRole: 'procurement',
+    assignedFunctions: [
+      'fn_proj_view_workspace',
+      'fn_proj_reconcile_shortages',
+      'fn_proc_create_pr',
+      'fn_proc_approve_pr',
+      'fn_proc_release_po',
+      'fn_proc_vendor_transmit',
+      'fn_inv_view_stock',
+      'fn_inv_safety_stock_config'
+    ],
+    assignedUserIds: ['usr-002'],
+    status: 'active',
+    createdAt: '2026-01-12T10:00:00Z',
+    updatedAt: '2026-01-12T10:00:00Z'
+  },
+  {
+    id: 'brole-04',
+    code: 'BR-WMS-01',
+    name: 'Chief Warehouse Custodian',
+    department: 'Warehouse & Logistics',
+    description: 'Oversees multi-bay storage facilities, verifies physical GRN inwardings, executes scrap write-offs, and manages safety-stock.',
+    associatedSystemRole: 'warehouse',
+    assignedFunctions: [
+      'fn_proc_create_pr',
+      'fn_inv_view_stock',
+      'fn_inv_receive_grn',
+      'fn_inv_stock_adjustment',
+      'fn_inv_safety_stock_config'
+    ],
+    assignedUserIds: ['usr-005'],
+    status: 'active',
+    createdAt: '2026-02-01T10:00:00Z',
+    updatedAt: '2026-02-01T10:00:00Z'
+  },
+  {
+    id: 'brole-05',
+    code: 'BR-FIN-01',
+    name: 'Senior Financial Controller',
+    department: 'Finance & Accounts',
+    description: 'Enforces GAAP double-entry ledger discipline, issues milestone tax invoices, acknowledges wire remittances, and manages TDS.',
+    associatedSystemRole: 'finance',
+    assignedFunctions: [
+      'fn_fin_create_invoice',
+      'fn_fin_record_payment',
+      'fn_fin_post_jv',
+      'fn_fin_tds_challan',
+      'fn_hr_employee_directory',
+      'fn_hr_biometric_attendance',
+      'fn_hr_run_payroll',
+      'fn_hr_exit_settlement',
+      'fn_sys_audit_logs'
+    ],
+    assignedUserIds: ['usr-006'],
+    status: 'active',
+    createdAt: '2026-01-20T10:00:00Z',
+    updatedAt: '2026-01-20T10:00:00Z'
+  },
+  {
+    id: 'brole-06',
+    code: 'BR-SVC-01',
+    name: 'Field Operations & Services Manager',
+    department: 'Services & AMC Operations',
+    description: 'Supervises post-commissioning maintenance contracts, technician routing, 4-point inspection audits, and 24x7 emergency tickets.',
+    associatedSystemRole: 'service_manager',
+    assignedFunctions: [
+      'fn_crm_lead_view',
+      'fn_crm_survey_schedule',
+      'fn_proj_view_workspace',
+      'fn_proj_workorder_release',
+      'fn_svc_create_amc',
+      'fn_svc_schedule_ppm',
+      'fn_svc_execute_inspection',
+      'fn_svc_emergency_dispatch'
+    ],
+    assignedUserIds: ['usr-008'],
+    status: 'active',
+    createdAt: '2026-02-10T10:00:00Z',
+    updatedAt: '2026-02-10T10:00:00Z'
+  },
+  {
+    id: 'brole-07',
+    code: 'BR-TECH-01',
+    name: 'HVAC Commissioning & TAB Technician',
+    department: 'Field Engineering',
+    description: 'Field execution of refrigerant charging, duct pressure balancing, electrical control terminations, and quarterly PPM visits.',
+    associatedSystemRole: 'technician',
+    assignedFunctions: [
+      'fn_proj_view_workspace',
+      'fn_proj_workorder_release',
+      'fn_inv_view_stock',
+      'fn_svc_schedule_ppm',
+      'fn_svc_execute_inspection',
+      'fn_svc_emergency_dispatch'
+    ],
+    assignedUserIds: ['usr-007'],
+    status: 'active',
+    createdAt: '2026-02-05T10:00:00Z',
+    updatedAt: '2026-02-05T10:00:00Z'
+  }
+];
+
 
 

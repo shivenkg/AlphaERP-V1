@@ -123,8 +123,6 @@ export const ClientQuotationDocumentModal: React.FC<ClientQuotationDocumentModal
     'Equipment supply carries 1-Year Comprehensive On-Site Warranty and 5-Year Compressor Warranty. Testing, Adjusting & Balancing (TAB) report will be submitted within 7 days of site commissioning.'
   );
 
-  if (!isOpen) return null;
-
   // Commercial calculations (Client-facing Selling Price, NOT internal cost)
   const subtotal = currentQuote.subtotal || currentQuote.items.reduce((sum, i) => sum + (i.totalPrice || (i.unitPrice * i.qty)), 0);
   const discountAmount = currentQuote.discountAmount || 0;
@@ -188,6 +186,8 @@ export const ClientQuotationDocumentModal: React.FC<ClientQuotationDocumentModal
       { phase: 'M4', title: 'Testing, Commissioning & Handover', percentage: 15, deliverable: 'Pressure testing, air balancing (TAB), 72-hr trial run & handover' }
     ];
   }, [currentProject]);
+
+  if (!isOpen) return null;
 
   const handleDownloadPDF = async () => {
     if (!printDocRef.current) return;

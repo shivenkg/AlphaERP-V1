@@ -49,6 +49,8 @@ export const MongoDbAdminSection: React.FC = () => {
   const [migrationResult, setMigrationResult] = useState<MongoMigrationResult | null>(null);
   const [restoreResult, setRestoreResult] = useState<MongoRestoreResult | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [isSyncingProjects, setIsSyncingProjects] = useState(false);
+  const [isHydratingProjects, setIsHydratingProjects] = useState(false);
 
   // Active state counts for previewing what will be migrated
   const allData = storageService.getAllData();
@@ -211,9 +213,6 @@ export const MongoDbAdminSection: React.FC = () => {
       setIsRestoring(false);
     }
   };
-
-  const [isSyncingProjects, setIsSyncingProjects] = useState(false);
-  const [isHydratingProjects, setIsHydratingProjects] = useState(false);
 
   const handleSyncProjectsToBoth = async () => {
     setIsSyncingProjects(true);

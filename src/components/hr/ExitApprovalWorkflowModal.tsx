@@ -31,9 +31,7 @@ export const ExitApprovalWorkflowModal: React.FC<ExitApprovalWorkflowModalProps>
   resignation,
   onSuccess
 }) => {
-  if (!isOpen) return null;
-
-  const approvals = resignation.approvals || {
+  const approvals = resignation?.approvals || {
     manager: { status: 'Pending' },
     admin: { status: 'Pending' },
     hr: { status: 'Pending' }
@@ -41,21 +39,21 @@ export const ExitApprovalWorkflowModal: React.FC<ExitApprovalWorkflowModalProps>
 
   // Manager stage states
   const [managerApproverName, setManagerApproverName] = useState(
-    approvals.manager.approverName || 'Prakash Rao (Projects Director)'
+    approvals.manager?.approverName || 'Prakash Rao (Projects Director)'
   );
   const [managerRemarks, setManagerRemarks] = useState(
-    approvals.manager.remarks || 'Handover of all engineering documentation verified.'
+    approvals.manager?.remarks || 'Handover of all engineering documentation verified.'
   );
   const [managerHandoverDone, setManagerHandoverDone] = useState<boolean>(
-    approvals.manager.handoverCompleted ?? true
+    approvals.manager?.handoverCompleted ?? true
   );
   const [recommendedDate, setRecommendedDate] = useState<string>(
-    approvals.manager.recommendedLastWorkingDate || resignation.requestedRelievingDate || resignation.approvedLastWorkingDate
+    approvals.manager?.recommendedLastWorkingDate || resignation?.requestedRelievingDate || resignation?.approvedLastWorkingDate || ''
   );
 
   // Admin stage states
   const [adminApproverName, setAdminApproverName] = useState(
-    approvals.admin.approverName || 'Suresh Patil (Admin & Facilities)'
+    approvals.admin?.approverName || 'Suresh Patil (Admin & Facilities)'
   );
   const [adminRemarks, setAdminRemarks] = useState(
     approvals.admin.remarks || 'ID Card returned, access revocation scheduled for exit date.'
@@ -150,6 +148,8 @@ export const ExitApprovalWorkflowModal: React.FC<ExitApprovalWorkflowModalProps>
       </span>
     );
   };
+
+  if (!isOpen || !resignation) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
