@@ -2,7 +2,7 @@
 
 ## Production Deployment for InsForge BaaS, Vercel Serverless, Google Cloud Run, Docker Containers, Ubuntu Linux, Systemd, PM2 & Nginx
 
-**Document Version:** 3.5.1-Production  
+**Document Version:** 3.6.0-Production  
 **Primary Custom Domain:** [https://hvacbiz.insforge.site](https://hvacbiz.insforge.site)  
 **Vercel Production Mirror:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
 **Ingress Host & Port:** `0.0.0.0:3000` (Dedicated Server) | Vercel Serverless Edge | InsForge Edge
@@ -297,10 +297,19 @@ curl -X POST https://hvacbiz.vercel.app/api/procurement/reorder-alert-email \
     "smtpConfig": { "mode": "mock" }
   }'
 
-# 3. MongoDB Cluster Connection Test
+# 3. Test 30-Day AMC Expiry Alert Email API
+curl -X POST https://hvacbiz.vercel.app/api/service/amc-expiry-alert-email \
+  -H "Content-Type: application/json" \
+  -d '{
+    "subject": "AMC Smoke Test",
+    "recipients": ["sales@yourcompany.com"],
+    "smtpConfig": { "mode": "mock" }
+  }'
+
+# 4. MongoDB Cluster Connection Test
 curl -s https://hvacbiz.vercel.app/api/mongodb/status | jq .
 
-# 4. Automated Enterprise UAT Test Suite (17 Use Cases, 65 Verification Steps)
+# 5. Automated Enterprise UAT Test Suite (24 Use Cases, 92 Verification Steps)
 npm run test:uat
 ```
 
@@ -316,4 +325,4 @@ npm run build
 pm2 reload alpha-erp --update-env
 ```
 
-> **Permissions Cache Reset on Upgrade:** If the release bumps `PERMISSIONS_SCHEMA_VERSION` in `src/services/storageService.ts` (which happens whenever new sidebar modules are added to `src/utils/rbac.ts`), each user's browser will automatically detect the version mismatch on the next page load and rebuild its cached `roleModulePermissions` from the latest defaults. No additional migration steps, database changes, or manual browser cache clearing are required.
+> **Permissions Cache Reset on Upgrade:** If the release bumps `PERMISSIONS_SCHEMA_VERSION` in `src/services/storageService.ts` (current: `'5'`), each user's browser will automatically detect the version mismatch on the next page load and rebuild its cached `roleModulePermissions` from the latest defaults in `src/utils/rbac.ts`. No additional migration steps, database changes, or manual browser cache clearing are required.

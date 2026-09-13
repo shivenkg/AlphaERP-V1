@@ -2,8 +2,8 @@
 
 ## Enterprise HVAC Techno-Commercial, BOQ Verification, WhatsApp Automated Digest, Email/SMTP Alerts, MongoDB Cloud Sync & Gemini Live APIs
 
-**Document Version:** 3.5.1-Production  
-**Base Production URL:** `https://hvacbiz.vercel.app`  
+**Document Version:** 3.6.0-Production  
+**Base Production URL:** [https://hvacbiz.insforge.site](https://hvacbiz.insforge.site) | [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
 **WebSocket Protocol:** `ws://<host>/live` (or `wss://<host>/live` on HTTPS)
 
 ---
@@ -24,11 +24,13 @@ flowchart TB
     subgraph ServiceRoutes["⚙️ Domain API Endpoints"]
         Health["1. System Diagnostics (/api/health)"]
         EmailAlert["2. Reorder Alert Email (/api/procurement/reorder-alert-email)"]
-        EmailTest["3. SMTP Connection Tester (/api/email/test-connection)"]
-        MongoSync["4. MongoDB Atlas Sync & CRUD (/api/mongodb/*)"]
-        GeminiVoice["5. Gemini Live Voice WebSocket (/live)"]
-        WhatsApp["6. WhatsApp Automated Digest Generator"]
-        GoogleSheets["7. Google Sheets 2-Way Sync Engine"]
+        AMCEmailAlert["3. AMC 30-Day Expiry Alert (/api/service/amc-expiry-alert-email)"]
+        EmailTest["4. SMTP Connection Tester (/api/email/test-connection)"]
+        MongoSync["5. MongoDB Atlas Sync & CRUD (/api/mongodb/*)"]
+        AdminEnv["6. SuperAdmin Env Secrets API (/api/admin/env*)"]
+        GeminiVoice["7. Gemini Live Voice WebSocket (/live)"]
+        WhatsApp["8. WhatsApp Automated Digest Generator"]
+        GoogleSheets["9. Google Sheets 2-Way Sync Engine"]
     end
 
     subgraph ExternalServices["☁️ Integrated External Services"]
@@ -41,14 +43,17 @@ flowchart TB
 
     BodyParser --> Health
     BodyParser --> EmailAlert
+    BodyParser --> AMCEmailAlert
     BodyParser --> EmailTest
     BodyParser --> MongoSync
+    BodyParser --> AdminEnv
     BodyParser --> GeminiVoice
     BodyParser --> WhatsApp
     BodyParser --> GoogleSheets
 
     MongoSync <--> MongoDBAtlas
     EmailAlert --> SMTPTransporter
+    AMCEmailAlert --> SMTPTransporter
     EmailTest --> SMTPTransporter
     GeminiVoice <--> GeminiPlatform
     GoogleSheets <--> GoogleDrive
@@ -155,6 +160,56 @@ Sends an automated, itemized email alert to the procurement team whenever invent
   "recipients": ["procurement@atmosaircon.com"],
   "timestamp": "2026-09-10T00:00:00.000Z",
   "note": "Email recorded and dispatched via AlphaERP resilient Mock Sandbox."
+}
+```
+
+---
+
+#### `POST /api/service/amc-expiry-alert-email`
+
+Dispatches an itemized 30-day AMC contract expiry notice to the sales operations team and customer account managers.
+
+**Request Payload:**
+
+```json
+{
+  "recipients": ["sales@atmosaircon.com", "accounts@atmosaircon.com"],
+  "subject": "⚠️ [AlphaERP Sales Alert] 3 HVAC AMC Contracts Expiring in 30 Days",
+  "contracts": [
+    {
+      "id": "amc-2026-001",
+      "contractCode": "AMC-2026-001",
+      "customerName": "Grand Hyatt Mumbai",
+      "siteLocation": "Santacruz East, Mumbai",
+      "endDate": "2026-10-12",
+      "contractValue": 1250000,
+      "type": "comprehensive"
+    }
+  ],
+  "smtpConfig": {
+    "mode": "smtp",
+    "host": "smtp.sendgrid.net",
+    "port": 587,
+    "username": "apikey",
+    "password": "SG.YourApiKey",
+    "senderName": "AlphaERP AMC Operations",
+    "senderEmail": "service-alerts@alphaerp.com"
+  }
+}
+```
+
+**Response `200 OK`:**
+
+```json
+{
+  "success": true,
+  "mode": "smtp",
+  "isRealSmtp": true,
+  "messageId": "<amc-alert-1234@alphaerp.com>",
+  "recipients": ["sales@atmosaircon.com"],
+  "timestamp": "2026-09-13T12:00:00.000Z",
+  "contractsCount": 1,
+  "note": "AMC expiry notification email successfully dispatched to sales team via SMTP (smtp.sendgrid.net)"
 }
 ```
 
@@ -269,9 +324,80 @@ Reads or bulk-saves HVAC project execution records in MongoDB Atlas.
 
 Upserts a single project record by its unique `id` in MongoDB Atlas.
 
+#### `POST /api/mongodb/restore`
+
+Restores the complete database collection snapshot from MongoDB Atlas.
+
+#### `POST /api/mongodb/config`
+
+Updates MongoDB connection URI and database target dynamically at runtime without restarting the process.
+
+**Request Payload:**
+
+```json
+{
+  "uri": "mongodb+srv://user:password@cluster.mongodb.net/alphaerp?retryWrites=true&w=majority",
+  "databaseName": "alphaerp"
+}
+```
+
 ---
 
-### 3.4 Gemini Live Audio Assistant API (Duplex WebSocket)
+### 3.4 SuperAdmin Environment Variables & Secrets Management APIs
+
+Exclusively accessible to root administrators for inspecting, validating, and updating server runtime environment secrets.
+
+#### `GET /api/admin/env`
+
+Retrieves all configured environment variables with metadata, source (`.env` vs runtime), masked values for sensitive secrets, and system validation status.
+
+#### `POST /api/admin/env`
+
+Saves modified environment variables and persists them directly into the root `.env` configuration file.
+
+**Request Payload:**
+
+```json
+{
+  "variables": {
+    "GEMINI_API_KEY": "AIzaSyNewKeyHere",
+    "SMTP_HOST": "smtp.sendgrid.net",
+    "SMTP_PORT": "587"
+  },
+  "removedKeys": ["OLD_UNUSED_KEY"]
+}
+```
+
+#### `POST /api/admin/env/test`
+
+Executes an active test validation against an individual API key or connection string.
+
+**Request Payload:**
+
+```json
+{
+  "key": "GEMINI_API_KEY",
+  "value": "AIzaSyNewKeyHere"
+}
+```
+
+**Response `200 OK`:**
+
+```json
+{
+  "success": true,
+  "message": "Gemini API key validated successfully. Model initialized.",
+  "latencyMs": 142
+}
+```
+
+#### `GET /api/admin/env/raw`
+
+Exports the formatted `.env` content as an attachment stream (`Content-Disposition: attachment; filename=".env"`).
+
+---
+
+### 3.5 Gemini Live Audio Assistant API (Duplex WebSocket)
 
 AlphaERP includes an ultra-low latency real-time voice assistant powered by Gemini Live:
 
@@ -297,7 +423,7 @@ AlphaERP includes an ultra-low latency real-time voice assistant powered by Gemi
 
 ---
 
-### 3.5 Automated WhatsApp Daily KPI Trigger
+### 3.6 Automated WhatsApp Daily KPI Trigger
 
 Generates automated previous-day business metrics and dispatches via `https://wa.me`:
 
@@ -320,7 +446,7 @@ Generates automated previous-day business metrics and dispatches via `https://wa
 
 ---
 
-### 3.6 Google Sheets Multi-Tab Synchronization Engine
+### 3.7 Google Sheets Multi-Tab Synchronization Engine
 
 Synchronizes full bi-directional collections across Google Spreadsheets:
 
@@ -338,7 +464,7 @@ Synchronizes full bi-directional collections across Google Spreadsheets:
 
 ---
 
-### 3.7 AMC 30-Day Renewal Notification & Telemetry Logging Service
+### 3.8 AMC 30-Day Renewal Notification & Telemetry Logging Service
 
 #### Automated 30-Day AMC Expiry Scan
 
@@ -347,23 +473,23 @@ The automated AMC Renewal Engine (`src/services/amcRenewalNotificationService.ts
 1. Calculates remaining days until expiry.
 2. Compiles covered equipment inventory and historical PPM visit compliance.
 3. Formats an itemized renewal estimate with standard revision index.
-4. Triggers `POST /api/procurement/reorder-alert-email` or dispatches via configured SMTP transporter to both client contact and the assigned `Service Operations Manager`.
+4. Triggers `POST /api/service/amc-expiry-alert-email` or dispatches via configured SMTP transporter to both client contact and the assigned `Service Operations Manager`.
 
 ---
 
-### 3.8 Services & AMC RBAC Module IDs
+### 3.9 Persona Scoping & RBAC Module IDs
 
 When using the admin RBAC panel to assign or query module permissions, use these canonical module IDs:
 
 | Sidebar Tab Label | Module ID | `category` in `APP_MODULES` | Default Roles |
 | :--- | :--- | :--- | :--- |
-| Services & AMC Contracts | `services_amc` | `services` | executive, sales_manager, estimator, technician, warehouse, service_manager |
-| Service Scheduling & PPM | `services_schedule` | `services` | executive, sales_manager, estimator, technician, warehouse, service_manager |
-| Work Orders & Field Dispatch | `workorders` | `services` | executive, technician, warehouse, service_manager |
-
-All three IDs are grouped under the `services_section` sidebar group and appear **immediately below** the `Sales & Engineering` (`sales_eng`) group in the navigation sidebar.
+| Investor Pitch Deck | `pitch_deck` | `management` | `superadmin` (SuperAdmin Only) |
+| Enterprise Licensing & DRM | `license` | `system` | `superadmin` (SuperAdmin Only) |
+| Services & AMC Contracts | `services_amc` | `services` | superadmin, admin, executive, sales_manager, estimator, technician, warehouse, service_manager |
+| Service Scheduling & PPM | `services_schedule` | `services` | superadmin, admin, executive, sales_manager, estimator, technician, warehouse, service_manager |
+| Work Orders & Field Dispatch | `workorders` | `services` | superadmin, admin, executive, technician, warehouse, service_manager |
 
 - **Rate Limits**: 120 req/min for general REST routes; 20 req/min for email alerts and AI endpoints.
 - **WebSocket Protection**: Maximum 5 concurrent WebSocket connections per IP address with automated heartbeat ping/pong cleanup.
 - **Payload Size**: Maximum 25MB JSON payload limit for database migrations and backup ingestion.
-- **UAT Verification**: 100% Passing automated test suite with 17 cases and 65 verification steps (`npm run test:uat`).
+- **UAT Verification**: 100% Passing automated test suite with 24 cases and 92 verification steps (`npm run test:uat`).

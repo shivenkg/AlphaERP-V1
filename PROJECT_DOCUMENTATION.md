@@ -3,10 +3,10 @@
 ## Enterprise HVAC Techno-Commercial, BOQ Engineering, Multi-Tier Procurement, Predictive Stock Indents, GAAP Accounting & Multi-Cloud Platform
 
 **Project Name:** AlphaERP / HVAC-Sync Pro (Commercial HVAC & MEP Enterprise Lifecycle Platform)  
-**Version:** 3.5.1-Production  
+**Version:** 3.6.0-Production  
 **Document Author:** Google AI Studio Systems Engineering & Enterprise Solutions Architecture  
 **Date:** September 2026  
-**Live Production URL:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
+**Live Production URL:** [https://hvacbiz.insforge.site](https://hvacbiz.insforge.site) | [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
 **Target Repository:** `AlphaERP-V1`
 
 ---
@@ -47,11 +47,13 @@ flowchart TB
         subgraph REST_APIs["Core REST Endpoints"]
             HAPI["GET /api/health"]
             EmailAlertAPI["POST /api/procurement/reorder-alert-email"]
+            AMCEmailAPI["POST /api/service/amc-expiry-alert-email"]
             EmailTestAPI["POST /api/email/test-connection"]
             MongoStatusAPI["GET /api/mongodb/status"]
             MongoMigrateAPI["POST /api/mongodb/migrate"]
-            MongoExportAPI["GET /api/mongodb/export"]
+            MongoExportAPI["GET /api/mongodb/export & restore"]
             MongoProjectsAPI["GET & POST /api/mongodb/projects"]
+            AdminEnvAPI["GET & POST /api/admin/env*"]
         end
         
         subgraph RealtimeHub["Real-Time Duplex WebSocket Hub"]
@@ -396,27 +398,30 @@ flowchart TD
 
 ## 5. Role-Based Access Control (RBAC) Matrix
 
-| Module / Operation | Executive / MD | Sales Manager | HVAC Estimator | Procurement | Warehouse | Finance | Service Operations Manager | Lead / Field Engineer |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Executive Management Dashboard** | Full | View | View | View | View | View | View | View |
-| **CRM Leads & Site Survey** | Full | Full | View | View | No | View | View (Client Info) | No |
-| **Quotation & Margin Engine** | Full | Full | Full | View | No | View | View (Specs) | No |
-| **Project Milestones & Gantt** | Full | View | View | View | View | View | View (Sites) | Full (Site Tasks) |
-| **BOQ Stock Shortage Reconciliation** | Full | View | Full | View | View | View | View | View |
-| **Raise Purchase Requisition (PR)** | Full | No | Full | Full | Full | No | Full (Spares PR) | No |
-| **Issue Purchase Order (PO)** | Full | No | No | Full | No | No | No | No |
-| **Goods Receipt Note (GRN) Inwarding** | Full | No | No | No | Full | No | No | No |
-| **Services & AMC Contracts** | Full | View | View | View | View | View | Full (Manage AMC/SLA) | View (Active) |
-| **PPM Scheduling & Fleet Dispatch** | Full | No | No | No | View (Van Stock) | No | Full (Roster & Routing) | View & Execute |
-| **Breakdown Tickets & Telemetry** | Full | No | No | No | View (Spares) | No | Full (Escalate & Close) | Full (Log Telemetry) |
-| **Field Work Orders & Signoff** | Full | No | No | No | No | No | Full & Dispatch | Full & Sign |
-| **Milestone Invoicing & GST** | Full | View | No | View | No | Full | View (AMC Billing) | No |
-| **GAAP Double-Entry Ledger** | Full | No | No | No | No | Full | No | No |
-| **HRMS & Payroll Administration** | Full | Team View | Self | Self | Self | Payroll Full | Team View | Self |
-| **Admin SMTP & MongoDB Config** | Full | No | No | No | No | No | No | No |
+| Module / Operation | SuperAdmin | Enterprise Admin | Executive / MD | Sales Manager | HVAC Estimator | Procurement | Warehouse | Finance | Service Ops Manager | Lead / Field Tech |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Executive Management Dashboard** | Full | Full | Full | View | View | View | View | View | View | View |
+| **CRM Leads & Site Survey** | Full | Full | Full | Full | View | View | No | View | View (Client Info) | No |
+| **Quotation & Margin Engine** | Full | Full | Full | Full | Full | View | No | View | View (Specs) | No |
+| **Project Milestones & Gantt** | Full | Full | Full | View | View | View | View | View | View (Sites) | Full (Site Tasks) |
+| **BOQ Stock Shortage Reconciliation** | Full | Full | Full | View | Full | View | View | View | View | View |
+| **Raise Purchase Requisition (PR)** | Full | Full | Full | No | Full | Full | Full | No | Full (Spares PR) | No |
+| **Issue Purchase Order (PO)** | Full | Full | Full | No | No | Full | No | No | No | No |
+| **Goods Receipt Note (GRN) Inwarding** | Full | Full | Full | No | No | No | Full | No | No | No |
+| **Services & AMC Contracts** | Full | Full | Full | View | View | View | View | View | Full (Manage AMC/SLA) | View (Active) |
+| **PPM Scheduling & Fleet Dispatch** | Full | Full | Full | No | No | No | View (Van Stock) | No | Full (Roster & Routing) | View & Execute |
+| **Breakdown Tickets & Telemetry** | Full | Full | Full | No | No | No | View (Spares) | No | Full (Escalate & Close) | Full (Log Telemetry) |
+| **Field Work Orders & Signoff** | Full | Full | Full | No | No | No | No | No | Full & Dispatch | Full & Sign |
+| **Milestone Invoicing & GST** | Full | Full | Full | View | No | View | No | Full | View (AMC Billing) | No |
+| **GAAP Double-Entry Ledger** | Full | Full | Full | No | No | No | No | Full | No | No |
+| **HRMS & Payroll Administration** | Full | Full | Full | Team View | Self | Self | Self | Payroll Full | Team View | Self |
+| **Investor Pitch Deck** | Full (Exclusive) | No | No | No | No | No | No | No | No | No |
+| **DRM Enterprise License Manager** | Full (Exclusive) | No | No | No | No | No | No | No | No | No |
+| **Admin SMTP & MongoDB Config** | Full | Full | Full | No | No | No | No | No | No | No |
 
-> **RBAC Module Assignment:** The `executive` (Super Admin) role can assign or revoke any module from any role at runtime via **System & Administration → Users & RBAC Roles**. Changes are persisted to `localStorage` and take effect immediately on next navigation.
-> **RBAC Permissions Auto-Reset:** `storageService.ts` maintains a `PERMISSIONS_SCHEMA_VERSION` stamp (current: `'3'`). Whenever this version differs from the value stored in `systemSettings.permissionsSchemaVersion` in `localStorage`, the entire `roleModulePermissions` map is rebuilt from `DEFAULT_ROLE_MODULE_PERMISSIONS` in `src/utils/rbac.ts`. This ensures newly introduced modules (such as `services_amc`, `services_schedule`, `workorders`) always surface automatically after a code deployment — no manual browser cache clearing is needed.
+> **SuperAdmin Exclusive Modules:** The **Investor Pitch Deck (`pitch_deck`)** and **Enterprise DRM Licensing (`license`)** modules are strictly reserved for the `superadmin` role.
+> **RBAC Module Assignment:** The `superadmin`, `admin`, and `executive` roles can assign or revoke any module from any role at runtime via **System & Administration → Users & RBAC Roles**. Changes are persisted to `localStorage` and take effect immediately on next navigation.
+> **RBAC Permissions Auto-Reset:** `storageService.ts` maintains a `PERMISSIONS_SCHEMA_VERSION` stamp (current: `'5'`). Whenever this version differs from the value stored in `systemSettings.permissionsSchemaVersion` in `localStorage`, the entire `roleModulePermissions` map is rebuilt from `DEFAULT_ROLE_MODULE_PERMISSIONS` in `src/utils/rbac.ts`. This ensures newly introduced modules always surface automatically after a code deployment — no manual browser cache clearing is needed.
 
 ---
 
@@ -447,7 +452,7 @@ flowchart TD
 
 ---
 
-## 8. Enterprise UAT Test Verification Matrix (17 Use Cases, 65 Steps)
+## 8. Enterprise UAT Test Verification Matrix (24 Use Cases, 92 Steps)
 
 AlphaERP is validated with a 100% passing automated business test suite:
 
@@ -472,3 +477,10 @@ npm run test:uat
 - **UAT-15**: Application-Wide Data Sanity, Mobile Digit Constraints, Email RFC, Date Limits & Gov IDs
 - **UAT-16**: AMC Contracts, Google Sheets Sync, 30-Day Renewal Email Alerts & PPM Scheduling
 - **UAT-17**: Service Operations Manager & Service Engineer Dual Persona Workflows & Telemetry Logs
+- **UAT-18**: Advanced HRMS Sub-Modules: Assets, Travel, Grievances, Recruitment & F&F Settlement
+- **UAT-19**: Sales Quota Tracking, Representative Leaderboards & Tiered Commission Incentives
+- **UAT-20**: GAAP Double-Entry Ledger, Balanced Journal Vouchers & Project Retention Release
+- **UAT-21**: Multi-Tab Google Sheets Sync Engine & 40+ Enterprise Data Store Marshalling
+- **UAT-22**: System Security, Anti-Tamper Audit Trail, Local Storage Protection & Diagnostics
+- **UAT-23**: Enterprise Customization: Branding Logo, Granular Functions, Custom Roles, SoD Governance Matrix & Multi-User Mapping
+- **UAT-24**: SuperAdmin, Admin Profiles, User Activation Controls & Enterprise DRM Licensing

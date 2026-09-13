@@ -22,3 +22,24 @@ coverage/
 .roo
 .trae
 .windsurf
+.aistudio
+
+# Large binary assets (store in cloud/CDN instead)
+*.pdf
+*.xlsx
+*.zip
+*.psd
+*.ai
+
+# Marketing / branding PNGs in repo root (keep public/ assets)
+/AlphaERP*.png
+
+# Duplicate lockfiles
+bun.lock
+yarn.lock
+
+# Stray metadata
+/metadata.json
+
+# Accidental submodule
+/AlphaERPV1

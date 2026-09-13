@@ -4,9 +4,9 @@
 
 [![Custom Domain](https://img.shields.io/badge/InsForge_Domain-hvacbiz.insforge.site-00C49F?style=for-the-badge&logo=fastapi)](https://hvacbiz.insforge.site/#dashboard)
 [![InsForge BaaS](https://img.shields.io/badge/PostgreSQL_14+-InsForge_BaaS-336791?style=for-the-badge&logo=postgresql)](https://as2hwz72.us-east.insforge.app)
-[![UAT Test Suite](https://img.shields.io/badge/UAT_Tests-100%25_Passing_(17_Cases%2F65_Steps)-10B981?style=for-the-badge)](#11-enterprise-uat-test-verification-suite)
+[![UAT Test Suite](https://img.shields.io/badge/UAT_Tests-100%25_Passing_(24_Cases%2F92_Steps)-10B981?style=for-the-badge)](#11-enterprise-uat-test-verification-suite)
 [![Production Status](https://img.shields.io/badge/Production-Live-success?style=for-the-badge&logo=vercel)](https://hvacbiz.insforge.site)
-[![Version](https://img.shields.io/badge/Version-3.5.1--Production-blue?style=for-the-badge)](https://hvacbiz.insforge.site)
+[![Version](https://img.shields.io/badge/Version-3.6.0--Production-blue?style=for-the-badge)](https://hvacbiz.insforge.site)
 [![Framework](https://img.shields.io/badge/React_19-Vite_6-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-v4.1-38B2AC?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
@@ -21,7 +21,7 @@
 - **Vercel Mirror Production URL**: [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)
 - **InsForge BaaS API Endpoint**: [https://as2hwz72.us-east.insforge.app](https://as2hwz72.us-east.insforge.app)
 - **API Health Diagnostics**: [https://hvacbiz.vercel.app/api/health](https://hvacbiz.vercel.app/api/health)
-- **Quality Verification**: [100% Passing Enterprise UAT Suite (17 Use Cases, 65 Verification Steps)](#11-enterprise-uat-test-verification-suite)
+- **Quality Verification**: [100% Passing Enterprise UAT Suite (24 Use Cases, 92 Verification Steps)](#11-enterprise-uat-test-verification-suite)
 - **Primary Runtime**: Vercel Serverless Edge Network & Node.js 20+ Hybrid Container Backend with InsForge BaaS PostgreSQL 14+
 
 ---
@@ -38,7 +38,8 @@ Commercial HVAC projects operate under stringent engineering constraints, high-v
 4. **Services, AMC Contracts & Telemetry**: Comprehensive & Non-Comprehensive Annual Maintenance Contracts (AMC), automated 30-day renewal alerts, Periodic Planned Maintenance (PPM) scheduling, emergency breakdown dispatch, spare parts inventory van allocation, and 4-point HVAC telemetry logging (Suction PSI, Discharge PSI, Delta T, Motor Amperage).
 5. **Phased Milestone Contracting & GAAP Financials**: Commercial contracting requires milestone-based billing (30% Advance, 40% Delivery, 20% Erection, 10% Testing & Commissioning Handover) tied to double-entry accounting ledgers and tax compliance (GST & TDS).
 6. **Human Capital & Field Workforce Operations**: Integrated HRMS managing 12 sub-modules (Attendance Regularization, Payroll Payslip Generation, Employee Asset Allocations, Digital Document Vault, KRA Job Requisitions, Candidate Tracking, Grievances, Travel & Per-Diem Claims, and Full & Final Settlements).
-7. **Live Multi-Cloud Persistence & AI Voice Interaction**: Native bidirectional sync with MongoDB Atlas, Google Sheets enterprise export, and real-time duplex voice assistance via Gemini Live API.
+7. **Enterprise Governance, DRM Licensing & SoD Matrix**: Strict Segregation of Duties (SoD) conflict detection, 36 granular enterprise functions across 9 domains, dynamic organization logo customizer, time-based enterprise DRM licensing engine (7-day to lifetime/custom with seat caps), and SuperAdmin-exclusive Investor Pitch Deck.
+8. **Live Multi-Cloud Persistence & AI Voice Interaction**: Native bidirectional sync with MongoDB Atlas, Google Sheets enterprise export, and real-time duplex voice assistance via Gemini Live API.
 
 ---
 
@@ -67,14 +68,18 @@ flowchart TB
         NodeServer["Dedicated Server & WebSocket Hub (dist/server.cjs)"]
         HealthAPI["Health & Diagnostics API (/api/health)"]
         ProcureAPI["Predictive Email Dispatcher (/api/procurement/reorder-alert-email)"]
+        AMCEmailAPI["AMC Expiry Alert API (/api/service/amc-expiry-alert-email)"]
         EmailTestAPI["SMTP Connection Tester (/api/email/test-connection)"]
         MongoAPI["MongoDB Sync & Migration Engine (/api/mongodb/*)"]
+        AdminEnvAPI["SuperAdmin Env Secrets API (/api/admin/env*)"]
         GeminiWS["Gemini Live Duplex WebSocket (/live)"]
         
         APIEntry --> HealthAPI
         APIEntry --> ProcureAPI
+        APIEntry --> AMCEmailAPI
         APIEntry --> EmailTestAPI
         APIEntry --> MongoAPI
+        APIEntry --> AdminEnvAPI
         NodeServer --> GeminiWS
     end
 
@@ -199,19 +204,22 @@ $$\text{Suggested Reorder Indent} = \max\Big(0, \, \text{Reorder Level Threshold
 
 ## 6. Role-Based Access Control (RBAC) Matrix
 
-| Persona / Role | Leads CRM | Quotes | Projects & BOQ | Procurement | Warehouse | Services & AMC | Field Tickets | Finance & Invoicing | HRMS | Admin & Settings |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Executive / MD** | ✅ Full | ✅ Full | ✅ Full | ✅ Full & Sign | ✅ Full | ✅ Full | ✅ Full | ✅ Full | ✅ Full | ✅ Full |
-| **Sales Manager** | ✅ Full | ✅ Full | 👁️ View | 👁️ View | 👁️ Stock | 👁️ Contracts | 👁️ View | 👁️ Receivables | 👁️ Team | ❌ |
-| **HVAC Estimator** | 👁️ Leads | ✅ Full | 👁️ BOQ | ✍️ Raise PR | 👁️ Stock | 👁️ View | 👁️ View | 👁️ Margins | 👤 Self | ❌ |
-| **Procurement Head** | 👁️ View | 👁️ Costs | 👁️ BOQ | ✅ Full & PO | ✅ Manage | 👁️ Spares | 👁️ View | 👁️ Payables | 👤 Self | ❌ |
-| **Warehouse Keeper** | ❌ | ❌ | 👁️ BOQ | 📦 GRN Inward | ✅ Full | 📦 Spares Dispatch | ❌ | ❌ | 👤 Self | ❌ |
-| **Finance Controller** | 👁️ Won | 👁️ Approved | 👁️ Value | 👁️ POs | 👁️ Value | 👁️ AMC Billing | 👁️ Work Orders | ✅ Full | ✅ Payroll Admin | ❌ |
-| **Service Operations Manager** | 👁️ Client Info | 👁️ Quotes | 👁️ Sites | ✍️ Request Spares | 👁️ Van Stock | ✅ Full (AMC/PPM/Roster) | ✅ Full & Dispatch | 👁️ Invoices | 👁️ Team | ❌ |
-| **Lead / Service Engineer** | ❌ | ❌ | 👁️ Site | ❌ | 👁️ Allocated Spares | ✍️ Log PPM & Breakdown | ✅ Full & Sign | ❌ | 👤 Self | ❌ |
+| Persona / Role | Leads CRM | Quotes | Projects & BOQ | Procurement | Warehouse | Services & AMC | Field Tickets | Finance & Invoicing | HRMS | Pitch Deck | DRM Licensing | Admin & Settings |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Root SuperAdmin** | ✅ Full | ✅ Full | ✅ Full | ✅ Full & Sign | ✅ Full | ✅ Full | ✅ Full | ✅ Full | ✅ Full | 👑 Exclusive | 👑 Exclusive | ✅ Full & License |
+| **Enterprise Admin** | ✅ Full | ✅ Full | ✅ Full | ✅ Full & Sign | ✅ Full | ✅ Full | ✅ Full | ✅ Full | ✅ Full | ❌ | ❌ | ✅ Full Admin |
+| **Executive / MD** | ✅ Full | ✅ Full | ✅ Full | ✅ Full & Sign | ✅ Full | ✅ Full | ✅ Full | ✅ Full | ✅ Full | ❌ | ❌ | ✅ Full & Users |
+| **Sales Manager** | ✅ Full | ✅ Full | 👁️ View | 👁️ View | 👁️ Stock | 👁️ Contracts | 👁️ View | 👁️ Receivables | 👁️ Team | ❌ | ❌ | ❌ |
+| **HVAC Estimator** | 👁️ Leads | ✅ Full | 👁️ BOQ | ✍️ Raise PR | 👁️ Stock | 👁️ View | 👁️ View | 👁️ Margins | 👤 Self | ❌ | ❌ | ❌ |
+| **Procurement Head** | 👁️ View | 👁️ Costs | 👁️ BOQ | ✅ Full & PO | ✅ Manage | 👁️ Spares | 👁️ View | 👁️ Payables | 👤 Self | ❌ | ❌ | ❌ |
+| **Warehouse Keeper** | ❌ | ❌ | 👁️ BOQ | 📦 GRN Inward | ✅ Full | 📦 Spares Dispatch | ❌ | ❌ | 👤 Self | ❌ | ❌ | ❌ |
+| **Finance Controller** | 👁️ Won | 👁️ Approved | 👁️ Value | 👁️ POs | 👁️ Value | 👁️ AMC Billing | 👁️ Work Orders | ✅ Full | ✅ Payroll Admin | ❌ | ❌ | ❌ |
+| **Service Operations Manager** | 👁️ Client Info | 👁️ Quotes | 👁️ Sites | ✍️ Request Spares | 👁️ Van Stock | ✅ Full (AMC/PPM/Roster) | ✅ Full & Dispatch | 👁️ Invoices | 👁️ Team | ❌ | ❌ | ❌ |
+| **Lead / Service Engineer** | ❌ | ❌ | 👁️ Site | ❌ | 👁️ Allocated Spares | ✍️ Log PPM & Breakdown | ✅ Full & Sign | ❌ | 👤 Self | ❌ | ❌ | ❌ |
 
-> **Admin Module Assignment:** The `Executive / MD` role can grant or revoke sidebar module access for any role at runtime via **System & Administration → Users & RBAC Roles**. Permissions are persisted to `localStorage` and take effect immediately — no page reload required.
-> **Permissions Auto-Reset on Upgrade:** When `PERMISSIONS_SCHEMA_VERSION` is bumped in `src/services/storageService.ts` (e.g., after a new module is added to `src/utils/rbac.ts`), each user's browser automatically rebuilds its cached role-module permissions from the latest defaults on the next page load. The **Services & AMC Contracts** sidebar group (`services_amc`, `services_schedule`, `workorders`) is governed by this mechanism.
+> **SuperAdmin Exclusive Access:** The **Investor Pitch Deck (`pitch_deck`)** and **Enterprise DRM Licensing (`license`)** modules are strictly reserved for the `superadmin` role.
+> **Admin Module Assignment:** The `superadmin`, `admin`, and `executive` roles can grant or revoke sidebar module access for any role at runtime via **System & Administration → Users & RBAC Roles**. Permissions are persisted to `localStorage` and take effect immediately — no page reload required.
+> **Permissions Auto-Reset on Upgrade:** When `PERMISSIONS_SCHEMA_VERSION` is bumped in `src/services/storageService.ts` (current: `'5'`), each user's browser automatically rebuilds its cached role-module permissions from the latest defaults in `src/utils/rbac.ts` on the next page load.
 
 ---
 
@@ -219,7 +227,9 @@ $$\text{Suggested Reorder Indent} = \max\Big(0, \, \text{Reorder Level Threshold
 
 The system supports instant authentication via **OTP** with master passcodes `123456` or `999999` with convenient 1-click login quick-switch banners:
 
-- **Executive / MD**: `vikram.m@airdynamic.com` (Vikram Malhotra — Full Corporate Governance)
+- **Root SuperAdmin**: `superadmin@airdynamic.com` (Siddharth Sengupta — Root Corporate Governance, Pitch Deck & DRM Licenses)
+- **Enterprise Admin**: `admin@airdynamic.com` (Rohan Deshmukh — System Operations & Enterprise Administration)
+- **Executive / MD**: `vikram.m@airdynamic.com` (Vikram Malhotra — Executive Management & Strategy)
 - **Sales Manager**: `rajesh.s@airdynamic.com` (Rajesh Sharma — CRM & Quota Leaderboard)
 - **HVAC Estimator**: `ananya.d@airdynamic.com` (Ananya Deshmukh — Thermodynamics & BOQ Sizing)
 - **Procurement Manager**: `karan.m@airdynamic.com` (Karan Mehta — PR Review & Vendor PO Release)
@@ -239,6 +249,7 @@ AlphaERP-V1/
 ├── server/
 │   ├── app.ts                           # Express application & REST API routes
 │   ├── api-entry.ts                     # Bundling entry for Vercel Serverless Function
+│   ├── envManager.ts                    # Dynamic .env secrets manager & validation
 │   └── mongodb.ts                       # MongoDB Atlas connection manager & sync engine
 ├── server.ts                            # Standalone Node.js server with WebSocket (/live)
 ├── vercel.json                          # Vercel routing, rewrite rules, security headers
@@ -254,15 +265,16 @@ AlphaERP-V1/
 │   ├── main.tsx                         # React 19 mounting entry point
 │   ├── index.css                        # Tailwind CSS global styling tokens & themes
 │   ├── types/
-│   │   └── index.ts                     # Global TypeScript interfaces & data models
+│   │   └── index.ts                     # Global TypeScript interfaces, models & DRM license contracts
 │   ├── services/
-│   │   ├── storageService.ts            # Reactive Pub/Sub state, local storage & audit log
+│   │   ├── storageService.ts            # Reactive Pub/Sub state, local storage, DRM licensing & audit log
+│   │   ├── amcRenewalNotificationService.ts # 30-Day AMC contract renewal email notifications
+│   │   ├── unifiedProjectSyncService.ts # Multi-cloud database synchronizer (InsForge, Mongo, IndexedDB)
 │   │   ├── googleSheets.ts              # Google Identity Services (GIS) 9-tab sync
 │   │   ├── whatsappEmailService.ts      # Automated SMTP alerts & WhatsApp generator
-│   │   ├── amcRenewalNotificationService.ts # 30-Day AMC contract renewal email notifications
 │   │   └── exportService.ts             # CSV & PDF generation engines
 │   └── components/
-│       ├── Header.tsx                   # Top bar, role selector, persona quick-switch
+│       ├── Header.tsx                   # Top bar, role selector, persona quick-switch & license status
 │       ├── Sidebar.tsx                  # Collapsible multi-module navigation sidebar
 │       ├── DashboardView.tsx            # Executive KPI summary & revenue charts
 │       ├── CRMLeadsView.tsx             # Lead management, sizing & survey tracker
@@ -278,10 +290,16 @@ AlphaERP-V1/
 │       ├── FinanceView.tsx              # GAAP double-entry ledger & vouchers
 │       ├── HRView.tsx                   # 12-Module HRMS & Payroll Suite
 │       ├── SalesPerformanceView.tsx     # Quota tracking & performance charts
+│       ├── LicenseManagementView.tsx    # Enterprise DRM license generator & seat control (SuperAdmin only)
+│       ├── PitchDeckView.tsx            # Stakeholder & Investor Pitch Deck presentation (SuperAdmin only)
+│       ├── OrganizationLogoCustomizer.tsx # Enterprise branding logo customizer & dual-theme previews
+│       ├── SodMatrixManager.tsx         # Segregation of Duties (SoD) governance matrix
+│       ├── EnterpriseFunctionsRolesManager.tsx # Granular 36 enterprise functions catalog & custom roles
+│       ├── EnvironmentVariablesAdminSection.tsx # SuperAdmin secrets & .env management panel
 │       ├── EmailSettingsAdminSection.tsx# SMTP credentials & Dummy Sandbox settings
 │       ├── LiveAudioAssistantModal.tsx  # Gemini Live real-time voice assistant
 │       ├── MongoSyncModal.tsx           # MongoDB Atlas bidirectional cloud sync
-│       ├── UserManagementView.tsx       # RBAC user administration
+│       ├── UserManagementView.tsx       # RBAC user administration & account activation/deactivation
 │       └── AuditLogView.tsx             # Immutable event ledger & compliance logs
 ```
 
@@ -350,14 +368,14 @@ npx @insforge/cli deployments deploy .
 
 ## 11. Enterprise UAT Test Verification Suite
 
-AlphaERP includes a comprehensive end-to-end automated business UAT suite validating all 17 core enterprise workflows with 65 distinct verification assertions:
+AlphaERP includes a comprehensive end-to-end automated business UAT suite validating all 24 core enterprise workflows with 92 distinct verification assertions:
 
 ```bash
 # Run the automated Enterprise UAT Test Suite
 npm run test:uat
 ```
 
-### Verified Test Matrix (100% Passing • 17 Cases / 65 Verification Steps)
+### Verified Test Matrix (100% Passing • 24 Cases / 92 Verification Steps)
 
 | Case ID | Module & Business Use Case | Key Assertions Verified | Status |
 | :---: | :--- | :--- | :---: |
@@ -369,7 +387,7 @@ npm run test:uat
 | **UAT-06** | **Warehouse GRN & Inventory Valuation** | Goods Receipt Note, bin location inwarding, weighted average unit cost adjustment | ✅ PASS |
 | **UAT-07** | **Milestone Invoicing & GAAP Journal AR** | Milestone billing (Advance, Erection, Handover), GAAP ledger entry, AR debit | ✅ PASS |
 | **UAT-08** | **HRMS Payroll & Statutory Payslip** | CTC structure, PF (12%), ESIC (0.75%), Professional Tax, Net Salary calculation | ✅ PASS |
-| **UAT-09** | **Role-Based Access Control (RBAC)** | Role permissions enforcement across 8 enterprise personas including Service Ops & Field Techs | ✅ PASS |
+| **UAT-09** | **Role-Based Access Control (RBAC)** | Role permissions enforcement across 10 enterprise personas including SuperAdmin & Admin | ✅ PASS |
 | **UAT-10** | **MongoDB Atlas Dual-Direction Sync** | Export payload compilation, Atlas schema validation, immutable audit log verification | ✅ PASS |
 | **UAT-11** | **Project Cost Variance & Margin Erosion** | Baseline BOQ cost vs committed POs vs actuals, variance computation, alert thresholds | ✅ PASS |
 | **UAT-12** | **Thermodynamic UOM Conversions** | Precise physical conversions: TR to kW/BTU/hr, CFM to CMH, Bar to PSI/Pa | ✅ PASS |
@@ -378,6 +396,13 @@ npm run test:uat
 | **UAT-15** | **Application-Wide Data Sanity & Validation** | Indian 10-digit mobile, RFC 5322 email, PAN, GSTIN, Aadhaar, past DOB constraints | ✅ PASS |
 | **UAT-16** | **AMC Contracts, Google Sheets & 30-Day Email** | 9-Tab Google Sheets sync, automated 30-day renewal notice dispatch via SMTP relay | ✅ PASS |
 | **UAT-17** | **Service Manager & Engineer Dual Personas** | Dual-persona workflow, 4-point telemetry logs (PSI/Delta T/Amps), audit trail verification | ✅ PASS |
+| **UAT-18** | **Advanced HRMS Sub-Modules** | IT/safety asset allocation, per-diem travel claims, grievance escalation, recruitment & F&F | ✅ PASS |
+| **UAT-19** | **Sales Quotas & Tiered Commissions** | Sales quota attainment, gross-margin weighted ranking, tiered incentive payouts | ✅ PASS |
+| **UAT-20** | **GAAP Double-Entry Ledger & JV** | Multi-line balanced journal vouchers (Debit === Credit), 5% DLP retention money release | ✅ PASS |
+| **UAT-21** | **Multi-Tab Google Sheets Sync Engine** | 40+ Enterprise collections marshalling, schema label mapping, normalization & row sanitization | ✅ PASS |
+| **UAT-22** | **System Security & Anti-Tamper Audit** | Prototype pollution protection, sandbox diagnostics verification, immutable audit log trail | ✅ PASS |
+| **UAT-23** | **Enterprise Branding, SoD & Roles** | Dynamic branding logo customizer, 36 enterprise functions, SoD conflict detection & overrides | ✅ PASS |
+| **UAT-24** | **SuperAdmin, User Activation & DRM Licensing** | Root SuperAdmin governance, user activation toggles, timeframe-based DRM licenses & verification | ✅ PASS |
 
 ---
 

@@ -10,7 +10,7 @@ alwaysApply: true
 
 **Target Repository:** `AlphaERP-V1`  
 **Live Production Applet:** [https://hvacbiz.insforge.site/#dashboard](https://hvacbiz.insforge.site/#dashboard) (Custom InsForge Domain) | [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
-**Version:** 3.5.1-Production
+**Version:** 3.6.0-Production
 
 ---
 
@@ -159,14 +159,21 @@ flowchart TD
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/health` | Service health, model status & DB config | None |
 | `POST` | `/api/procurement/reorder-alert-email` | Dispatches low-stock email alerts | `recipients`, `itemsSummary`, `smtpConfig` |
+| `POST` | `/api/service/amc-expiry-alert-email` | Dispatches 30-day AMC contract expiry alerts to sales team | `recipients`, `contracts`, `smtpConfig` |
 | `POST` | `/api/email/test-connection` | Validates SMTP connection and sends test email | `host`, `port`, `username`, `password`, `testRecipient` |
 | `GET` | `/api/mongodb/status` | MongoDB cluster connection state & stats | None |
 | `POST` | `/api/mongodb/test` | Tests MongoDB Atlas ping latency | None |
 | `POST` | `/api/mongodb/migrate` | Migrates local state payload into MongoDB | `payload: { projects, quotes, leads, inventory }` |
 | `GET` | `/api/mongodb/export` | Full snapshot export of all collections | None |
+| `POST` | `/api/mongodb/restore` | Full database restore endpoint from MongoDB snapshot | None |
+| `POST` | `/api/mongodb/config` | Dynamic runtime update of MongoDB Atlas connection URI | `uri`, `databaseName` |
 | `GET` | `/api/mongodb/projects` | Fetches projects array from MongoDB | None |
 | `POST` | `/api/mongodb/projects` | Bulk-saves projects array to MongoDB | `projects: [...]` |
 | `POST` | `/api/mongodb/project` | Upserts single project in MongoDB | `project: { id, ... }` |
+| `GET` | `/api/admin/env` | Retrieves environment variables status & masked secrets | None (SuperAdmin/Admin) |
+| `POST` | `/api/admin/env` | Updates and persists runtime environment secrets to `.env` | `variables: {...}`, `removedKeys: [...]` |
+| `POST` | `/api/admin/env/test` | Live test connection for API keys, DBs, and SMTP | `key`, `value` |
+| `GET` | `/api/admin/env/raw` | Exports raw formatted `.env` content as attachment | None (SuperAdmin/Admin) |
 | `WS` | `/live` | Duplex real-time audio voice assistant | 16kHz PCM upstream / 24kHz PCM downstream |
 
 ---
@@ -179,6 +186,7 @@ AlphaERP-V1/
 ├── server/
 │   ├── app.ts                           # Express application & REST routes
 │   ├── api-entry.ts                     # Bundling entrypoint for Vercel
+│   ├── envManager.ts                    # Dynamic .env secrets manager & validation
 │   └── mongodb.ts                       # MongoDB Atlas driver & sync operations
 ├── server.ts                            # Standalone Node.js server with WebSockets
 ├── vercel.json                          # Vercel routing rules & security headers
@@ -187,12 +195,14 @@ AlphaERP-V1/
 │   ├── insforge_schema.sql              # InsForge BaaS PostgreSQL schema
 │   └── seed_data.sql                    # Production HVAC seed data
 ├── src/
-│   ├── App.tsx                          # Root shell & role state
+│   ├── App.tsx                          # Root shell, license guard & role state
 │   ├── main.tsx                         # DOM mounting point
 │   ├── index.css                        # Tailwind CSS global styling
-│   ├── types/index.ts                   # TypeScript interfaces & enums
+│   ├── types/index.ts                   # TypeScript interfaces, enums & DRM license types
 │   ├── services/
-│   │   ├── storageService.ts            # Reactive storage, audit logger & RBAC permissions schema versioning (PERMISSIONS_SCHEMA_VERSION)
+│   │   ├── storageService.ts            # Reactive storage, audit logger, DRM licensing & RBAC versioning (PERMISSIONS_SCHEMA_VERSION = '5')
+│   │   ├── amcRenewalNotificationService.ts # Automated 30-day AMC expiry scanner & alert dispatcher
+│   │   ├── unifiedProjectSyncService.ts # Unified multi-cloud database synchronization service
 │   │   ├── googleSheets.ts              # Google Identity Services 9-tab sync
 │   │   └── whatsappEmailService.ts      # SMTP alert & WhatsApp formatters
 │   └── components/
@@ -210,10 +220,16 @@ AlphaERP-V1/
 │       ├── FinanceView.tsx              # GAAP double-entry ledger
 │       ├── HRView.tsx                   # 12-module HRMS suite
 │       ├── SalesPerformanceView.tsx     # Quota tracking & leaderboard
+│       ├── LicenseManagementView.tsx    # Enterprise DRM License generator & seat control (SuperAdmin only)
+│       ├── PitchDeckView.tsx            # Stakeholder & Investor Pitch Deck presentation (SuperAdmin only)
+│       ├── OrganizationLogoCustomizer.tsx # Enterprise branding logo customizer & dual-theme previews
+│       ├── SodMatrixManager.tsx         # Segregation of Duties (SoD) governance matrix
+│       ├── EnterpriseFunctionsRolesManager.tsx # Granular 36 enterprise functions catalog & custom roles
+│       ├── EnvironmentVariablesAdminSection.tsx # SuperAdmin secrets & .env management panel
 │       ├── EmailSettingsAdminSection.tsx# SMTP credentials & Sandbox mode
 │       ├── LiveAudioAssistantModal.tsx  # Gemini Live voice assistant
 │       ├── MongoSyncModal.tsx           # MongoDB Atlas cloud sync
-│       └── UserManagementView.tsx       # RBAC role management
+│       └── UserManagementView.tsx       # RBAC role management & user account activation
 ```
 
 ---
@@ -226,7 +242,7 @@ Before submitting changes, ensure you execute:
 # 1. Type-checking and static analysis (0 errors expected)
 npm run lint
 
-# 2. End-to-End Enterprise UAT Test Suite (17 Use Cases, 65 Steps - 100% Passing)
+# 2. End-to-End Enterprise UAT Test Suite (24 Use Cases, 92 Steps - 100% Passing)
 npm run test:uat
 
 # 3. Build verification for all targets (Vite SPA + Serverless + Standalone Server)
@@ -250,24 +266,45 @@ The sidebar (`src/components/Sidebar.tsx`) renders `navGroups` in this fixed ord
 | 7 | `master_section` | Master Data Hub |
 | 8 | `system_section` | System & Administration |
 
+### Persona Hierarchy & Role Definitions
+
+| Role ID | Role Title | Key Scope & Guardrails |
+| :--- | :--- | :--- |
+| `superadmin` | Root Super Administrator | Full unrestricted control, exclusive Investor Pitch Deck, enterprise license generator & DRM timeframe controls, admin account activation/deactivation |
+| `admin` | Enterprise System Administrator | Enterprise administrator with complete operational access to all business workflows, master data, user roster, and audit trails |
+| `executive` | Executive / Managing Director | Strategic oversight, approvals across CRM, Quotes, BOQ, Procurement, Services, Finance, and HRMS |
+| `sales_manager` | Head of Sales & Marketing | CRM leads, quotes, customer accounts, sales quotas, and revenue analytics |
+| `estimator` | HVAC Estimation & Sizing Engineer | Heat load calculations, equipment sizing, BOQ generation, and quotation margin calculations |
+| `service_manager` | Service Operations Manager | AMC contracts, PPM scheduling, breakdown ticket dispatch, and field engineer assignments |
+| `technician` | Senior HVAC Field Engineer | Field work orders, commissioning signoffs, PPM checklist execution, and telemetry logging |
+| `warehouse` | Stores & Logistics Officer | Inventory counts, bin locations, GRN inwarding, stock reservation, and dispatch notes |
+| `procurement` | Head of Supply Chain & Sourcing | Purchase requisitions (PR), RFQs, purchase orders (PO), vendor master, and delivery tracking |
+| `finance` | Chief Financial Officer / Controller | Milestone invoicing, AR/AP, tax compliance (GST & TDS), and GAAP double-entry ledger |
+| `hr_manager` | Head of Human Resources | Recruitment, biometric attendance, payroll processing, employee records, and grievances |
+
+### SuperAdmin-Exclusive Modules
+
+- **Investor Pitch Deck (`pitch_deck`)**: Strictly accessible to `superadmin` only.
+- **Enterprise Licensing & DRM (`license`)**: Strictly accessible to `superadmin` only.
+
 ### Services & AMC RBAC Module IDs
 
 | Tab Label | Module ID | Default Roles |
 | :--- | :--- | :--- |
-| Services & AMC Contracts | `services_amc` | executive, sales_manager, estimator, technician, warehouse, service_manager |
-| Service Scheduling & PPM | `services_schedule` | executive, sales_manager, estimator, technician, warehouse, service_manager |
-| Work Orders & Field Dispatch | `workorders` | executive, technician, warehouse, service_manager |
+| Services & AMC Contracts | `services_amc` | superadmin, admin, executive, sales_manager, estimator, technician, warehouse, service_manager |
+| Service Scheduling & PPM | `services_schedule` | superadmin, admin, executive, sales_manager, estimator, technician, warehouse, service_manager |
+| Work Orders & Field Dispatch | `workorders` | superadmin, admin, executive, technician, warehouse, service_manager |
 
 A sidebar group is only rendered if **at least one** of its items passes the `allowedModuleIds` filter for the active role. If all items in a group are filtered out, the entire group header is hidden.
 
 ### RBAC Permissions Schema Versioning — Critical Agent Rule
 
-`storageService.ts` declares a **private static** `PERMISSIONS_SCHEMA_VERSION` (`'3'` as of v3.5.1). On every app load, `getRoleModulePermissions()` compares the stored `systemSettings.permissionsSchemaVersion` against this constant:
+`storageService.ts` declares a **private static** `PERMISSIONS_SCHEMA_VERSION` (`'5'` as of v3.6.0). On every app load, `getRoleModulePermissions()` compares the stored `systemSettings.permissionsSchemaVersion` against this constant:
 
 - **Version match** → use cached permissions (normal path).
 - **Version mismatch** → **force-rebuild** `roleModulePermissions` from `DEFAULT_ROLE_MODULE_PERMISSIONS` in `rbac.ts`, persist the new version stamp, and return fresh permissions.
 
-> **⚠️ Agent Rule**: Whenever you add a new module ID to `DEFAULT_ROLE_MODULE_PERMISSIONS` in `src/utils/rbac.ts`, you **MUST** also increment `PERMISSIONS_SCHEMA_VERSION` in `src/services/storageService.ts` (e.g., `'3'` → `'4'`). Failure to do this will leave users with stale cached permissions that hide the new module in the sidebar.
+> **⚠️ Agent Rule**: Whenever you add a new module ID to `DEFAULT_ROLE_MODULE_PERMISSIONS` in `src/utils/rbac.ts`, you **MUST** also increment `PERMISSIONS_SCHEMA_VERSION` in `src/services/storageService.ts` (e.g., `'5'` → `'6'`). Failure to do this will leave users with stale cached permissions that hide the new module in the sidebar.
 
 <!-- INSFORGE:START -->
 ## InsForge backend

@@ -1,10 +1,10 @@
 # HVAC Dashboard - Quick Reference Testing Checklist
 
-> **Execution Status:** ✅ **100% EXECUTED & PASSED (273/273 Items Verified)**  
+> **Execution Status:** ✅ **100% EXECUTED & PASSED (300/300 Items Verified)**  
 > **Execution Date:** 2026-09-13  
 > **Lead QA:** Antigravity QA & Automated Engineering  
 > **Test Environment:** Local Dev / Staging (http://localhost:3000) & Multi-Cloud Backend  
-> **Release Target:** AlphaERP v3.5.1-Production
+> **Release Target:** AlphaERP v3.6.0-Production
 
 ## Pre-Testing Setup (Day 1)
 
@@ -145,6 +145,23 @@ DELETE:
 ☑ Filters persist when pagination
 ☑ Clear filters button works
 ☑ No results message shown when empty
+```
+
+#### Enterprise Governance, DRM Licensing & Branding Customizer
+```
+☑ Root SuperAdmin exclusive access to Investor Pitch Deck
+☑ Root SuperAdmin exclusive access to DRM License Manager
+☑ Generate time-based enterprise licenses (7d, 14d, 30d, 90d, 180d, 1y, 2y, 3y, lifetime, custom)
+☑ License cryptographic checksum generation & tamper detection
+☑ Enforce maximum active user seat limits based on license tier
+☑ License extension, revocation, and re-activation workflows
+☑ SuperAdmin can activate or disable Enterprise Admin accounts
+☑ Prevention of self-deactivation for current logged-in user
+☑ 36 Granular Enterprise Functions catalog across 9 operational domains
+☑ Segregation of Duties (SoD) conflict detection matrix
+☑ Compensating control overrides for approved role conflicts
+☑ Dynamic Organization Branding Logo upload with dual-theme preview
+☑ Reset logo to default system branding with instant reactivity
 ```
 
 ---

@@ -309,25 +309,6 @@ export const OrganizationLogoCustomizer: React.FC<OrganizationLogoCustomizerProp
           </div>
         </div>
 
-            {isCustomActive && (
-              <button
-                type="button"
-                onClick={handleReset}
-                className="px-4 py-2.5 border border-slate-200 hover:bg-rose-50 hover:text-rose-700 text-slate-600 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset to Default Logo</span>
-              </button>
-            )}
-
-            {logoData && logoData !== savedLogo && (
-              <span className="text-[11px] font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
-                ● Unsaved logo preview
-              </span>
-            )}
-          </div>
-        </div>
-
         {/* Right Column: Live Dual-Theme Previews (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
           <div className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">

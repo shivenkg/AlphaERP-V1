@@ -29,13 +29,17 @@ flowchart TD
         Function["Serverless Express Handler (api/index.js)"]
         HealthRoute["/api/health"]
         ProcureRoute["/api/procurement/reorder-alert-email"]
+        AMCEmailRoute["/api/service/amc-expiry-alert-email"]
         EmailTestRoute["/api/email/test-connection"]
         MongoRoutes["/api/mongodb/*"]
+        AdminEnvRoute["/api/admin/env*"]
         
         Function --> HealthRoute
         Function --> ProcureRoute
+        Function --> AMCEmailRoute
         Function --> EmailTestRoute
         Function --> MongoRoutes
+        Function --> AdminEnvRoute
     end
 
     subgraph CloudPersistence["☁️ External Persistence & Microservices"]
@@ -52,6 +56,7 @@ flowchart TD
     Function <--> InsForgeBaaS
     MongoRoutes <--> MongoDB
     ProcureRoute --> SMTP
+    AMCEmailRoute --> SMTP
     EmailTestRoute --> SMTP
     Function <--> GeminiAPI
 ```
@@ -118,6 +123,7 @@ Under the **Environment Variables** section in the Vercel dashboard, add:
 | `SMTP_PASS` | Optional | SMTP Password / App Password | `your_smtp_password` |
 | `SMTP_FROM` | Optional | Outbound Email Display & Address | `"AlphaERP" <procurement@alphaerp.com>` |
 | `PROCUREMENT_ALERT_EMAIL` | Optional | Destination email for reorder indents | `procurement@yourcompany.com` |
+| `SALES_ALERT_EMAIL` | Optional | Destination email for 30-day AMC expiry notices | `sales@yourcompany.com` |
 
 > ⚠️ **MongoDB Atlas IP Whitelist Requirement**: In MongoDB Atlas (`cloud.mongodb.com`), navigate to **Network Access** and ensure **`0.0.0.0/0` (Allow access from anywhere)** is active so Vercel's dynamic serverless IP ranges can connect.
 
@@ -145,6 +151,6 @@ curl -s https://hvacbiz.vercel.app/api/health | jq .
 # 2. Verify MongoDB Cluster Status
 curl -s https://hvacbiz.vercel.app/api/mongodb/status | jq .
 
-# 3. Run Automated Enterprise UAT Test Suite (17 Cases, 65 Steps)
+# 3. Run Automated Enterprise UAT Test Suite (24 Cases, 92 Steps)
 npm run test:uat
 ```
