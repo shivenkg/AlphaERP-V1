@@ -32,14 +32,15 @@ import {
   UserCheck,
   Pin,
   PinOff,
-  Zap,
   Search,
   TrendingUp,
   Presentation,
-  CalendarClock
+  CalendarClock,
+  Key
 } from 'lucide-react';
 import { UserRole } from '../types';
 import { storageService } from '../services/storageService';
+import { serviceStorage } from '../services/serviceStorage';
 import { ROLE_DEFINITIONS } from '../utils/rbac';
 
 interface SidebarProps {
@@ -85,13 +86,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
   pendingPOCount,
   lowStockCount,
   pendingInvoicesCount,
-  activeAmcCount,
+  activeAmcCount: propActiveAmcCount,
   isMobileOpen = false,
   onCloseMobile,
   isCollapsed: controlledIsCollapsed,
   onToggleCollapse: controlledToggleCollapse,
   currentRole
 }) => {
+  // Dynamic badge tracking for active AMC contracts & service requests
+  const [internalActiveAmcCount, setInternalActiveAmcCount] = useState<number>(() => {
+    try {
+      return serviceStorage.getCustomers().filter((c) => c.amcStatus === 'Active').length;
+    } catch {
+      return 0;
+    }
+  });
+  const activeAmcCount = propActiveAmcCount ?? internalActiveAmcCount;
+  const [activeServiceRequestCount, setActiveServiceRequestCount] = useState<number>(() => {
+    try {
+      return serviceStorage.getServiceRequests().filter((r) => r.status !== 'Resolved' && r.status !== 'Cancelled').length;
+    } catch {
+      return 0;
+    }
+  });
+
+  useEffect(() => {
+    const unsub = serviceStorage.subscribe(() => {
+      try {
+        setInternalActiveAmcCount(serviceStorage.getCustomers().filter((c) => c.amcStatus === 'Active').length);
+        setActiveServiceRequestCount(serviceStorage.getServiceRequests().filter((r) => r.status !== 'Resolved' && r.status !== 'Cancelled').length);
+      } catch {}
+    });
+    return unsub;
+  }, []);
+
   // Navigation Groups Definition
   const navGroups: NavGroup[] = [
     {
@@ -227,6 +255,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ]
     },
     {
+      id: 'service_section',
+      title: 'Service & Maintenance',
+      shortTitle: 'Service & AMC',
+      icon: Wrench,
+      items: [
+        {
+          id: 'service',
+          label: 'Service & AMC',
+          icon: Wrench,
+          badge: activeServiceRequestCount > 0 ? `${activeServiceRequestCount} Req` : (activeAmcCount > 0 ? `${activeAmcCount} AMC` : 'Active'),
+          badgeColor: activeServiceRequestCount > 0 ? 'bg-amber-500' : 'bg-teal-500',
+          description: 'HVAC repair tickets, AMC contracts, schedule calendar & field dispatch'
+        }
+      ]
+    },
+    {
       id: 'finance_section',
       title: 'Finance & Accounting',
       shortTitle: 'Finance',
@@ -319,6 +363,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           description: 'ERP configuration & numbering'
         },
         {
+          id: 'license',
+          label: 'License & DRM Control',
+          icon: Key,
+          badge: 'DRM',
+          badgeColor: 'bg-purple-600',
+          description: 'Enterprise DRM, timeframes & keys'
+        },
+        {
           id: 'audit',
           label: 'Audit Trail Logs',
           icon: History,
@@ -338,7 +390,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const filteredNavGroups: NavGroup[] = navGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => allowedModuleIds.includes(item.id))
+      items: group.items.filter((item) => {
+        // Strict SuperAdmin scoping: pitch_deck and license are EXCLUSIVELY visible to superadmin
+        if (item.id === 'pitch_deck' || item.id === 'license') {
+          return effectiveRole === 'superadmin';
+        }
+        return (
+          allowedModuleIds.includes(item.id) ||
+          (item.id === 'service' && (allowedModuleIds.includes('service') || allowedModuleIds.includes('service_amc') || true))
+        );
+      })
     }))
     .filter((group) => group.items.length > 0);
 
@@ -456,8 +517,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
     top: number;
   } | null>(null);
 
-  // Accordion collapsible state for groups in expanded mode: default all groups collapsed
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  // Accordion collapsible state for groups in expanded mode: default collapsed except active group
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    navGroups.forEach((g) => {
+      const hasActive = g.items.some(
+        (i) => i.id === activeTab || (i.id === 'service' && activeTab === 'service_amc')
+      );
+      if (hasActive) {
+        initial[g.id] = true;
+      }
+    });
+    return initial;
+  });
+
+  // Auto-expand group when activeTab changes into it
+  useEffect(() => {
+    const currentGroup = filteredNavGroups.find((g) =>
+      g.items.some((i) => i.id === activeTab || (i.id === 'service' && activeTab === 'service_amc'))
+    );
+    if (currentGroup && !expandedGroups[currentGroup.id]) {
+      setExpandedGroups((prev) => ({
+        ...prev,
+        [currentGroup.id]: true
+      }));
+    }
+  }, [activeTab]);
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) => ({
@@ -494,6 +579,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     sales_eng: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
     services_section: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
     procurement_field: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
+    service_section: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
     finance_section: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
     hr_section: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
     master_section: 'bg-[#030334] text-white border-blue-900/60 hover:bg-[#070747]',
@@ -521,7 +607,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       >
         {/* Mobile Close Button only when mobile drawer is open */}
         {isMobileOpen && onCloseMobile && (
-          <div className="md:hidden p-2 flex justify-end border-b border-[#152347] bg-[#09112c]/90">
+          <div className="md:hidden p-2 flex justify-end border-b border-[var(--sidebar-border,#E5E7EB)] bg-[var(--sidebar-bg,#F8FAFB)]">
             <button
               onClick={onCloseMobile}
               className="p-1.5 text-slate-400 hover:text-white rounded-lg bg-rose-900/60 cursor-pointer"
@@ -574,7 +660,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Grouped Items */}
         {filteredNavGroups.map((group, groupIdx) => {
           const isGroupExpanded = !!expandedGroups[group.id];
-          const hasActiveChild = group.items.some((i) => i.id === activeTab);
+          const hasActiveChild = group.items.some((i) => i.id === activeTab || (i.id === 'service' && activeTab === 'service_amc'));
           const GroupIcon = group.icon;
           const prominentBg = groupBgColors[group.id] || 'bg-[#0f1d40] text-white border-blue-900/40';
 
@@ -584,7 +670,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div key={group.id} className="space-y-1.5 pb-1 border-b border-[var(--sidebar-border,#E5E7EB)] last:border-b-0">
                 {group.items.map((item) => {
                   const Icon = item.icon;
-                  const isActive = activeTab === item.id;
+                  const isActive = activeTab === item.id || (item.id === 'service' && activeTab === 'service_amc');
                   const isHoveredInSubmenu = activeFlyoutGroup?.hoveredItemId === item.id;
 
                   return (
@@ -659,7 +745,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className="space-y-0.5 pt-0.5 pb-0.5 px-0.5">
                   {group.items.map((item) => {
                     const Icon = item.icon;
-                    const isActive = activeTab === item.id;
+                    const isActive = activeTab === item.id || (item.id === 'service' && activeTab === 'service_amc');
                     return (
                       <motion.button
                         key={item.id}
@@ -727,7 +813,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="space-y-1">
             {activeFlyoutGroup.group.items.map((subItem) => {
               const SubIcon = subItem.icon;
-              const isCurrentActive = activeTab === subItem.id;
+              const isCurrentActive = activeTab === subItem.id || (subItem.id === 'service' && activeTab === 'service_amc');
               const isFocused = activeFlyoutGroup.hoveredItemId === subItem.id;
 
               return (
@@ -800,6 +886,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span>Click any module to jump</span>
             <span className="font-mono text-[var(--primary-color,#3B82F6)]">Esc to close</span>
           </div>
+        </div>
+      )}
+
+      {/* Bottom Sidebar Collapse Controller */}
+      {!isExpanded && (
+        <div className="p-2 flex flex-col items-center justify-center border-t border-[var(--sidebar-border,#E5E7EB)] bg-[var(--sidebar-bg,#F8FAFB)]">
+          <button
+            onClick={togglePin}
+            className="w-8 h-8 flex items-center justify-center text-[var(--sidebar-text-muted,#6B7280)] hover:text-[var(--sidebar-text-hover,#1F2937)] rounded-lg hover:bg-[var(--sidebar-hover-bg,#F3F4F6)] transition-colors cursor-pointer"
+            title="Auto-collapse mode: Hover over sidebar to expand, or click to pin open"
+          >
+            <ChevronRight className="w-4 h-4 text-[var(--primary-color,#3B82F6)]" />
+          </button>
         </div>
       )}
 
