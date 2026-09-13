@@ -13,10 +13,10 @@ import {
   History,
   FileSpreadsheet,
   AlertTriangle,
-  Flame,
   CheckCircle,
   HelpCircle,
   X,
+  Menu,
   Sliders,
   ShieldCheck,
   ChevronDown,
@@ -30,8 +30,6 @@ import {
   FoldHorizontal,
   UnfoldHorizontal,
   UserCheck,
-  PanelLeftClose,
-  PanelLeftOpen,
   Pin,
   PinOff,
   Zap,
@@ -40,8 +38,6 @@ import {
   Presentation,
   CalendarClock
 } from 'lucide-react';
-import { JSAlphaSoftLogo } from './JSAlphaSoftLogo';
-import { QuickExportMenu } from './QuickExportMenu';
 import { UserRole } from '../types';
 import { storageService } from '../services/storageService';
 import { ROLE_DEFINITIONS } from '../utils/rbac';
@@ -460,26 +456,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
     top: number;
   } | null>(null);
 
-  // Accordion collapsible state for groups in expanded mode
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  // Accordion collapsible state for groups in expanded mode: default all groups collapsed
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   const toggleGroup = (groupId: string) => {
-    setCollapsedGroups((prev) => ({
+    setExpandedGroups((prev) => ({
       ...prev,
       [groupId]: !prev[groupId]
     }));
   };
 
   const collapseAll = () => {
-    const allCollapsed: Record<string, boolean> = {};
-    filteredNavGroups.forEach((g) => {
-      allCollapsed[g.id] = true;
-    });
-    setCollapsedGroups(allCollapsed);
+    setExpandedGroups({});
   };
 
   const expandAll = () => {
-    setCollapsedGroups({});
+    const allExpanded: Record<string, boolean> = {};
+    filteredNavGroups.forEach((g) => {
+      allExpanded[g.id] = true;
+    });
+    setExpandedGroups(allExpanded);
   };
 
   const handleSelectTab = (tabId: string) => {
@@ -523,73 +519,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
             : 'w-16 z-30 shadow-lg'
         }`}
       >
-        {/* Top Header & Logo Area */}
-        <div className="p-2.5 border-b border-[#152347] bg-[#09112c]/90 flex items-center justify-between">
-          {isExpanded ? (
-            <div className="flex items-center justify-between w-full min-w-0">
-              <button
-                type="button"
-                onClick={() => setActiveTab('dashboard')}
-                className="flex items-center gap-2 min-w-0 text-left hover:opacity-85 active:scale-[0.99] transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded-lg p-0.5"
-                title="Click to land on Executive Dashboard"
-                aria-label="Click HVAC Biz to land on Executive Dashboard"
-              >
-                <JSAlphaSoftLogo size="xs" variant="icon" isDarkTheme={true} />
-                <div className="min-w-0 truncate">
-                  <div className="text-xs font-black text-white tracking-tight flex items-center gap-1">
-                    <span className="text-[#0080FF]">HVAC</span>
-                    <span>Biz</span>
-                  </div>
-                  <div className="text-[9px] font-semibold text-slate-400 flex items-center gap-1.5">
-                    <span>AlphaERP Hub</span>
-                  </div>
-                </div>
-              </button>
-
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={togglePin}
-                  className="p-1.5 rounded-lg text-xs font-medium transition-colors text-slate-400 bg-[#14234c] hover:bg-blue-600 hover:text-white cursor-pointer"
-                  title="Collapse Sidebar"
-                >
-                  <PanelLeftClose className="w-3.5 h-3.5" />
-                </button>
-                {onCloseMobile && (
-                  <button
-                    onClick={onCloseMobile}
-                    className="md:hidden p-1.5 text-slate-400 hover:text-white rounded-lg bg-rose-900/60"
-                    title="Close mobile menu"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center w-full gap-2 py-1">
-              <button
-                type="button"
-                onClick={() => setActiveTab('dashboard')}
-                className="hover:opacity-85 active:scale-95 transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded-lg p-0.5"
-                title="Click to land on Executive Dashboard"
-                aria-label="Click HVAC Biz to land on Executive Dashboard"
-              >
-                <JSAlphaSoftLogo size="xs" variant="icon" isDarkTheme={true} />
-              </button>
-              <button
-                onClick={togglePin}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg bg-[#14234c] hover:bg-blue-600 transition-colors cursor-pointer"
-                title="Expand to Full Pinned Sidebar"
-                aria-label="Expand to Full Pinned Sidebar"
-              >
-                <PanelLeftOpen className="w-3.5 h-3.5 text-blue-300" />
-              </button>
-              <div className="text-[7.5px] font-bold text-blue-300/80 uppercase tracking-widest text-center">
-                Sub Menu
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Mobile Close Button only when mobile drawer is open */}
+        {isMobileOpen && onCloseMobile && (
+          <div className="md:hidden p-2 flex justify-end border-b border-[#152347] bg-[#09112c]/90">
+            <button
+              onClick={onCloseMobile}
+              className="p-1.5 text-slate-400 hover:text-white rounded-lg bg-rose-900/60 cursor-pointer"
+              title="Close mobile menu"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
       {/* Navigation Scrollable Body */}
       <div
@@ -632,7 +573,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Grouped Items */}
         {filteredNavGroups.map((group, groupIdx) => {
-          const isGroupCollapsed = !!collapsedGroups[group.id];
+          const isGroupExpanded = !!expandedGroups[group.id];
           const hasActiveChild = group.items.some((i) => i.id === activeTab);
           const GroupIcon = group.icon;
           const prominentBg = groupBgColors[group.id] || 'bg-[#0f1d40] text-white border-blue-900/40';
@@ -706,6 +647,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 id={`sidebar-group-header-${group.id}`}
                 whileTap={{ scale: 0.99 }}
                 onClick={() => toggleGroup(group.id)}
+                title={isGroupExpanded ? `Click to collapse ${group.title}` : `Click to expand ${group.title}`}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition-all duration-200 ease-out transform hover:scale-[1.015] active:scale-[0.99] shadow-xs border cursor-pointer ${
                   hasActiveChild
                     ? `${prominentBg} ring-2 ring-blue-400/50 shadow-md font-extrabold`
@@ -718,18 +660,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
                 <div className="flex items-center gap-1">
                   {hasActiveChild && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 ring-2 ring-cyan-400/40"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 ring-2 ring-cyan-400/40" title="Active module inside"></span>
                   )}
-                  {isGroupCollapsed ? (
-                    <ChevronRight className="w-3 h-3 text-blue-200 transition-transform duration-200 group-hover:translate-x-0.5" />
-                  ) : (
+                  {isGroupExpanded ? (
                     <ChevronDown className="w-3 h-3 text-blue-200 transition-transform duration-200 group-hover:translate-y-0.5" />
+                  ) : (
+                    <ChevronRight className="w-3 h-3 text-blue-200 transition-transform duration-200 group-hover:translate-x-0.5" />
                   )}
                 </div>
               </motion.button>
 
               {/* Items under Group */}
-              {!isGroupCollapsed && (
+              {isGroupExpanded && (
                 <div className="space-y-0.5 pt-0.5 pb-0.5 px-0.5">
                   {group.items.map((item) => {
                     const Icon = item.icon;
@@ -906,46 +848,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       )}
 
-      {/* Bottom Global Quick Export & Automated Lifecycle Card */}
-      {isExpanded ? (
-        <div className="p-2 space-y-2">
-          {/* Global Quick Export Floating Action Trigger Menu */}
-          <QuickExportMenu activeTab={activeTab} isCollapsed={false} />
-
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#0c183d] to-[#142352] border border-[#20346b] text-xs shadow-md">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-1.5 font-bold text-blue-200">
-                <Flame className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-[11px]">AlphaERP • HVAC Biz</span>
-              </div>
-              <span className="px-1.5 py-0.2 text-[8px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded font-mono font-bold">
-                v2.4 Live
-              </span>
-            </div>
-            <div className="text-[9px] text-slate-300 leading-tight font-medium">
-              Leads ➔ Quotes ➔ BOQ ➔ Procurement ➔ GL Vouchers ➔ HR Payroll
-            </div>
-            <div className="pt-2 mt-2 border-t border-[#1d2f62] flex items-center justify-between text-[8.5px] text-slate-400">
-              <span className="flex items-center gap-1 font-semibold text-slate-300">
-                <JSAlphaSoftLogo size="xs" variant="icon" isDarkTheme={true} iconSize={12} />
-                &copy; {new Date().getFullYear()} JS AlphaSoft Pvt. Ltd.
-              </span>
-              <span className="text-[7.5px] font-mono text-blue-300/80">All Rights Reserved</span>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="p-2 flex flex-col items-center justify-center gap-2 border-t border-[#152347] bg-[#081029]">
-          <QuickExportMenu activeTab={activeTab} isCollapsed={true} />
-          <button
-            onClick={togglePin}
-            className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-white rounded-lg hover:bg-[#14234c] transition-colors"
-            title="Auto-collapse mode: Hover over sidebar to expand, or click to pin open"
-          >
-            <ChevronRight className="w-4 h-4 text-blue-300" />
-          </button>
-        </div>
-      )}
+      {/* Bottom padding spacer */}
+      <div className="h-2" />
     </aside>
   </>
   );

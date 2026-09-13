@@ -740,7 +740,7 @@ export type EmailProviderType = 'custom_smtp' | 'mailtrap' | 'ethereal' | 'gmail
 export interface EmailSmtpConfig {
   enabled: boolean;
   provider: EmailProviderType;
-  mode: 'mock' | 'smtp';
+  mode: 'mock' | 'mock_wrapper' | 'test_sandbox' | 'smtp';
   host: string;
   port: number;
   secure: boolean;
