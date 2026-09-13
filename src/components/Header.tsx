@@ -14,6 +14,8 @@ import {
   Sparkles,
   Menu,
   X,
+  Pin,
+  PinOff,
   Sliders,
   LogOut,
   LogIn,
@@ -414,17 +416,17 @@ export const Header: React.FC<HeaderProps> = ({
               className="hidden md:flex items-center justify-center p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors shrink-0 border border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer"
               title={
                 isSidebarPinned
-                  ? 'Click to collapse sidebar'
-                  : 'Click to expand sidebar'
+                  ? 'Sidebar pinned open • Click to unpin (auto-collapse on hover)'
+                  : 'Auto-collapse mode • Hover over sidebar to expand, or click to pin open'
               }
               aria-label={
                 isSidebarPinned
-                  ? 'Click to collapse sidebar'
-                  : 'Click to expand sidebar'
+                  ? 'Sidebar pinned open • Click to unpin (auto-collapse on hover)'
+                  : 'Auto-collapse mode • Hover over sidebar to expand, or click to pin open'
               }
             >
               {isSidebarPinned ? (
-                <X className="w-5 h-5 text-slate-700 dark:text-slate-200" />
+                <PinOff className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               ) : (
                 <Menu className="w-5 h-5 text-slate-700 dark:text-slate-200" />
               )}

@@ -408,7 +408,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Pin state: when pinned, sidebar stays open permanently.
-  // When unpinned, sidebar collapses to sub menu bar and opens interactive flyouts on hover.
+  // When unpinned, sidebar defaults to collapsed rail and smoothly expands on mouse hover.
   const [internalPinned, setInternalPinned] = useState<boolean>(() => {
     if (controlledIsCollapsed !== undefined) {
       return !controlledIsCollapsed;
@@ -440,9 +440,58 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  // Determine whether sidebar is visually expanded
-  const isExpanded = isMobileOpen || (controlledIsCollapsed !== undefined ? !controlledIsCollapsed : isPinned);
+  // Determine whether sidebar is visually expanded: open mobile drawer, pinned open, or actively hovered
+  const isExpanded = isMobileOpen || isPinned || isHovered;
   const isCollapsed = !isExpanded;
+
+  // Mouse hover event handlers with subtle debounces for ultra-smooth responsiveness
+  const handleSidebarMouseEnter = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(true);
+    }, 60);
+  };
+
+  const handleSidebarMouseLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+      setActiveFlyoutGroup(null);
+    }, 180);
+  };
+
+  const handleFocusCapture = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setIsHovered(true);
+  };
+
+  const handleBlurCapture = (e: React.FocusEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+      hoverTimeoutRef.current = setTimeout(() => {
+        setIsHovered(false);
+      }, 180);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Active Flyout Sub Menu Bar state for Collapsed Mode
   const [activeFlyoutGroup, setActiveFlyoutGroup] = useState<{
@@ -571,6 +620,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (onCloseMobile) {
       onCloseMobile();
     }
+    // Automatically collapse sidebar when unpinned upon selecting a module
+    if (!isPinned) {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+      setIsHovered(false);
+    }
   };
 
   // Prominent theme group background colors
@@ -596,15 +652,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
         />
       )}
 
-      <aside
-        className={`bg-[var(--sidebar-bg,#F8FAFB)] border-r border-[var(--sidebar-border,#E5E7EB)] flex flex-col justify-between h-full text-[var(--sidebar-text,#374151)] select-none transition-[width] duration-300 ease-in-out shrink-0 ${
+      {/* Outer Layout Container: holds steady space in workspace flow so content does not jitter */}
+      <div
+        className={`relative h-full shrink-0 transition-[width] duration-300 ease-in-out ${
           isMobileOpen
-            ? 'fixed inset-y-0 left-0 z-50 w-64 shadow-2xl'
-            : isExpanded
-            ? 'w-64 z-30 shadow-xl'
-            : 'w-16 z-30 shadow-lg'
+            ? 'w-0'
+            : isPinned
+            ? 'w-64'
+            : 'w-16'
         }`}
+        onMouseEnter={handleSidebarMouseEnter}
+        onMouseLeave={handleSidebarMouseLeave}
+        onFocusCapture={handleFocusCapture}
+        onBlurCapture={handleBlurCapture}
       >
+        <aside
+          className={`bg-[var(--sidebar-bg,#F8FAFB)] border-r border-[var(--sidebar-border,#E5E7EB)] flex flex-col justify-between h-full text-[var(--sidebar-text,#374151)] select-none transition-all duration-300 ease-in-out ${
+            isMobileOpen
+              ? 'fixed inset-y-0 left-0 z-50 w-64 shadow-2xl'
+              : isPinned
+              ? 'relative w-64 h-full shadow-md z-30'
+              : isHovered
+              ? 'absolute top-0 left-0 bottom-0 w-64 h-full z-40 shadow-2xl ring-1 ring-black/5 dark:ring-white/10'
+              : 'relative w-16 h-full shadow-xs z-30'
+          }`}
+        >
         {/* Mobile Close Button only when mobile drawer is open */}
         {isMobileOpen && onCloseMobile && (
           <div className="md:hidden p-2 flex justify-end border-b border-[var(--sidebar-border,#E5E7EB)] bg-[var(--sidebar-bg,#F8FAFB)]">
@@ -889,22 +961,47 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       )}
 
-      {/* Bottom Sidebar Collapse Controller */}
-      {!isExpanded && (
-        <div className="p-2 flex flex-col items-center justify-center border-t border-[var(--sidebar-border,#E5E7EB)] bg-[var(--sidebar-bg,#F8FAFB)]">
+      {/* Bottom Sidebar Pin & Mode Controller Bar */}
+      <div className="p-2 flex items-center justify-between border-t border-[var(--sidebar-border,#E5E7EB)] bg-[var(--sidebar-bg,#F8FAFB)]">
+        {isExpanded ? (
           <button
+            id="sidebar-pin-toggle-btn"
             onClick={togglePin}
-            className="w-8 h-8 flex items-center justify-center text-[var(--sidebar-text-muted,#6B7280)] hover:text-[var(--sidebar-text-hover,#1F2937)] rounded-lg hover:bg-[var(--sidebar-hover-bg,#F3F4F6)] transition-colors cursor-pointer"
-            title="Auto-collapse mode: Hover over sidebar to expand, or click to pin open"
+            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--sidebar-text-muted,#6B7280)] hover:text-[var(--sidebar-text-hover,#1F2937)] hover:bg-[var(--sidebar-hover-bg,#F3F4F6)] transition-colors cursor-pointer"
+            title={isPinned ? 'Click to unpin sidebar (auto-collapse mode)' : 'Click to pin sidebar open permanently'}
           >
-            <ChevronRight className="w-4 h-4 text-[var(--primary-color,#3B82F6)]" />
+            <div className="flex items-center gap-2">
+              {isPinned ? (
+                <PinOff className="w-3.5 h-3.5 text-[var(--primary-color,#3B82F6)]" />
+              ) : (
+                <Pin className="w-3.5 h-3.5 text-[var(--sidebar-text-muted,#6B7280)]" />
+              )}
+              <span className="text-[11px] font-semibold truncate">
+                {isPinned ? 'Pinned Open' : 'Hover Expanded'}
+              </span>
+            </div>
+            <span className="text-[10px] text-[var(--primary-color,#3B82F6)] font-bold shrink-0 ml-1">
+              {isPinned ? 'Unpin' : 'Pin'}
+            </span>
           </button>
-        </div>
-      )}
+        ) : (
+          <div className="w-full flex justify-center">
+            <button
+              id="sidebar-pin-toggle-btn"
+              onClick={togglePin}
+              className="w-8 h-8 flex items-center justify-center text-[var(--sidebar-text-muted,#6B7280)] hover:text-[var(--sidebar-text-hover,#1F2937)] rounded-lg hover:bg-[var(--sidebar-hover-bg,#F3F4F6)] transition-colors cursor-pointer"
+              title="Auto-collapse mode: Hover over sidebar to expand, or click to pin open permanently"
+            >
+              <Pin className="w-4 h-4 text-[var(--sidebar-text-muted,#6B7280)] hover:text-[var(--primary-color,#3B82F6)]" />
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Bottom padding spacer */}
-      <div className="h-2" />
+      <div className="h-1" />
     </aside>
-  </>
-  );
+  </div>
+</>
+);
 };
