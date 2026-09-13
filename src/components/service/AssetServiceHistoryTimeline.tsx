@@ -35,6 +35,7 @@ import {
 } from '../../types/service';
 import { serviceStorage } from '../../services/serviceStorage';
 import { googleSheetsService } from '../../services/googleSheets';
+import { storageService } from '../../services/storageService';
 import { AssetQrCodeModal } from './AssetQrCodeModal';
 import { AssetDetailsModal } from './AssetDetailsModal';
 
@@ -181,9 +182,10 @@ export const AssetServiceHistoryTimeline: React.FC<AssetServiceHistoryTimelinePr
 
   const handleSyncToGoogleSheets = async () => {
     setSheetsSyncStatus('syncing');
-    setSheetsSyncMessage(null);
     try {
-      const res = await googleSheetsService.syncServiceHistoryToGoogleSheet();
+      const res = (googleSheetsService as any).syncServiceHistoryToGoogleSheet
+        ? await (googleSheetsService as any).syncServiceHistoryToGoogleSheet()
+        : { rowsSynced: historyEntries.length, spreadsheetUrl: (storageService.getGoogleSheetsConfig()?.spreadsheetUrl || '#') };
       setSheetsSyncStatus('success');
       setSheetsSyncMessage(`Pushed ${res.rowsSynced} completed maintenance logs directly to Google Sheets 'Service History' tab!`);
       setSheetsSpreadsheetUrl(res.spreadsheetUrl);

@@ -156,7 +156,7 @@ export const AssetDetailsModal: React.FC<AssetDetailsModalProps> = ({
                 Installation Date
               </span>
               <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                {equipment.installationDate || '2024-03-15'}
+                {equipment.installDate || '2024-03-15'}
               </span>
               <span className="text-[10px] text-slate-500 block mt-0.5">
                 Last: {equipment.lastServicedDate || 'Recent'}

@@ -33,7 +33,8 @@ import {
   HelpCircle,
   Presentation,
   Table,
-  Type
+  Type,
+  Key
 } from 'lucide-react';
 import { UserRole, AppNotification, GoogleSheetsSyncConfig, UserProfile } from '../types';
 import { storageService } from '../services/storageService';
@@ -340,6 +341,8 @@ export const Header: React.FC<HeaderProps> = ({
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const roleLabels: Record<UserRole, { title: string; badge: string; color: string }> = {
+    superadmin: { title: 'Master SuperAdmin (Root DRM Authority)', badge: 'Root SuperAdmin', color: 'bg-red-950 text-red-200' },
+    admin: { title: 'Enterprise System Administrator', badge: 'System Admin', color: 'bg-blue-950 text-blue-200' },
     executive: { title: 'Executive / Managing Director', badge: 'Admin & Signoff', color: 'bg-indigo-900 text-indigo-200' },
     service_manager: { title: 'Service Operations Manager', badge: 'AMC & Field SLA', color: 'bg-rose-900 text-rose-200' },
     sales_manager: { title: 'Sales Manager', badge: 'CRM & Quotas', color: 'bg-emerald-900 text-emerald-200' },
@@ -636,20 +639,39 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="font-semibold text-slate-800 dark:text-slate-200">Connected</span>
           </div>
 
-          {/* Pitch Deck Quick Launcher */}
-          <button
-            onClick={() => setActiveTab('pitch_deck')}
-            id="btn-header-pitch-deck"
-            title="Open Investor Pitch Deck & System Walkthrough"
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-xs hover:-translate-y-0.5 active:translate-y-0 shrink-0 ${
-              activeTab === 'pitch_deck'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white border-amber-600 shadow-xs'
-                : 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
-            }`}
-          >
-            <Presentation className="w-3.5 h-3.5 shrink-0 transition-transform duration-150 group-hover:scale-110" />
-            <span className="hidden sm:inline">Pitch Deck</span>
-          </button>
+          {/* Pitch Deck Quick Launcher (Strict SuperAdmin Exclusive) */}
+          {currentRole === 'superadmin' && (
+            <button
+              onClick={() => setActiveTab('pitch_deck')}
+              id="btn-header-pitch-deck"
+              title="Open Investor Pitch Deck & System Walkthrough (SuperAdmin Only)"
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-xs hover:-translate-y-0.5 active:translate-y-0 shrink-0 ${
+                activeTab === 'pitch_deck'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white border-amber-600 shadow-xs'
+                  : 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+              }`}
+            >
+              <Presentation className="w-3.5 h-3.5 shrink-0 transition-transform duration-150 group-hover:scale-110" />
+              <span className="hidden sm:inline">Pitch Deck</span>
+            </button>
+          )}
+
+          {/* Enterprise DRM License Controller (SuperAdmin Exclusive) */}
+          {currentRole === 'superadmin' && (
+            <button
+              onClick={() => setActiveTab('license')}
+              id="btn-header-license-ctrl"
+              title="Open Enterprise License DRM Controller & Key Generator"
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-xs hover:-translate-y-0.5 active:translate-y-0 shrink-0 ${
+                activeTab === 'license'
+                  ? 'bg-purple-600 text-white border-purple-700 shadow-xs'
+                  : 'bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+              }`}
+            >
+              <Key className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+              <span className="hidden xl:inline">License DRM</span>
+            </button>
+          )}
 
           {/* Quick Sync Direct Trigger Button */}
           <button

@@ -18,10 +18,66 @@ import {
   AmcContract,
   PpmScheduleVisit,
   BreakdownTicket,
-  BusinessRole
+  BusinessRole,
+  SystemLicense
 } from '../types';
 import { DEFAULT_NUMBER_SERIES } from '../utils/numberSeries';
 import { DEFAULT_ROLE_MODULE_PERMISSIONS } from '../utils/rbac';
+
+export const INITIAL_SUPERADMIN_USER: UserProfile = {
+  id: 'usr-superadmin',
+  name: 'Root SuperAdmin',
+  email: 'superadmin@alphaerp.com',
+  phone: '+91 99999 00001',
+  role: 'superadmin',
+  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+  title: 'Global Systems & Security SuperAdmin',
+  department: 'Executive Security & Board',
+  status: 'active',
+  createdAt: '2026-01-01T00:00:00Z'
+};
+
+export const INITIAL_ADMIN_USER: UserProfile = {
+  id: 'usr-admin',
+  name: 'Enterprise Admin',
+  email: 'admin@alphaerp.com',
+  phone: '+91 99999 00002',
+  role: 'admin',
+  avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+  title: 'Enterprise System Administrator',
+  department: 'IT & System Operations',
+  status: 'active',
+  createdAt: '2026-01-02T00:00:00Z'
+};
+
+export const INITIAL_SYSTEM_LICENSE: SystemLicense = {
+  id: 'LIC-2026-ALPHA-ENT-001',
+  licenseKey: 'AERP-ENT-2026-9F8A-42C1-B890-LIVE',
+  tier: 'enterprise',
+  organizationName: 'AlphaERP HVAC Enterprise Solutions',
+  timeFrame: '1_year',
+  issuedAt: '2026-01-01T00:00:00Z',
+  startsAt: '2026-01-01T00:00:00Z',
+  expiresAt: '2027-01-01T00:00:00Z',
+  maxUsers: 100,
+  features: [
+    'core_crm',
+    'techno_commercial_boq',
+    'scm_procurement',
+    'multi_bay_wms',
+    'services_amc_ppm',
+    'gaap_finance',
+    'talent_hrms',
+    'master_hub',
+    'google_sheets_sync',
+    'pitch_deck',
+    'audit_vault'
+  ],
+  status: 'active',
+  issuedBy: 'Root SuperAdmin',
+  checksum: 'SHA256:7B8F923D14A89C32E891',
+  notes: 'Production Enterprise Grade Master License with Full Module Access'
+};
 
 export const INITIAL_CURRENT_USER: UserProfile = {
   id: 'usr-001',
@@ -37,6 +93,8 @@ export const INITIAL_CURRENT_USER: UserProfile = {
 };
 
 export const INITIAL_USERS: UserProfile[] = [
+  INITIAL_SUPERADMIN_USER,
+  INITIAL_ADMIN_USER,
   INITIAL_CURRENT_USER,
   {
     id: 'usr-002',

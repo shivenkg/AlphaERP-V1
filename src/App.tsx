@@ -36,6 +36,7 @@ const AuditLogView = lazy(() => import('./components/AuditLogView').then(m => ({
 const AdminCustomizationView = lazy(() => import('./components/AdminCustomizationView').then(m => ({ default: m.AdminCustomizationView })));
 const GlobalSearchView = lazy(() => import('./components/GlobalSearchView').then(m => ({ default: m.GlobalSearchView })));
 const PitchDeckView = lazy(() => import('./components/PitchDeckView').then(m => ({ default: m.PitchDeckView })));
+const LicenseManagementView = lazy(() => import('./components/LicenseManagementView').then(m => ({ default: m.LicenseManagementView })));
 
 // Heavy Modals Lazy Loaded
 const GoogleSheetIntegrationModal = lazy(() => import('./components/GoogleSheetIntegrationModal').then(m => ({ default: m.GoogleSheetIntegrationModal })));
@@ -110,6 +111,13 @@ export function App() {
       } catch {}
     }
   }, [activeTab]);
+
+  // Strict SuperAdmin security guard: redirect away if non-superadmin attempts to access pitch_deck or license
+  useEffect(() => {
+    if ((activeTab === 'pitch_deck' || activeTab === 'license') && data.currentUser?.role !== 'superadmin') {
+      setActiveTab('dashboard');
+    }
+  }, [activeTab, data.currentUser?.role, setActiveTab]);
 
   // Closes any open modal/overlay first, returning true if one was dismissed
   const closeAnyOpenModal = useCallback((): boolean => {
@@ -869,6 +877,26 @@ export function App() {
                 auditLogs={data.auditLogs}
                 onOpenSheetsModal={() => setIsSheetsModalOpen(true)}
               />
+            )}
+
+            {/* View: Investor Pitch Deck (Strict SuperAdmin Exclusive) */}
+            {activeTab === 'pitch_deck' && data.currentUser?.role === 'superadmin' && (
+              <PitchDeckView
+                onNavigateTab={setActiveTab}
+                projects={data.projects}
+                quotes={data.quotes}
+                leads={data.leads}
+                inventory={data.inventory}
+                pos={data.pos}
+                prs={data.prs}
+                payments={data.payments}
+                employees={data.employees}
+              />
+            )}
+
+            {/* View: Enterprise System Licensing & DRM Controller (SuperAdmin Exclusive) */}
+            {activeTab === 'license' && data.currentUser?.role === 'superadmin' && (
+              <LicenseManagementView currentRole={data.currentUser?.role} />
             )}
             </Suspense>
 

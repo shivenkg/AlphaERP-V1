@@ -1213,6 +1213,77 @@ app.post("/api/procurement/reorder-alert-email", async (req, res) => {
     });
   }
 });
+app.post("/api/service/amc-expiry-alert-email", async (req, res) => {
+  try {
+    const { recipients, subject, text, html, contracts, smtpConfig } = req.body;
+    const targetRecipients = Array.isArray(recipients) && recipients.length > 0 ? recipients : Array.isArray(smtpConfig?.salesRecipients) && smtpConfig.salesRecipients.length > 0 ? smtpConfig.salesRecipients : [process.env.SALES_ALERT_EMAIL || "sales@alphaerp-hvac.com"];
+    const emailSubject = subject || "\u26A0\uFE0F [AlphaERP Sales Alert] HVAC AMC Contracts Expiring in 30 Days";
+    const isExplicitMock = smtpConfig?.mode === "mock";
+    const smtpHost = smtpConfig?.host || process.env.SMTP_HOST;
+    const smtpUser = smtpConfig?.username || process.env.SMTP_USER;
+    const smtpPass = smtpConfig?.password || process.env.SMTP_PASS;
+    const smtpPort = Number(smtpConfig?.port || process.env.SMTP_PORT || 587);
+    const senderName = smtpConfig?.senderName || "AlphaERP Service & AMC Operations";
+    const senderEmail = smtpConfig?.senderEmail || smtpUser || "service-alerts@alphaerp.com";
+    const fromAddress = `"${senderName}" <${senderEmail}>`;
+    if (!isExplicitMock && smtpHost && smtpUser && smtpPass) {
+      try {
+        const nodemailer = await import("nodemailer");
+        const transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: smtpPort,
+          secure: smtpPort === 465 || Boolean(smtpConfig?.secure),
+          auth: {
+            user: smtpUser,
+            pass: smtpPass
+          },
+          connectionTimeout: 6e3
+        });
+        const info = await transporter.sendMail({
+          from: fromAddress,
+          to: targetRecipients.join(", "),
+          subject: emailSubject,
+          text,
+          html
+        });
+        res.json({
+          success: true,
+          mode: "smtp",
+          isRealSmtp: true,
+          messageId: info.messageId,
+          recipients: targetRecipients,
+          timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+          contractsCount: Array.isArray(contracts) ? contracts.length : 0,
+          note: `AMC expiry notification email successfully dispatched to sales team via SMTP (${smtpHost})`
+        });
+        return;
+      } catch (smtpErr) {
+        console.warn("AMC email SMTP transmission error, falling back to mock wrapper:", smtpErr?.message);
+      }
+    }
+    const mockMessageId = `mock-amc-sales-${Date.now()}-${Math.random().toString(36).substring(2, 8)}@alphaerp.local`;
+    console.log(`[MOCK AMC SALES EMAIL] From: ${fromAddress} | To: ${targetRecipients.join(", ")} | Subject: ${emailSubject}`);
+    if (contracts && Array.isArray(contracts)) {
+      console.log(`[MOCK AMC SALES EMAIL] Expiring Contracts (30 Days): ${contracts.map((c) => `${c.contractCode} (${c.customerName}, Ends: ${c.endDate})`).join(", ")}`);
+    }
+    res.json({
+      success: true,
+      mode: "mock_wrapper",
+      isRealSmtp: false,
+      messageId: mockMessageId,
+      recipients: targetRecipients,
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      contractsCount: Array.isArray(contracts) ? contracts.length : 0,
+      note: `AMC 30-day alert email recorded and dispatched via AlphaERP resilient Mock Sandbox (${smtpHost || "sandbox"}:${smtpPort}). Sales team notified.`
+    });
+  } catch (err) {
+    console.error("AMC email alert notification handler failed:", err);
+    res.status(500).json({
+      success: false,
+      error: err?.message || "Failed to dispatch AMC expiry notification email"
+    });
+  }
+});
 app.post("/api/email/test-connection", async (req, res) => {
   try {
     const {

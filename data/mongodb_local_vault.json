@@ -1,12 +1,12 @@
 {
   "projects": [
     {
-      "id": "prj-1789292611252",
+      "id": "prj-1789295989145",
       "projectNumber": "26-PJ-0001",
       "projectName": "Apollo Medcity Healthcare Ltd - Apollo Medcity - 320 TR Hospital Central Chiller & OT HVAC Suite",
       "clientName": "Apollo Medcity Healthcare Ltd",
-      "leadId": "lead-1789292611192",
-      "quoteId": "qte-1789292611250",
+      "leadId": "lead-1789295989110",
+      "quoteId": "qte-1789295989144",
       "contractValue": 15977200,
       "totalEstimatedCost": 11080000,
       "targetMarginPct": 18.17,
@@ -17,7 +17,7 @@
       "projectManager": "Vikramaditya Solanki (Senior HVAC PM)",
       "boqItems": [
         {
-          "id": "boq-1789292611252-0",
+          "id": "boq-1789295989145-0",
           "category": "Equipment",
           "sku": "CHL-SCR-160TR",
           "description": "Air-Cooled Screw Chiller 160 TR with Eco Refrigerant R134a & VFD Compressor",
@@ -30,7 +30,7 @@
           "status": "Shortage - PR Needed"
         },
         {
-          "id": "boq-1789292611252-1",
+          "id": "boq-1789295989145-1",
           "category": "Ducting & Insulation",
           "sku": "DUCT-GI-24G",
           "description": "Class VIII Factory Fabricated Galvanized Iron (GI) Sheet Ducting with acoustic lining",
@@ -43,7 +43,7 @@
           "status": "Shortage - PR Needed"
         },
         {
-          "id": "boq-1789292611252-2",
+          "id": "boq-1789295989145-2",
           "category": "Piping & Valves",
           "sku": "PIP-MS-150-HEAVY",
           "description": "Heavy Class MS Chilled Water Piping (150mm NB) with 25mm Nitrile Rubber Insulation",
@@ -57,7 +57,7 @@
           "poNumber": "26-PO-0001"
         },
         {
-          "id": "boq-1789292611252-3",
+          "id": "boq-1789295989145-3",
           "category": "Testing & Commissioning",
           "sku": "SKU-CUST-4",
           "description": "Complete System Air Balancing (TAB), Chilled Water Flow Balancing & Handover Protocol",

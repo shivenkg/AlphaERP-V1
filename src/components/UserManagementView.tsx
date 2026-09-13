@@ -58,7 +58,8 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
   const [editTitle, setEditTitle] = useState('');
   const [editDepartment, setEditDepartment] = useState('');
 
-  const isAdmin = currentRole === 'executive';
+  const isSuperAdmin = currentRole === 'superadmin';
+  const isAdmin = currentRole === 'superadmin' || currentRole === 'admin' || currentRole === 'executive';
 
   useEffect(() => {
     const unsubscribe = storageService.subscribe(() => {
@@ -149,13 +150,17 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
 
   const handleToggleStatus = (u: UserProfile) => {
     if (u.id === currentUser.id && u.status === 'active') {
-      const confirmSelf = window.confirm(
-        'You are currently logged in as this user. Deactivating this account will limit active operations. Are you sure?'
-      );
-      if (!confirmSelf) return;
+      alert('Security Violation: You cannot deactivate your own currently active user account.');
+      return;
     }
+
+    if ((u.role === 'admin' || u.role === 'superadmin') && currentRole !== 'superadmin') {
+      alert('Permission Denied: Only SuperAdmin has authorization to activate or disable Admin and SuperAdmin users.');
+      return;
+    }
+
     try {
-      storageService.toggleUserStatus(u.id);
+      storageService.toggleUserStatus(u.id, currentRole);
     } catch (e: any) {
       alert(e.message || 'Error updating user status');
     }
@@ -336,7 +341,9 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                 className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="ALL">All Roles</option>
-                <option value="executive">Admin / Executive</option>
+                <option value="superadmin">Root SuperAdmin</option>
+                <option value="admin">System Admin</option>
+                <option value="executive">Managing Director / Executive</option>
                 <option value="procurement">Procurement Manager</option>
                 <option value="sales_manager">Business Manager / Sales</option>
                 <option value="estimator">MEP / HVAC Estimator</option>
@@ -480,24 +487,39 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                                 </button>
                               )}
 
-                              {/* Deactivate / Reactivate (Admin Only) */}
-                              {isAdmin && (
-                                <button
-                                  onClick={() => handleToggleStatus(u)}
-                                  title={u.status === 'active' ? 'Deactivate user' : 'Reactivate user'}
-                                  className={`p-1.5 rounded-lg transition-colors ${
-                                    u.status === 'active'
-                                      ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
-                                      : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
-                                  }`}
-                                >
-                                  {u.status === 'active' ? (
-                                    <UserX className="w-3.5 h-3.5" />
-                                  ) : (
-                                    <UserCheck className="w-3.5 h-3.5" />
-                                  )}
-                                </button>
-                              )}
+                              {/* Deactivate / Reactivate (Admin Only, SuperAdmin exclusive for Admins) */}
+                              {isAdmin && (() => {
+                                const isTargetAdmin = u.role === 'admin' || u.role === 'superadmin';
+                                const canToggle = isSuperAdmin || (!isTargetAdmin && !isCurrent);
+                                const tooltipText = isCurrent
+                                  ? 'Cannot deactivate your own active user account'
+                                  : isTargetAdmin && !isSuperAdmin
+                                  ? 'Only SuperAdmin has authority to activate or disable Admin users'
+                                  : u.status === 'active'
+                                  ? 'Deactivate user'
+                                  : 'Reactivate user';
+
+                                return (
+                                  <button
+                                    onClick={() => canToggle && handleToggleStatus(u)}
+                                    disabled={!canToggle}
+                                    title={tooltipText}
+                                    className={`p-1.5 rounded-lg transition-colors ${
+                                      !canToggle
+                                        ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-50'
+                                        : u.status === 'active'
+                                        ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                                        : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
+                                    }`}
+                                  >
+                                    {u.status === 'active' ? (
+                                      <UserX className="w-3.5 h-3.5" />
+                                    ) : (
+                                      <UserCheck className="w-3.5 h-3.5" />
+                                    )}
+                                  </button>
+                                );
+                              })()}
                             </div>
                           </td>
                         </tr>
@@ -701,6 +723,12 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                   onChange={(e) => handleRoleSelectChange(e.target.value as UserRole)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
                 >
+                  {isSuperAdmin && (
+                    <>
+                      <option value="superadmin">Root SuperAdmin (Supreme Enterprise DRM & User Control)</option>
+                      <option value="admin">System Administrator (IT Operations & System Admin)</option>
+                    </>
+                  )}
                   <option value="procurement">Purchase / Procurement Manager (Approves PR, Creates PO)</option>
                   <option value="sales_manager">Business Manager / Sales Head (Signs off PO, Awards contracts)</option>
                   <option value="estimator">MEP / HVAC Estimator (Creates Quotes & BOQ, Raises PR)</option>
@@ -708,7 +736,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                   <option value="finance">Finance Controller (Invoicing & Settlement)</option>
                   <option value="technician">Field HVAC Service Engineer (PPM Checklists & Breakdown Tickets)</option>
                   <option value="service_manager">Service Operations Manager (AMC Contracts, Fleet & SLA Dispatch)</option>
-                  <option value="executive">Executive / Managing Director (Super Admin - All Rights)</option>
+                  <option value="executive">Executive / Managing Director (Executive Strategy & Board)</option>
                 </select>
               </div>
 
@@ -808,7 +836,13 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                   }}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
                 >
-                  <option value="executive">Executive / Managing Director (Super Admin)</option>
+                  {isSuperAdmin && (
+                    <>
+                      <option value="superadmin">Root SuperAdmin (Supreme Access)</option>
+                      <option value="admin">System Administrator (IT Operations)</option>
+                    </>
+                  )}
+                  <option value="executive">Executive / Managing Director</option>
                   <option value="procurement">Purchase / Procurement Manager</option>
                   <option value="sales_manager">Business Manager / Sales Head</option>
                   <option value="estimator">MEP / HVAC Estimator</option>

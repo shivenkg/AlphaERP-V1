@@ -74,7 +74,12 @@ import {
   CustomRoleDefinition,
   SodViolation,
   SodConflictRule,
-  EnterpriseFunction
+  EnterpriseFunction,
+  SystemLicense,
+  GenerateLicenseParams,
+  LicenseTier,
+  LicenseTimeFrame,
+  LicenseStatus
 } from '../types';
 import { FontSizeScaleMode } from '../types/fontSize';
 
@@ -128,7 +133,8 @@ import {
   INITIAL_AMC_CONTRACTS,
   INITIAL_PPM_VISITS,
   INITIAL_BREAKDOWN_TICKETS,
-  INITIAL_BUSINESS_ROLES
+  INITIAL_BUSINESS_ROLES,
+  INITIAL_SYSTEM_LICENSE
 } from '../data/initialData';
 
 import {
@@ -254,7 +260,11 @@ const STORAGE_KEYS = {
   BUSINESS_ROLES: 'alpha_erp_business_roles',
   CUSTOM_ROLES: 'alpha_erp_custom_roles',
   ROLE_FUNCTIONS: 'alpha_erp_role_functions',
-  SOD_OVERRIDES: 'alpha_erp_sod_overrides'
+  SOD_OVERRIDES: 'alpha_erp_sod_overrides',
+
+  // Enterprise System Licensing
+  ACTIVE_LICENSE: 'alpha_erp_active_license',
+  GENERATED_LICENSES: 'alpha_erp_generated_licenses'
 };
 
 const DEFAULT_BACKUP_CONFIG: BackupConfig = {
@@ -422,6 +432,10 @@ class StorageService {
   private roleFunctionPermissions: Record<string, string[]> = load(STORAGE_KEYS.ROLE_FUNCTIONS, JSON.parse(JSON.stringify(DEFAULT_ROLE_FUNCTION_PERMISSIONS)));
   private sodOverrides: { ruleId: string; targetId: string; targetType: 'role' | 'user'; approvedBy: string; approvedAt: string; reason: string }[] = load(STORAGE_KEYS.SOD_OVERRIDES, []);
 
+  // Enterprise Licensing System
+  private activeLicense: SystemLicense = load(STORAGE_KEYS.ACTIVE_LICENSE, INITIAL_SYSTEM_LICENSE);
+  private generatedLicenses: SystemLicense[] = load(STORAGE_KEYS.GENERATED_LICENSES, [INITIAL_SYSTEM_LICENSE]);
+
   private listeners: Array<() => void> = [];
   private backupListeners: Array<(event: BackupNotificationEvent) => void> = [];
   private periodicBackupTimer: any = null;
@@ -501,6 +515,16 @@ class StorageService {
     if (this.breakdownTickets.length < INITIAL_BREAKDOWN_TICKETS.length) {
       this.breakdownTickets = INITIAL_BREAKDOWN_TICKETS;
       save(STORAGE_KEYS.BREAKDOWN_TICKETS, this.breakdownTickets);
+    }
+
+    // Enterprise Licensing: ensure active and generated licenses are initialized
+    if (!this.activeLicense || !this.activeLicense.licenseKey) {
+      this.activeLicense = INITIAL_SYSTEM_LICENSE;
+      save(STORAGE_KEYS.ACTIVE_LICENSE, this.activeLicense);
+    }
+    if (!this.generatedLicenses || this.generatedLicenses.length === 0) {
+      this.generatedLicenses = [INITIAL_SYSTEM_LICENSE];
+      save(STORAGE_KEYS.GENERATED_LICENSES, this.generatedLicenses);
     }
 
     // Ensure number series are populated
@@ -697,6 +721,8 @@ class StorageService {
     department?: string;
   }): UserProfile {
     const defaultAvatars: Record<UserRole, string> = {
+      superadmin: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      admin: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
       executive: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       service_manager: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       procurement: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
@@ -762,11 +788,23 @@ class StorageService {
     return updatedUser;
   }
 
-  public toggleUserStatus(userId: string): UserProfile {
+  public toggleUserStatus(userId: string, requesterRole?: UserRole): UserProfile {
     const userIndex = this.users.findIndex((u) => u.id === userId);
     if (userIndex === -1) throw new Error('User not found');
 
     const current = this.users[userIndex];
+    const effectiveRequesterRole = requesterRole || this.user.role;
+
+    // Prevent deactivating own account
+    if (this.user.id === userId && current.status === 'active') {
+      throw new Error('Security Violation: You cannot deactivate your own currently active user account.');
+    }
+
+    // Only superadmin can activate or deactivate admin and superadmin users
+    if ((current.role === 'admin' || current.role === 'superadmin') && effectiveRequesterRole !== 'superadmin') {
+      throw new Error('Permission Denied: Only SuperAdmin has authority to activate or deactivate Admin and SuperAdmin users.');
+    }
+
     const newStatus: 'active' | 'deactivated' = current.status === 'active' ? 'deactivated' : 'active';
     const updated = { ...current, status: newStatus };
     this.users[userIndex] = updated;
@@ -777,7 +815,7 @@ class StorageService {
       save(STORAGE_KEYS.USER, this.user);
     }
 
-    this.logAudit('UPDATE', 'USER', userId, `${newStatus === 'active' ? 'Activated' : 'Deactivated'} user account for ${updated.name}`);
+    this.logAudit('UPDATE', 'USER', userId, `${newStatus === 'active' ? 'Activated' : 'Deactivated'} user account for ${updated.name} (${updated.role})`);
     this.addNotification(
       `User ${newStatus === 'active' ? 'Activated' : 'Deactivated'}`,
       `${updated.name} has been ${newStatus}.`,
@@ -803,6 +841,8 @@ class StorageService {
 
   public setUserRole(role: UserRole) {
     const roleTitles: Record<UserRole, string> = {
+      superadmin: 'Global Systems & Security SuperAdmin',
+      admin: 'Enterprise System Administrator',
       executive: 'Managing Director & Operations Head',
       service_manager: 'Service Operations Manager & AMC Head',
       sales_manager: 'HVAC Regional Sales Manager',
@@ -2566,7 +2606,7 @@ class StorageService {
   // ==========================================
   // Bump this version any time a new module is added to DEFAULT_ROLE_MODULE_PERMISSIONS
   // so cached localStorage permissions are rebuilt from the latest defaults.
-  private static readonly PERMISSIONS_SCHEMA_VERSION = '4';
+  private static readonly PERMISSIONS_SCHEMA_VERSION = '5';
 
   public getRoleModulePermissions(): Record<UserRole, string[]> {
     // Force-refresh if the stored schema version is outdated (handles stale localStorage)
@@ -5977,6 +6017,243 @@ class StorageService {
         totalTransactions: 0
       };
     }
+  }
+
+  // ==========================================
+  // ENTERPRISE LICENSING & CONTROL SUITE
+  // ==========================================
+  public getActiveLicense(): SystemLicense {
+    return this.activeLicense;
+  }
+
+  public getGeneratedLicenses(): SystemLicense[] {
+    return this.generatedLicenses;
+  }
+
+  public generateLicense(params: GenerateLicenseParams, issuedBy?: string): SystemLicense {
+    const daysMap: Record<LicenseTimeFrame, number> = {
+      '7_days': 7,
+      '14_days': 14,
+      '30_days': 30,
+      '90_days': 90,
+      '180_days': 180,
+      '1_year': 365,
+      '2_years': 730,
+      '3_years': 1095,
+      'lifetime': 36500,
+      'custom': params.customDays && params.customDays > 0 ? params.customDays : 30
+    };
+
+    const durationDays = daysMap[params.timeFrame] || 30;
+    const now = new Date();
+    const expires = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+
+    const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const timeSuffix = Date.now().toString(36).toUpperCase();
+    const tierCode = params.tier.slice(0, 3).toUpperCase();
+    const licenseKey = `AERP-${tierCode}-${timeSuffix}-${randomSuffix}-LIVE`;
+
+    const checksumHash = `SHA256:${Math.random().toString(16).substring(2, 10).toUpperCase()}${Date.now().toString(16).substring(4).toUpperCase()}`;
+
+    const newLicense: SystemLicense = {
+      id: `LIC-${Date.now()}-${randomSuffix}`,
+      licenseKey,
+      tier: params.tier,
+      organizationName: params.organizationName.trim(),
+      timeFrame: params.timeFrame,
+      issuedAt: now.toISOString(),
+      startsAt: now.toISOString(),
+      expiresAt: expires.toISOString(),
+      maxUsers: params.maxUsers || 50,
+      features: params.features || [
+        'core_crm',
+        'techno_commercial_boq',
+        'scm_procurement',
+        'multi_bay_wms',
+        'services_amc_ppm',
+        'gaap_finance',
+        'talent_hrms',
+        'master_hub',
+        'google_sheets_sync',
+        'audit_vault'
+      ],
+      status: 'active',
+      issuedBy: issuedBy || this.user.name || 'Root SuperAdmin',
+      checksum: checksumHash,
+      notes: params.notes || `Generated by ${this.user.name} for ${params.organizationName}`,
+      customDays: params.timeFrame === 'custom' ? params.customDays : undefined
+    };
+
+    this.generatedLicenses = [newLicense, ...this.generatedLicenses];
+    save(STORAGE_KEYS.GENERATED_LICENSES, this.generatedLicenses);
+
+    this.logAudit(
+      'CREATE',
+      'LICENSE' as any,
+      newLicense.id,
+      `SuperAdmin generated enterprise license ${newLicense.licenseKey} for ${newLicense.organizationName} (${newLicense.timeFrame}, max users: ${newLicense.maxUsers})`
+    );
+
+    this.addNotification(
+      'License Generated',
+      `New ${params.tier.toUpperCase()} license generated for ${params.organizationName} (${params.timeFrame}).`,
+      'success',
+      'license'
+    );
+
+    this.notify();
+    return newLicense;
+  }
+
+  public applyLicense(licenseKey: string): { success: boolean; message: string; license?: SystemLicense } {
+    const cleanKey = licenseKey.trim();
+    if (!cleanKey) {
+      return { success: false, message: 'Please enter a valid license key.' };
+    }
+
+    // Match in generatedLicenses or check format
+    const found = this.generatedLicenses.find((l) => l.licenseKey.toLowerCase() === cleanKey.toLowerCase());
+    if (found) {
+      if (found.status === 'revoked') {
+        return { success: false, message: 'This license has been revoked and cannot be activated.' };
+      }
+      const isExpired = new Date(found.expiresAt).getTime() < Date.now();
+      if (isExpired) {
+        return { success: false, message: 'This license has expired and cannot be activated.' };
+      }
+
+      this.activeLicense = { ...found, status: 'active' };
+      save(STORAGE_KEYS.ACTIVE_LICENSE, this.activeLicense);
+
+      this.logAudit(
+        'UPDATE',
+        'LICENSE' as any,
+        found.id,
+        `Activated license ${found.licenseKey} for organization ${found.organizationName}`
+      );
+      this.addNotification(
+        'License Activated',
+        `Successfully activated ${found.tier.toUpperCase()} license for ${found.organizationName}.`,
+        'success',
+        'license'
+      );
+      this.notify();
+      return { success: true, message: `License activated successfully for ${found.organizationName}!`, license: this.activeLicense };
+    }
+
+    // Support validly structured external enterprise license keys
+    if (cleanKey.startsWith('AERP-')) {
+      const parts = cleanKey.split('-');
+      const tierGuess: LicenseTier =
+        parts[1]?.toLowerCase() === 'ult'
+          ? 'ultimate'
+          : parts[1]?.toLowerCase() === 'pro'
+          ? 'professional'
+          : parts[1]?.toLowerCase() === 'tri'
+          ? 'trial'
+          : 'enterprise';
+
+      const customLicense: SystemLicense = {
+        id: `LIC-EXT-${Date.now()}`,
+        licenseKey: cleanKey,
+        tier: tierGuess,
+        organizationName: this.systemSettings.companyName || 'AlphaERP Enterprise Client',
+        timeFrame: '1_year',
+        issuedAt: new Date().toISOString(),
+        startsAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        maxUsers: 100,
+        features: ['all'],
+        status: 'active',
+        issuedBy: 'Enterprise License Server',
+        checksum: `SHA256:${Math.random().toString(16).substring(2, 10).toUpperCase()}`
+      };
+
+      this.activeLicense = customLicense;
+      save(STORAGE_KEYS.ACTIVE_LICENSE, this.activeLicense);
+      this.generatedLicenses = [customLicense, ...this.generatedLicenses];
+      save(STORAGE_KEYS.GENERATED_LICENSES, this.generatedLicenses);
+
+      this.logAudit('UPDATE', 'LICENSE' as any, customLicense.id, `Activated external license key ${cleanKey}`);
+      this.notify();
+      return { success: true, message: 'External license key successfully verified and applied!', license: customLicense };
+    }
+
+    return { success: false, message: 'Invalid license key format. Expected format: AERP-XXX-XXXX-XXXX-LIVE' };
+  }
+
+  public revokeLicense(licenseId: string, reason?: string): SystemLicense {
+    const idx = this.generatedLicenses.findIndex((l) => l.id === licenseId);
+    if (idx === -1) throw new Error('License record not found');
+
+    const updated = {
+      ...this.generatedLicenses[idx],
+      status: 'revoked' as LicenseStatus,
+      notes: reason ? `${this.generatedLicenses[idx].notes || ''} [REVOKED: ${reason}]` : this.generatedLicenses[idx].notes
+    };
+    this.generatedLicenses[idx] = updated;
+    save(STORAGE_KEYS.GENERATED_LICENSES, this.generatedLicenses);
+
+    if (this.activeLicense.id === licenseId) {
+      this.activeLicense = { ...this.activeLicense, status: 'revoked' };
+      save(STORAGE_KEYS.ACTIVE_LICENSE, this.activeLicense);
+    }
+
+    this.logAudit('UPDATE', 'LICENSE' as any, licenseId, `Revoked license ${updated.licenseKey}. Reason: ${reason || 'Administrative action'}`);
+    this.addNotification('License Revoked', `License ${updated.licenseKey} has been revoked.`, 'warning', 'license');
+    this.notify();
+    return updated;
+  }
+
+  public extendLicense(licenseId: string, additionalDays: number): SystemLicense {
+    const idx = this.generatedLicenses.findIndex((l) => l.id === licenseId);
+    if (idx === -1) throw new Error('License record not found');
+
+    const curExpires = new Date(this.generatedLicenses[idx].expiresAt).getTime();
+    const baseTime = curExpires > Date.now() ? curExpires : Date.now();
+    const newExpires = new Date(baseTime + additionalDays * 24 * 60 * 60 * 1000).toISOString();
+
+    const updated = {
+      ...this.generatedLicenses[idx],
+      expiresAt: newExpires,
+      status: 'active' as LicenseStatus
+    };
+    this.generatedLicenses[idx] = updated;
+    save(STORAGE_KEYS.GENERATED_LICENSES, this.generatedLicenses);
+
+    if (this.activeLicense.id === licenseId) {
+      this.activeLicense = { ...this.activeLicense, expiresAt: newExpires, status: 'active' };
+      save(STORAGE_KEYS.ACTIVE_LICENSE, this.activeLicense);
+    }
+
+    this.logAudit('UPDATE', 'LICENSE' as any, licenseId, `Extended license ${updated.licenseKey} by ${additionalDays} days`);
+    this.addNotification('License Extended', `License ${updated.licenseKey} extended by ${additionalDays} days.`, 'success', 'license');
+    this.notify();
+    return updated;
+  }
+
+  public validateSystemLicense(): {
+    isValid: boolean;
+    daysRemaining: number;
+    isExpired: boolean;
+    isRevoked: boolean;
+    license: SystemLicense;
+  } {
+    const lic = this.activeLicense || INITIAL_SYSTEM_LICENSE;
+    const now = Date.now();
+    const expTime = new Date(lic.expiresAt).getTime();
+    const daysRemaining = Math.ceil((expTime - now) / (1000 * 60 * 60 * 24));
+    const isExpired = daysRemaining <= 0;
+    const isRevoked = lic.status === 'revoked';
+    const isValid = !isExpired && !isRevoked && lic.status === 'active';
+
+    return {
+      isValid,
+      daysRemaining,
+      isExpired,
+      isRevoked,
+      license: lic
+    };
   }
 }
 

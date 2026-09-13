@@ -16,7 +16,8 @@ import {
   AlertTriangle,
   X,
   History,
-  QrCode
+  QrCode,
+  FileText
 } from 'lucide-react';
 import {
   ServiceCustomer,

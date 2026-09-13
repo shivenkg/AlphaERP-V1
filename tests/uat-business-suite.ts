@@ -2200,6 +2200,137 @@ export async function executeAllUATTests() {
   );
 
   // --------------------------------------------------------------------------
+  // USE CASE 24: SUPERADMIN, ADMIN PROFILES & ENTERPRISE DRM LICENSING ENGINE
+  // --------------------------------------------------------------------------
+  await runTestCase(
+    'UAT-CASE-24',
+    'SuperAdmin, Admin Profiles, User Activation Controls & Enterprise DRM Licensing',
+    'Security, Governance & Licensing',
+    async (step) => {
+      let testLicenseId = '';
+      let testLicenseKey = '';
+
+      await step('24.1 SuperAdmin & Admin Profiles & RBAC Scoping Integrity', async () => {
+        const users = storageService.getUsers();
+        const superAdminUser = users.find((u) => u.role === 'superadmin');
+        const adminUser = users.find((u) => u.role === 'admin');
+
+        assert(Boolean(superAdminUser), 'Root SuperAdmin profile must exist in users directory');
+        assert(Boolean(adminUser), 'Enterprise Admin profile must exist in users directory');
+
+        // Check module permissions
+        const perms = storageService.getRoleModulePermissions();
+        assert(perms.superadmin.includes('pitch_deck'), 'SuperAdmin must have access to investor pitch deck');
+        assert(perms.superadmin.includes('license'), 'SuperAdmin must have access to enterprise license engine');
+        assert(!perms.admin.includes('pitch_deck'), 'Admin profile must NOT have access to pitch deck');
+        assert(!perms.admin.includes('license'), 'Admin profile must NOT have access to license engine');
+        assert(!perms.executive.includes('pitch_deck'), 'Executive profile must NOT have access to pitch deck');
+      });
+
+      await step('24.2 SuperAdmin Right to Activate and Disable Admin Users', async () => {
+        const users = storageService.getUsers();
+        const adminUser = users.find((u) => u.role === 'admin');
+        assert(Boolean(adminUser), 'Admin user must exist for toggle test');
+
+        // 1. Non-superadmin cannot deactivate an admin
+        let errorCaught = false;
+        try {
+          storageService.toggleUserStatus(adminUser.id, 'procurement');
+        } catch (e: any) {
+          errorCaught = true;
+          assert(e.message.includes('Only SuperAdmin'), 'Must enforce SuperAdmin authority message');
+        }
+        assert(errorCaught, 'Deactivating admin by non-superadmin must be rejected');
+
+        // 2. Superadmin CAN toggle admin user
+        const toggled = storageService.toggleUserStatus(adminUser.id, 'superadmin');
+        assert(toggled.status === 'deactivated', 'Admin user must be deactivated by SuperAdmin');
+
+        // Reactivate by SuperAdmin
+        const reactivated = storageService.toggleUserStatus(adminUser.id, 'superadmin');
+        assert(reactivated.status === 'active', 'Admin user must be reactivated by SuperAdmin');
+      });
+
+      await step('24.3 Prevention of Self-Deactivation for Active User Session', async () => {
+        const currentUser = storageService.getCurrentUser();
+        let selfDeactivateBlocked = false;
+        try {
+          storageService.toggleUserStatus(currentUser.id, currentUser.role);
+        } catch (e: any) {
+          selfDeactivateBlocked = true;
+          assert(e.message.includes('cannot deactivate your own'), 'Must block self-deactivation');
+        }
+        assert(selfDeactivateBlocked, 'System must strictly prevent user from deactivating their own active account');
+      });
+
+      await step('24.4 Timeframe-Based Enterprise License Generation', async () => {
+        const generated = storageService.generateLicense({
+          organizationName: 'Atmos BlueStar HVAC Consortium',
+          tier: 'enterprise',
+          timeFrame: '30_days',
+          maxUsers: 150,
+          notes: 'Contract Ref: UAT-CTR-2026-X1'
+        }, 'Root SuperAdmin');
+
+        assert(Boolean(generated.id), 'Generated license must have unique ID');
+        assert(generated.licenseKey.startsWith('AERP-ENT-'), 'License key must match signed enterprise prefix');
+        assert(generated.tier === 'enterprise', 'Tier must match enterprise');
+        assert(generated.maxUsers === 150, 'Seat allocation must equal 150');
+        assert(Boolean(generated.checksum), 'Cryptographic checksum must be calculated');
+
+        const starts = new Date(generated.startsAt).getTime();
+        const expires = new Date(generated.expiresAt).getTime();
+        const diffDays = Math.round((expires - starts) / (1000 * 60 * 60 * 24));
+        assert(diffDays === 30, `Expiry diff must equal 30 days, got ${diffDays}`);
+
+        testLicenseId = generated.id;
+        testLicenseKey = generated.licenseKey;
+      });
+
+      await step('24.5 Custom Timeframe License Generation', async () => {
+        const customGen = storageService.generateLicense({
+          organizationName: 'Custom Horizon Systems',
+          tier: 'ultimate',
+          timeFrame: 'custom',
+          customDays: 45,
+          maxUsers: 250
+        });
+
+        const starts = new Date(customGen.startsAt).getTime();
+        const expires = new Date(customGen.expiresAt).getTime();
+        const diffDays = Math.round((expires - starts) / (1000 * 60 * 60 * 24));
+        assert(diffDays === 45, `Custom expiry diff must equal 45 days, got ${diffDays}`);
+      });
+
+      await step('24.6 License Validation, Application & Lifecycle Extension/Revocation', async () => {
+        // Apply generated license to active system
+        const applyRes = storageService.applyLicense(testLicenseKey);
+        assert(applyRes.success, 'License application must succeed');
+        assert(storageService.getActiveLicense().licenseKey === testLicenseKey, 'Active license key must match applied key');
+
+        // Validation test
+        const validation = storageService.validateSystemLicense();
+        assert(validation.isValid, 'Active system license must be valid');
+        assert(validation.daysRemaining > 0, 'Days remaining must be positive');
+        assert(!validation.isExpired, 'License must not be expired');
+        assert(!validation.isRevoked, 'License must not be revoked');
+
+        // Extend license +30 days
+        const extended = storageService.extendLicense(testLicenseId, 30);
+        const newExpiry = new Date(extended.expiresAt).getTime();
+        assert(newExpiry > Date.now() + 30 * 24 * 60 * 60 * 1000, 'Expiration must be extended by 30 days');
+
+        // Revoke license
+        const revoked = storageService.revokeLicense(testLicenseId, 'UAT Test Revocation');
+        assert(revoked.status === 'revoked', 'License status must be revoked');
+        const validationAfterRevoke = storageService.validateSystemLicense();
+        assert(!validationAfterRevoke.isValid, 'Revoked license must fail validation');
+        assert(validationAfterRevoke.isRevoked, 'Validation must report license as revoked');
+      });
+    }
+  );
+
+  // --------------------------------------------------------------------------
   // SUMMARY REPORT GENERATION
   // --------------------------------------------------------------------------
   console.log('\n================================================================');

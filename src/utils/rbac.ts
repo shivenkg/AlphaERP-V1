@@ -56,8 +56,8 @@ export const APP_MODULES: AppModuleInfo[] = [
     shortName: 'Pitch Deck',
     category: 'management',
     categoryLabel: 'Management & Strategy',
-    description: 'Interactive presentation deck for investors, business partners, and key stakeholders.',
-    defaultRoles: ['executive', 'sales_manager']
+    description: 'Interactive presentation deck for investors, business partners, and key stakeholders (Superadmin Only).',
+    defaultRoles: ['superadmin']
   },
   {
     id: 'sales',
@@ -241,15 +241,71 @@ export const APP_MODULES: AppModuleInfo[] = [
     category: 'system',
     categoryLabel: 'System & Master Data',
     description: 'Tamper-evident logs of all transactions, user logins, data modifications, and approvals.',
-    defaultRoles: ['executive', 'finance']
+    defaultRoles: ['superadmin', 'admin', 'executive', 'finance']
+  },
+  {
+    id: 'license',
+    name: 'Enterprise Licensing & System Control',
+    shortName: 'License Manager',
+    category: 'system',
+    categoryLabel: 'System & Master Data',
+    description: 'Generate time-based enterprise licenses, manage active installations, and enforce seat limits (Superadmin Only).',
+    defaultRoles: ['superadmin']
   }
 ];
 
 export const DEFAULT_ROLE_MODULE_PERMISSIONS: Record<UserRole, string[]> = {
-  executive: [
+  superadmin: [
     'search',
     'dashboard',
     'pitch_deck',
+    'sales',
+    'crm',
+    'quotes',
+    'projects',
+    'cost_analysis',
+    'services_amc',
+    'services_schedule',
+    'workorders',
+    'procurement',
+    'inventory',
+    'finance',
+    'payments',
+    'hr',
+    'ess',
+    'masterdata',
+    'sheets',
+    'users',
+    'customization',
+    'audit',
+    'license'
+  ],
+  admin: [
+    'search',
+    'dashboard',
+    'sales',
+    'crm',
+    'quotes',
+    'projects',
+    'cost_analysis',
+    'services_amc',
+    'services_schedule',
+    'workorders',
+    'procurement',
+    'inventory',
+    'finance',
+    'payments',
+    'hr',
+    'ess',
+    'masterdata',
+    'sheets',
+    'users',
+    'customization',
+    'audit'
+  ],
+  executive: [
+    'search',
+    'dashboard',
     'sales',
     'crm',
     'quotes',
@@ -382,17 +438,53 @@ export const canRoleAccessTab = (
   tabId: string,
   customRoleModulePermissions?: Record<string, string[]> | Record<UserRole, string[]>
 ): boolean => {
+  // Pitch deck and license management are strictly accessible only to superadmin
+  if (tabId === 'pitch_deck' || tabId === 'license') {
+    return role === 'superadmin';
+  }
   const allowed = getEffectiveRoleModules(role, customRoleModulePermissions);
   return allowed.includes(tabId);
 };
 
 export const ROLE_DEFINITIONS: Record<UserRole, RoleMetadata> = {
+  superadmin: {
+    id: 'superadmin',
+    name: 'Root Super Administrator',
+    department: 'Information Security & Executive Office',
+    badge: 'SuperAdmin',
+    badgeColor: 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/60',
+    description: 'Supreme unrestricted governance authority across all ERP systems, exclusive Investor Pitch Deck access, license generation & controls, and admin user activation/deactivation.',
+    keyPermissions: [
+      'Full Root Administrative Control',
+      'Exclusive Access to Investor Pitch Deck',
+      'Generate, Control & Implement System Licenses',
+      'Activate & Disable Admin & User Accounts',
+      'Segregation of Duties (SoD) Overrides',
+      'All Financial, Operational & Technical Approvals'
+    ]
+  },
+  admin: {
+    id: 'admin',
+    name: 'Enterprise System Administrator',
+    department: 'IT & System Operations',
+    badge: 'Enterprise Admin',
+    badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/60',
+    description: 'Enterprise administrator with complete access to all business workflows, master configurations, user directory, and operational management.',
+    keyPermissions: [
+      'Operational Admin Control (Workflows & Masters)',
+      'User Directory & Role Assignments',
+      'PR & PO Authorizations',
+      'Financial & Accounting Approvals',
+      'Customization & Numbering Series',
+      'Audit Trail Monitoring'
+    ]
+  },
   executive: {
     id: 'executive',
-    name: 'Executive / Managing Director (Admin)',
+    name: 'Executive / Managing Director',
     department: 'Executive Management',
-    badge: 'Super Admin',
-    badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+    badge: 'Executive Director',
+    badgeColor: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60',
     description: 'Full unrestricted super-admin privileges across all ERP workflows, approvals, finance, settings, and user management.',
     keyPermissions: [
       'Full Admin Control (Create, Edit, Delete, Override)',
@@ -945,6 +1037,8 @@ export const ENTERPRISE_FUNCTIONS: EnterpriseFunction[] = [
 
 // Default function IDs assigned to standard system roles
 export const DEFAULT_ROLE_FUNCTION_PERMISSIONS: Record<string, string[]> = {
+  superadmin: ENTERPRISE_FUNCTIONS.map((f) => f.id),
+  admin: ENTERPRISE_FUNCTIONS.map((f) => f.id),
   executive: ENTERPRISE_FUNCTIONS.map((f) => f.id),
   sales_manager: [
     'fn_crm_lead_view',

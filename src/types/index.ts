@@ -1,4 +1,6 @@
 export type UserRole =
+  | 'superadmin'
+  | 'admin'
   | 'executive'
   | 'sales_manager'
   | 'estimator'
@@ -2049,5 +2051,48 @@ export interface AdminEnvTestResult {
   details?: any;
 }
 
+// Enterprise System Licensing Contracts
+export type LicenseTier = 'trial' | 'professional' | 'enterprise' | 'ultimate';
 
+export type LicenseTimeFrame =
+  | '7_days'
+  | '14_days'
+  | '30_days'
+  | '90_days'
+  | '180_days'
+  | '1_year'
+  | '2_years'
+  | '3_years'
+  | 'lifetime'
+  | 'custom';
 
+export type LicenseStatus = 'active' | 'expired' | 'revoked' | 'suspended';
+
+export interface SystemLicense {
+  id: string;
+  licenseKey: string;
+  tier: LicenseTier;
+  organizationName: string;
+  timeFrame: LicenseTimeFrame;
+  issuedAt: string;
+  startsAt: string;
+  expiresAt: string;
+  maxUsers: number;
+  features: string[];
+  status: LicenseStatus;
+  issuedBy: string;
+  checksum: string;
+  notes?: string;
+  customDays?: number;
+}
+
+export interface GenerateLicenseParams {
+  organizationName: string;
+  tier: LicenseTier;
+  timeFrame: LicenseTimeFrame;
+  maxUsers: number;
+  customDays?: number;
+  features?: string[];
+  notes?: string;
+  issuedBy?: string;
+}
