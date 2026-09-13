@@ -128,29 +128,30 @@ export const OrganizationLogoCustomizer: React.FC<OrganizationLogoCustomizerProp
   };
 
   const handleSave = () => {
-    if (!logoData) {
-      // If empty, reset to default
+    const cleanAlt = altText.trim();
+    if (!logoData && !cleanAlt && !savedLogo) {
       handleReset();
       return;
     }
-    storageService.setOrganizationLogo(logoData, altText);
-    setSavedLogo(logoData);
-    showFeedback('Enterprise Organization Logo successfully updated and published!', 'success');
+    storageService.setOrganizationLogo(logoData || savedLogo || undefined, cleanAlt);
+    setSavedLogo(logoData || savedLogo);
+    showFeedback('Enterprise Organization Name & Visual Identity successfully updated and published!', 'success');
     if (onSaved) onSaved();
   };
 
   const handleReset = () => {
-    if (window.confirm('Reset organization logo to default system branding?')) {
+    if (window.confirm('Reset organization logo and name to default system branding?')) {
       storageService.resetOrganizationLogo();
       setLogoData('');
       setUrlInput('');
       setSavedLogo('');
-      showFeedback('Organization logo reset to default system brand.', 'info');
+      setAltText('');
+      showFeedback('Organization logo and branding restored to system default.', 'info');
       if (onSaved) onSaved();
     }
   };
 
-  const isCustomActive = Boolean(savedLogo);
+  const isCustomActive = Boolean(savedLogo || altText.trim());
 
   return (
     <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
@@ -166,12 +167,12 @@ export const OrganizationLogoCustomizer: React.FC<OrganizationLogoCustomizerProp
             </h3>
             {isCustomActive && (
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                Custom Logo Active
+                Custom Identity Active
               </span>
             )}
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Upload your organization logo to appear on top application headers, formal techno-commercial quotation printouts, client BOQ sheets, and Purchase Orders.
+            Configure your enterprise name and upload your organization logo to link across top application headers, sidebar, executive dashboard, formal techno-commercial quotation printouts, client BOQ sheets, and Purchase Orders.
           </p>
         </div>
 
@@ -257,18 +258,24 @@ export const OrganizationLogoCustomizer: React.FC<OrganizationLogoCustomizerProp
             </div>
           </div>
 
-          {/* Logo Alt Text */}
+          {/* Organisation Name / Alt name */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Organization Name / Alt Label
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Organisation Name / Alt name
+              </label>
+              <span className="text-[10px] text-blue-600 font-medium">Links across Header, Sidebar &amp; Reports</span>
+            </div>
             <input
               type="text"
               placeholder="e.g., Atmos Aircon Engineering Pvt Ltd"
               value={altText}
               onChange={(e) => setAltText(e.target.value)}
-              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
             />
+            <p className="text-[11px] text-slate-500">
+              This enterprise name links immediately across the application header, sidebar navigation, executive dashboard, printable quotations, and official reports.
+            </p>
           </div>
 
           {/* Action Buttons */}
@@ -276,12 +283,31 @@ export const OrganizationLogoCustomizer: React.FC<OrganizationLogoCustomizerProp
             <button
               type="button"
               onClick={handleSave}
-              disabled={!logoData && !savedLogo}
+              disabled={!logoData && !altText.trim() && !savedLogo}
               className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 cursor-pointer"
             >
               <Save className="w-4 h-4" />
-              <span>Save & Publish Logo</span>
+              <span>Save &amp; Publish Enterprise Identity</span>
             </button>
+
+            {isCustomActive && (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="px-4 py-2.5 border border-slate-200 hover:bg-rose-50 hover:text-rose-700 text-slate-600 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset to Default Brand</span>
+              </button>
+            )}
+
+            {((logoData && logoData !== savedLogo) || (altText && altText !== (storageService.getSystemSettings().organizationLogoAlt || ''))) && (
+              <span className="text-[11px] font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
+                ● Unsaved brand changes
+              </span>
+            )}
+          </div>
+        </div>
 
             {isCustomActive && (
               <button

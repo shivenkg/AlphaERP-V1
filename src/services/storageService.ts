@@ -2736,17 +2736,41 @@ class StorageService {
   // ==========================================
   // ENTERPRISE BRANDING & ORGANIZATION LOGO
   // ==========================================
-  public setOrganizationLogo(logoBase64OrUrl: string, altText?: string): SystemSettings {
-    this.systemSettings = {
-      ...this.systemSettings,
-      organizationLogo: logoBase64OrUrl,
-      organizationLogoAlt: altText || this.systemSettings.organizationLogoAlt || 'Company Logo'
+  public setOrganizationLogo(logoBase64OrUrl?: string, altText?: string): SystemSettings {
+    const cleanAlt = (altText || '').trim();
+    const updatedSettings: SystemSettings = {
+      ...this.systemSettings
     };
+
+    if (logoBase64OrUrl !== undefined) {
+      if (logoBase64OrUrl) {
+        updatedSettings.organizationLogo = logoBase64OrUrl;
+      } else {
+        delete updatedSettings.organizationLogo;
+      }
+    }
+
+    if (cleanAlt) {
+      updatedSettings.organizationLogoAlt = cleanAlt;
+      updatedSettings.companyName = cleanAlt;
+    }
+
+    this.systemSettings = updatedSettings;
     save(STORAGE_KEYS.SYSTEM_SETTINGS, this.systemSettings);
-    this.logAudit('UPDATE', 'SYSTEM', this.user.id, 'Updated enterprise organization branding logo');
-    this.addNotification('Branding Updated', 'Organization logo has been successfully updated.', 'success', 'customization');
+    this.logAudit('UPDATE', 'SYSTEM', this.user.id, `Updated enterprise organization branding (${cleanAlt || 'logo'})`);
+    this.addNotification('Branding Updated', `Enterprise name and branding set to "${cleanAlt || 'Custom Logo'}".`, 'success', 'customization');
     this.notify();
     return this.systemSettings;
+  }
+
+  public setOrganizationName(name: string): SystemSettings {
+    const cleanName = (name || '').trim();
+    if (!cleanName) return this.systemSettings;
+    return this.setOrganizationLogo(this.systemSettings.organizationLogo, cleanName);
+  }
+
+  public getEnterpriseName(): string {
+    return this.systemSettings.organizationLogoAlt?.trim() || this.systemSettings.companyName?.trim() || 'HVAC Biz';
   }
 
   public resetOrganizationLogo(): SystemSettings {

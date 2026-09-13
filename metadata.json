@@ -1,6 +1,0 @@
-{
-  "name": "AlphaERP - Enterprise HVAC Suite",
-  "description": "AlphaERP - Full-lifecycle HVAC CRM, Quote-to-Project conversion, BOQ inventory cross-check, PR & PO approval pipeline, Work Orders, Final Handover Billing, MongoDB linked database persistence, and Google Sheets synchronization.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
