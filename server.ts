@@ -1,4 +1,5 @@
 import http from "http";
+import net from "net";
 import path from "path";
 import express from "express";
 import { createServer as createViteServer } from "vite";
@@ -7,7 +8,7 @@ import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 import { app } from "./server/app";
 
 const server = http.createServer(app);
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // WebSocket Server for Gemini Live API
 const wss = new WebSocketServer({ noServer: true });
@@ -243,9 +244,34 @@ async function setupApp() {
     });
   }
 
-  server.listen(PORT, "0.0.0.0", () => {
-    console.log(`AlphaERP Server running on http://0.0.0.0:${PORT}`);
+  function findAvailablePort(startPort: number): Promise<number> {
+    return new Promise((resolve, reject) => {
+      const tester = net.createServer();
+      tester.once("error", (err: any) => {
+        if (err.code === "EADDRINUSE") {
+          resolve(findAvailablePort(startPort + 1));
+        } else {
+          reject(err);
+        }
+      });
+      tester.once("listening", () => {
+        tester.close(() => {
+          resolve(startPort);
+        });
+      });
+      tester.listen(startPort, "0.0.0.0");
+    });
+  }
+
+  const activePort = await findAvailablePort(PORT);
+  if (activePort !== PORT) {
+    console.warn(`[AlphaERP] Port ${PORT} is occupied by another process. Automatically using port ${activePort}.`);
+  }
+
+  server.listen(activePort, "0.0.0.0", () => {
+    console.log(`[AlphaERP] Server running on http://localhost:${activePort} (http://0.0.0.0:${activePort})`);
   });
 }
 
 setupApp();
+
