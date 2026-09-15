@@ -8,7 +8,7 @@ import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 import { app } from "./server/app";
 
 const server = http.createServer(app);
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = Number(process.env.PORT) || 3001;
 
 // WebSocket Server for Gemini Live API
 const wss = new WebSocketServer({ noServer: true });
