@@ -3,13 +3,14 @@
 > **Execution Status:** ✅ **100% EXECUTED & PASSED (300/300 Items Verified)**  
 > **Execution Date:** 2026-09-17  
 > **Lead QA:** Antigravity QA & Automated Engineering  
-> **Test Environment:** Local Dev / Staging (http://localhost:3001 or dynamic active port) & Multi-Cloud Backend  
+> **Test Environment:** Local Dev / Staging (<http://localhost:3001> or dynamic active port) & Multi-Cloud Backend  
 > **Release Target:** AlphaERP v3.6.0-Production
 
 ## Pre-Testing Setup (Day 1)
 
 ### Environment Preparation
-```
+
+```text
 ☑ Access to test environment (staging/dev)
 ☑ Test database loaded with sample data
 ☑ VPN connected (if required)
@@ -24,7 +25,8 @@
 ```
 
 ### Tools Installation
-```
+
+```text
 ☑ Burp Suite Community (security testing)
 ☑ Apache JMeter (load testing)
 ☑ Postman (API testing)
@@ -34,7 +36,8 @@
 ```
 
 ### Test Data Preparation
-```
+
+```text
 ☑ Sample leads: 20 records (various statuses)
 ☑ Sample customers: 15 records
 ☑ Sample quotes: 25 records
@@ -52,7 +55,8 @@
 ### FUNCTIONAL TESTING CHECKLIST (Weeks 1-2)
 
 #### Dashboard Module
-```
+
+```text
 ☑ Dashboard loads in < 3 seconds
 ☑ All 5 metric cards visible
 ☑ Dark mode toggle works & persists
@@ -64,7 +68,8 @@
 ```
 
 #### Navigation
-```
+
+```text
 ☑ All 8 sidebar menu items clickable
 ☑ Correct page loads for each menu item
 ☑ URL updates correctly
@@ -76,7 +81,8 @@
 ```
 
 #### CRUD Operations - For Each Module (Leads, Quotes, Inventory, Projects)
-```
+
+```text
 CREATE:
   ☑ "Add [Entity]" button visible
   ☑ Form opens with all required fields
@@ -119,7 +125,8 @@ DELETE:
 ```
 
 #### Form Validation
-```
+
+```text
 ☑ Required fields marked
 ☑ Empty required field shows error on submit
 ☑ Error message clear and helpful
@@ -134,7 +141,8 @@ DELETE:
 ```
 
 #### Search & Filtering
-```
+
+```text
 ☑ Search finds matching items
 ☑ Search is case-insensitive
 ☑ Partial matches work
@@ -148,7 +156,8 @@ DELETE:
 ```
 
 #### Enterprise Governance, DRM Licensing & Branding Customizer
-```
+
+```text
 ☑ Root SuperAdmin exclusive access to Investor Pitch Deck
 ☑ Root SuperAdmin exclusive access to DRM License Manager
 ☑ Generate time-based enterprise licenses (7d, 14d, 30d, 90d, 180d, 1y, 2y, 3y, lifetime, custom)
@@ -169,7 +178,8 @@ DELETE:
 ### SECURITY TESTING CHECKLIST (Week 1)
 
 #### Authentication & Authorization
-```
+
+```text
 ☑ Login required for all pages
 ☑ Invalid login rejected
 ☑ Session timeout after 30 minutes
@@ -183,7 +193,8 @@ DELETE:
 ```
 
 #### OWASP Top 10 Tests
-```
+
+```text
 A01 - Broken Access Control:
   ☑ Test privilege escalation
   ☑ Test unauthorized data access
@@ -229,7 +240,8 @@ A09 - Logging & Monitoring:
 ```
 
 #### Data Protection (GDPR)
-```
+
+```text
 ☑ PII masked in UI (SSN, CC)
 ☑ Data export works (GDPR right)
 ☑ Data deletion works (GDPR right)
@@ -245,7 +257,8 @@ A09 - Logging & Monitoring:
 ### PERFORMANCE TESTING CHECKLIST (Week 2)
 
 #### Baseline Performance (1 User)
-```
+
+```text
 ☑ Dashboard loads: < 3 seconds
 ☑ First page paint: < 1 second
 ☑ Largest paint: < 2.5 seconds
@@ -256,7 +269,8 @@ A09 - Logging & Monitoring:
 ```
 
 #### Load Testing (50 Concurrent Users)
-```
+
+```text
 ☑ 90% of requests respond in < 3 seconds
 ☑ Error rate < 1%
 ☑ No timeouts
@@ -266,7 +280,8 @@ A09 - Logging & Monitoring:
 ```
 
 #### Peak Load Testing (500 Concurrent Users)
-```
+
+```text
 ☑ 95% of requests respond in < 5 seconds
 ☑ Error rate < 5%
 ☑ System doesn't crash
@@ -278,7 +293,8 @@ A09 - Logging & Monitoring:
 ```
 
 #### Endurance Test (24-hour)
-```
+
+```text
 ☑ Memory stable (no leaks)
 ☑ Response time consistent
 ☑ Error rate < 1%
@@ -292,7 +308,8 @@ A09 - Logging & Monitoring:
 ### COMPATIBILITY TESTING CHECKLIST (Week 1-2)
 
 #### Browsers (Test Latest & Latest-1 versions)
-```
+
+```text
 Chrome:
   ☑ Desktop 1920×1080
   ☑ Tablet 768×1024
@@ -310,8 +327,9 @@ Edge:
   ☑ Desktop 1920×1080
 ```
 
-#### For Each Browser/Device:
-```
+#### For Each Browser/Device
+
+```text
 ☑ Page loads completely
 ☑ Layout not broken
 ☑ Sidebar accessible
@@ -333,7 +351,8 @@ Edge:
 ### UAT TESTING CHECKLIST (Week 2-3)
 
 #### Business Workflows to Verify
-```
+
+```text
 ☑ Lead to Quote workflow
   - Lead created/imported
   - Quote auto-populated from lead
@@ -384,7 +403,8 @@ Edge:
 ```
 
 #### Business User Sign-Offs
-```
+
+```text
 For Each Workflow:
   ☑ Business owner reviews workflow
   ☑ Confirms accuracy and completeness
@@ -398,8 +418,9 @@ For Each Workflow:
 
 ### API TESTING CHECKLIST
 
-#### For Each Endpoint:
-```
+#### For Each Endpoint
+
+```text
 GET /api/[resource]
   ☑ Returns 200 OK
   ☑ Returns correct data
@@ -454,7 +475,8 @@ Error Handling:
 ## Defect Tracking Quick Guide
 
 ### When to Log a Defect
-```
+
+```text
 Log defect when:
   ☑ Feature doesn't work as specified
   ☑ Feature works, but incorrectly
@@ -467,7 +489,8 @@ Log defect when:
 ```
 
 ### Defect Report Template
-```
+
+```text
 Title: [Clear, concise description]
   Good: "Dark mode toggle doesn't persist after refresh"
   Bad: "Bug in dashboard"
@@ -500,7 +523,8 @@ Screenshots/Video:
 ```
 
 ### Defect Severity Definitions
-```
+
+```text
 CRITICAL - Must fix before release:
   • App crashes
   • Data loss
@@ -532,7 +556,8 @@ LOW - Fix when time allows:
 ## Daily Testing Checklist
 
 ### Morning (Start of Day)
-```
+
+```text
 ☑ Check status of open defects
 ☑ Review yesterday's test execution
 ☑ Confirm test environment accessible
@@ -543,7 +568,8 @@ LOW - Fix when time allows:
 ```
 
 ### During Testing
-```
+
+```text
 ☑ Follow test cases exactly (don't skip steps)
 ☑ Document actual results (not expected)
 ☑ Take screenshots of issues
@@ -554,7 +580,8 @@ LOW - Fix when time allows:
 ```
 
 ### End of Day
-```
+
+```text
 ☑ Update test status spreadsheet
 ☑ Close all open defects/findings
 ☑ Provide daily summary report
@@ -569,7 +596,8 @@ LOW - Fix when time allows:
 ## Key Performance Indicators (KPIs) to Track
 
 ### Test Execution
-```
+
+```text
 Total Test Cases: ___
 Executed: ___ (%)
 Passed: ___ (%)
@@ -581,7 +609,8 @@ Target: > 95% pass rate before release
 ```
 
 ### Defect Metrics
-```
+
+```text
 Total Defects Found: ___
   Critical: ___ (target: 0 at release)
   High: ___ (target: 0 at release)
@@ -594,7 +623,8 @@ Deferred: ___ (%)
 ```
 
 ### Quality Metrics
-```
+
+```text
 Code Coverage: ___% (target: > 80%)
 Test Coverage: ___% (target: > 80%)
 Security Issues: ___
@@ -607,7 +637,8 @@ Uptime: ___%
 ## Communication Template
 
 ### Daily Status Report
-```
+
+```text
 TESTING DAILY REPORT
 Date: 2026-09-13
 Prepared by: Antigravity QA & Automated Engineering
@@ -641,7 +672,8 @@ Approval: Antigravity QA Lead | Date: 2026-09-13
 ```
 
 ### Release Readiness Report
-```
+
+```text
 RELEASE READINESS ASSESSMENT
 Project: AlphaERP - HVAC Dashboard v3.5.1
 Date: 2026-09-13
@@ -675,7 +707,8 @@ Rollback Plan: Automated bundle rollback via dist/ & git history
 ## Testing Best Practices Summary
 
 ### DO ✓
-```
+
+```text
 ✓ Test according to specifications
 ✓ Document everything (test cases, results, evidence)
 ✓ Test both valid and invalid inputs
@@ -692,7 +725,8 @@ Rollback Plan: Automated bundle rollback via dist/ & git history
 ```
 
 ### DON'T ✗
-```
+
+```text
 ✗ Skip steps in test cases
 ✗ Assume features work (test them)
 ✗ Only test the happy path
@@ -713,7 +747,8 @@ Rollback Plan: Automated bundle rollback via dist/ & git history
 ## Testing Timeline Example
 
 ### Week 1: Functional + Security Testing
-```
+
+```text
 Monday:
   - Setup test environment
   - Prepare test data
@@ -741,7 +776,8 @@ Friday:
 ```
 
 ### Week 2: Performance + Compatibility + UAT
-```
+
+```text
 Monday:
   - Load testing (50 users)
   - Browser compatibility testing
@@ -773,7 +809,7 @@ Friday:
 
 ## Emergency Contacts
 
-```
+```text
 QA Lead: [Name] [Phone] [Email]
 Development Lead: [Name] [Phone] [Email]
 Security Lead: [Name] [Phone] [Email]
@@ -789,11 +825,11 @@ Escalation: [Process & contacts]
 
 ## Resources & Documentation
 
-```
+```text
 Automated Test Suite: tests/uat-business-suite.ts (24 Use Cases, 92 Steps - 100% Passing)
 Execution Guide: TESTING-EXECUTION-GUIDE.md
-Repository: https://github.com/gautam303in/AlphaERP-HVAC
-Bug Tracking: https://github.com/gautam303in/AlphaERP-HVAC/issues
+Repository: <https://github.com/gautam303in/AlphaERP-HVAC>
+Bug Tracking: <https://github.com/gautam303in/AlphaERP-HVAC/issues>
 API Documentation: API_INTEGRATION_GUIDE.md
 Project Docs: PROJECT_DOCUMENTATION.md
 ```
@@ -811,4 +847,4 @@ Project Docs: PROJECT_DOCUMENTATION.md
 ✓ Monitor production after release  
 ✓ Continuous improvement from lessons learned  
 
-**Happy Testing! 🚀**
+### Happy Testing! 🚀

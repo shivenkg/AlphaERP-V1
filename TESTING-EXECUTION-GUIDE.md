@@ -10,6 +10,7 @@
 ---
 
 ## Table of Contents
+
 1. [Executive Summary](#executive-summary)
 2. [Testing Strategy & Approach](#testing-strategy--approach)
 3. [Functional Testing](#functional-testing)
@@ -26,6 +27,7 @@
 ## Executive Summary
 
 This document outlines a comprehensive testing plan for the HVAC Dashboard application, covering:
+
 - **80+ Functional Test Cases** across all modules
 - **21 Security Test Cases** aligned with OWASP Top 10
 - **24 UAT Business Workflow Scenarios (92 Steps - 100% Passing)**
@@ -47,36 +49,42 @@ This document outlines a comprehensive testing plan for the HVAC Dashboard appli
 ### Testing Phases
 
 #### Phase 1: Unit Testing (Dev Team)
+
 - **Duration:** During development
 - **Coverage:** 80%+ code coverage
 - **Tools:** Jest, Mocha, or similar
 - **Acceptance Criteria:** All tests passing, no critical bugs
 
 #### Phase 2: Integration Testing (QA Team)
+
 - **Duration:** After feature completion
 - **Coverage:** API integration, database, third-party services
 - **Tools:** Postman, REST Assured, API testing frameworks
 - **Acceptance Criteria:** All integrations functioning, data flow correct
 
 #### Phase 3: System Testing (QA Team)
+
 - **Duration:** After all features integrated
 - **Coverage:** End-to-end workflows, user journeys
 - **Tools:** Selenium, Playwright, manual testing
 - **Acceptance Criteria:** All workflows complete, UI responsive
 
 #### Phase 4: Security Testing (Security Team)
+
 - **Duration:** In parallel with system testing, critical before release
 - **Coverage:** OWASP Top 10, penetration testing
 - **Tools:** Burp Suite, OWASP ZAP, manual verification
 - **Acceptance Criteria:** Zero critical vulnerabilities, remediation plan for high
 
 #### Phase 5: Performance Testing (QA/DevOps)
+
 - **Duration:** Before staging release
 - **Coverage:** Load, stress, endurance testing
 - **Tools:** JMeter, LoadRunner, Artillery
 - **Acceptance Criteria:** Performance benchmarks met
 
 #### Phase 6: UAT Testing (Business Users)
+
 - **Duration:** Before production release
 - **Coverage:** Business-critical workflows
 - **Tools:** Test instance, manual testing, user feedback
@@ -87,6 +95,7 @@ This document outlines a comprehensive testing plan for the HVAC Dashboard appli
 ## Functional Testing
 
 ### Scope
+
 - Dashboard UI/UX
 - Sidebar navigation
 - All CRUD operations (Create, Read, Update, Delete)
@@ -99,8 +108,9 @@ This document outlines a comprehensive testing plan for the HVAC Dashboard appli
 
 #### 1. Dashboard Module (5 Test Cases)
 
-**TC-F-001: Load Dashboard**
-```
+#### TC-F-001: Load Dashboard
+
+```text
 Pre-conditions:
   - User logged in
   - Database connection active
@@ -121,8 +131,9 @@ Expected Results:
 Pass/Fail Criteria: PASS if all data visible and accurate
 ```
 
-**TC-F-002: Dark Mode Toggle**
-```
+#### TC-F-002: Dark Mode Toggle
+
+```text
 Steps:
   1. Click theme toggle (sun/moon icon)
   2. Observe theme change
@@ -139,6 +150,7 @@ Pass/Fail Criteria: PASS if theme persists and all elements visible
 ```
 
 **TC-F-003 through TC-F-004:**
+
 - Follow similar structure
 - Document actual results
 - Record time taken
@@ -146,8 +158,9 @@ Pass/Fail Criteria: PASS if theme persists and all elements visible
 
 #### 2. Navigation Module (3 Test Cases)
 
-**TC-F-005: Sidebar Navigation**
-```
+#### TC-F-005: Sidebar Navigation
+
+```text
 Test Steps:
   1. Click each sidebar menu item
   2. Verify page navigation
@@ -168,7 +181,8 @@ Acceptance Criteria: All 8 menu items navigate correctly
 For each major module (Leads, Quotes, Inventory, Projects):
 
 **CREATE Test Case:**
-```
+
+```text
 TC-F-00X: Create [Entity]
 - Click "Add [Entity]" button
 - Fill required fields with valid data
@@ -184,7 +198,8 @@ Data to Test:
 ```
 
 **READ Test Case:**
-```
+
+```text
 TC-F-00X: View [Entity] Details
 - Click on any record
 - Verify details page loads
@@ -199,7 +214,8 @@ Data Validation:
 ```
 
 **UPDATE Test Case:**
-```
+
+```text
 TC-F-00X: Edit [Entity]
 - Open record details
 - Click edit button
@@ -216,7 +232,8 @@ Test Scenarios:
 ```
 
 **DELETE Test Case:**
-```
+
+```text
 TC-F-00X: Delete [Entity]
 - Select record
 - Click delete/trash icon
@@ -233,8 +250,9 @@ Test Variations:
 
 ### Validation Testing
 
-**TC-F-018: Required Field Validation**
-```
+#### TC-F-018: Required Field Validation
+
+```text
 For each form field marked as required:
 
 Steps:
@@ -255,8 +273,9 @@ Test Cases:
   - Email field (format validation)
 ```
 
-**TC-F-019: Email Format Validation**
-```
+#### TC-F-019: Email Format Validation
+
+```text
 Test Inputs:
   ✓ valid@email.com (PASS)
   ✓ user+tag@domain.co.uk (PASS)
@@ -269,8 +288,9 @@ Expected Result:
   - Invalid formats rejected with message
 ```
 
-**TC-F-020: Numeric Field Validation**
-```
+#### TC-F-020: Numeric Field Validation
+
+```text
 Test Inputs:
   ✓ 1000 (PASS)
   ✓ 1000.50 (PASS)
@@ -286,7 +306,8 @@ Expected Result:
 ### Documentation of Results
 
 For each test case, record:
-```
+
+```text
 Test Case: TC-F-001
 Module: Dashboard
 Tester: [Name]
@@ -315,8 +336,9 @@ Comments:
 
 #### A01: Broken Access Control
 
-**SEC-001: Privilege Escalation**
-```
+#### SEC-001: Privilege Escalation
+
+```text
 Objective: Verify unprivileged users cannot access admin features
 
 Test Procedure:
@@ -341,8 +363,9 @@ Tools:
 Pass Criteria: All access denied, no data exposure
 ```
 
-**SEC-002: Unauthorized Data Access**
-```
+#### SEC-002: Unauthorized Data Access
+
+```text
 Test Procedure:
   1. Remove Authorization header from API requests
   2. Send API call without authentication
@@ -362,8 +385,9 @@ curl https://api.hvacbiz.com/api/leads \
      (no auth header)
 ```
 
-**SEC-003: Role-Based Access Control (RBAC)**
-```
+#### SEC-003: Role-Based Access Control (RBAC)
+
+```text
 Test Roles:
   - Admin: Full access
   - Manager: Department-level access
@@ -389,8 +413,9 @@ Pass Criteria: Each role can access only assigned features
 
 #### A02: Cryptographic Failures
 
-**SEC-004: Unencrypted Data Transmission**
-```
+#### SEC-004: Unencrypted Data Transmission
+
+```text
 Tools: Burp Suite, Wireshark, OWASP ZAP
 
 Test Procedure:
@@ -417,8 +442,9 @@ Expected Results:
 Pass Criteria: 100% HTTPS, no unencrypted data
 ```
 
-**SEC-005: Password Storage**
-```
+#### SEC-005: Password Storage
+
+```text
 Test Procedure:
   1. Request database access (or review code)
   2. Check password storage mechanism
@@ -444,8 +470,9 @@ Tools:
   - OWASP ZAP (password check)
 ```
 
-**SEC-006: API Token Handling**
-```
+#### SEC-006: API Token Handling
+
+```text
 Test JWT Token Security:
 
 1. Capture API Token:
@@ -485,8 +512,9 @@ Pass Criteria:
 
 #### A03: Injection Attacks
 
-**SEC-007: SQL Injection**
-```
+#### SEC-007: SQL Injection
+
+```text
 Test Procedure:
   1. Find input fields (search, filters, forms)
   2. Inject SQL commands
@@ -529,8 +557,9 @@ Expected Result (SECURE):
 Pass Criteria: SQL injection blocked, no data exposure
 ```
 
-**SEC-008: NoSQL Injection**
-```
+#### SEC-008: NoSQL Injection
+
+```text
 For MongoDB/NoSQL backends:
 
 Test Payloads:
@@ -551,8 +580,9 @@ Test Procedure:
 Expected: Injection blocked, proper filtering
 ```
 
-**SEC-009: Command Injection**
-```
+#### SEC-009: Command Injection
+
+```text
 Test File Upload & Processing:
 
 Malicious Filenames:
@@ -575,8 +605,9 @@ Expected:
 Pass Criteria: File upload safe, no command execution
 ```
 
-**SEC-010: Cross-Site Scripting (XSS)**
-```
+#### SEC-010: Cross-Site Scripting (XSS)
+
+```text
 Test Payloads:
   <script>alert('XSS')</script>
   <img src=x onerror="alert('XSS')">
@@ -613,8 +644,9 @@ Pass Criteria: XSS prevented, input properly encoded
 
 #### A05: Broken Authentication
 
-**SEC-013: Session Hijacking Prevention**
-```
+#### SEC-013: Session Hijacking Prevention
+
+```text
 Test Procedure:
   1. Login from Device A (IP: 192.168.1.100)
   2. Capture session cookie
@@ -630,8 +662,9 @@ Expected Results:
 Pass Criteria: Session not reusable from different context
 ```
 
-**SEC-014: Password Reset Token Abuse**
-```
+#### SEC-014: Password Reset Token Abuse
+
+```text
 Test Procedure:
   1. Initiate password reset for user
   2. Capture reset token from email
@@ -650,8 +683,9 @@ Expected Results:
 Pass Criteria: Token invalidation after use
 ```
 
-**SEC-015: Account Lockout Protection**
-```
+#### SEC-015: Account Lockout Protection
+
+```text
 Test Procedure:
   1. Attempt login with wrong password 5 times
   2. Observe system response
@@ -671,8 +705,9 @@ Pass Criteria: Lockout enforced, prevents brute force
 
 #### A09: Logging & Monitoring
 
-**SEC-018: Sensitive Data Logging**
-```
+#### SEC-018: Sensitive Data Logging
+
+```text
 Test Procedure:
   1. Perform login with password: Test123!@#
   2. Make API call with API key in header
@@ -703,8 +738,9 @@ Bad Log (exposes sensitive data):
 Pass Criteria: No sensitive data in logs
 ```
 
-**SEC-019: Audit Trail**
-```
+#### SEC-019: Audit Trail
+
+```text
 Test Procedure:
   1. Create a new lead
   2. Edit lead details
@@ -723,8 +759,9 @@ Pass Criteria: Complete audit trail for all changes
 
 #### Data Protection (GDPR)
 
-**SEC-020: PII Data Masking**
-```
+#### SEC-020: PII Data Masking
+
+```text
 Test Procedure:
   1. View customer/lead in application
   2. Check sensitive fields displayed
@@ -744,8 +781,9 @@ Fields to NOT mask:
 Pass Criteria: PII properly masked in UI
 ```
 
-**SEC-021: GDPR Compliance**
-```
+#### SEC-021: GDPR Compliance
+
+```text
 Features to Test:
 
 1. Right to Deletion:
@@ -776,6 +814,7 @@ Pass Criteria: All GDPR rights implemented
 ### Test Environment Setup
 
 **Tools Required:**
+
 - Apache JMeter (load testing)
 - Artillery.io (API load testing)
 - Lighthouse (performance audit)
@@ -784,8 +823,9 @@ Pass Criteria: All GDPR rights implemented
 
 ### Performance Baseline
 
-**PERF-001: Baseline Performance (1 User)**
-```
+#### PERF-001: Baseline Performance (1 User)
+
+```text
 Test Steps:
   1. Clear browser cache
   2. Navigate to dashboard
@@ -822,8 +862,9 @@ Pass Criteria: All metrics meet targets
 
 ### Load Testing
 
-**PERF-002: Normal Load (50 Concurrent Users)**
-```
+#### PERF-002: Normal Load (50 Concurrent Users)
+
+```text
 JMeter Test Plan:
 
 1. Setup Thread Group:
@@ -861,8 +902,9 @@ Expected Results (Normal Load):
 Pass Criteria: 90% of requests < 3s, < 1% errors
 ```
 
-**PERF-003: Peak Load (500 Concurrent Users)**
-```
+#### PERF-003: Peak Load (500 Concurrent Users)
+
+```text
 JMeter Configuration:
   - Number of threads: 500
   - Ramp-up time: 300 seconds (5 minutes)
@@ -887,8 +929,9 @@ Stress Test Threshold:
 Pass Criteria: Graceful degradation, no data loss
 ```
 
-**PERF-004: Endurance Test (24-hour)**
-```
+#### PERF-004: Endurance Test (24-hour)
+
+```text
 Configuration:
   - Moderate load (100 users)
   - Duration: 24 hours
@@ -912,8 +955,8 @@ Pass Criteria: System stable for 24-hour run
 
 ### API Performance Testing
 
-**PERF-004: API Response Time**
-```
+#### PERF-004: API Response Time
+
 Using Artillery.io:
 
 ```yaml
@@ -942,36 +985,43 @@ scenarios:
 ```
 
 Expected Results:
-  - All API endpoints respond in < 200ms
-  - 99th percentile < 500ms
-  - Error rate < 0.1%
-```
+
+- All API endpoints respond in < 200ms
+- 99th percentile < 500ms
+- Error rate < 0.1%
 
 ### Database Performance
 
-**PERF-006: Database Query Performance**
-```
+#### PERF-006: Database Query Performance
+
+```text
+
 Test Procedure:
+
   1. Monitor slow query log
   2. Run common queries
   3. Check execution time
 
 Slow Query Log Setup:
-  - Enable in database config
-  - Set threshold: 500ms
-  - Monitor for 24 hours
-  - Review results
+
+- Enable in database config
+- Set threshold: 500ms
+- Monitor for 24 hours
+- Review results
 
 Expected Results:
-  - No queries > 1 second
-  - Index created for common filters
-  - N+1 queries avoided
-  - Connection pool properly sized
+
+- No queries > 1 second
+- Index created for common filters
+- N+1 queries avoided
+- Connection pool properly sized
 
 Tools:
-  - Database profiler
-  - Query analyzer
-  - Explain plan analysis
+
+- Database profiler
+- Query analyzer
+- Explain plan analysis
+
 ```
 
 ---
@@ -980,19 +1030,23 @@ Tools:
 
 ### Business Workflow Testing
 
-**UAT-001: Lead to Quote to Project Workflow**
-```
+#### UAT-001: Lead to Quote to Project Workflow
+
+```text
+
 Test Scenario:
   "As a sales representative, I want to quickly convert
    a customer inquiry into a quote, and then into a project
    when approved, without manual data re-entry."
 
 Pre-conditions:
-  - Sales rep logged in
-  - Customer lead available in CRM
-  - Pricing configured in system
+
+- Sales rep logged in
+- Customer lead available in CRM
+- Pricing configured in system
 
 Steps (Actual Business Process):
+
   1. Review incoming lead from "New Leads" dashboard
   2. Click "Create Quote" from lead detail
   3. Quote form pre-populated with customer details
@@ -1031,25 +1085,31 @@ Test Data:
   Cost: $8,500
 
 Success Indicators:
-  - Quote created: 2 minutes
-  - Quote total: $8,500 (accurate)
-  - Customer receives email immediately
-  - After approval, project created within 5 seconds
-  - Technician can see job on mobile app
-  - No rework needed
+
+- Quote created: 2 minutes
+- Quote total: $8,500 (accurate)
+- Customer receives email immediately
+- After approval, project created within 5 seconds
+- Technician can see job on mobile app
+- No rework needed
 
 User Sign-off:
   "This is exactly what we needed. Workflow is perfect."
-  - Signature: _______ Date: _______
+
+- Signature: _______ Date: _______
+
 ```
 
-**UAT-002: Project Execution & Status Tracking**
-```
+#### UAT-002: Project Execution & Status Tracking
+
+```text
+
 Test Scenario:
   "As a technician, I need to see my assigned jobs,
    update status in real-time, and capture photos/notes."
 
 Business Process:
+
   1. Technician logs into mobile app
   2. See today's assigned jobs (3 jobs)
   3. Navigate to first job location
@@ -1078,6 +1138,7 @@ Acceptance Criteria:
   ✓ Customer gets SMS/email updates
 
 Test Execution:
+
   1. Assign 3 jobs to test technician
   2. Technician works through jobs
   3. Verify status visible to manager
@@ -1086,25 +1147,31 @@ Test Execution:
   6. Verify invoice auto-triggered
 
 Success Indicators:
-  - All 3 jobs tracked accurately
-  - No data loss (offline sync works)
-  - Photos/notes preserved
-  - Manager can monitor progress
-  - Customer satisfaction high (status visibility)
+
+- All 3 jobs tracked accurately
+- No data loss (offline sync works)
+- Photos/notes preserved
+- Manager can monitor progress
+- Customer satisfaction high (status visibility)
 
 User Sign-off:
   "This makes my job so much easier. No paperwork!"
-  - Technician: _______ Date: _______
-  - Manager: _______ Date: _______
+
+- Technician: _______ Date: _______
+- Manager: _______ Date: _______
+
 ```
 
-**UAT-003: Financial Management - Revenue Recognition**
-```
+#### UAT-003: Financial Management - Revenue Recognition
+
+```text
+
 Test Scenario:
   "As a business owner, I need accurate monthly revenue
    reports to track business performance and make decisions."
 
 Business Process:
+
   1. Access "Financial Reports" dashboard
   2. Select date range: January 2024
   3. View key metrics:
@@ -1118,21 +1185,22 @@ Business Process:
   6. Print report
 
 Accuracy Tests:
-  - Manually verify revenue calculations:
-    * Count invoices in period: 47
-    * Sum invoice totals: $125,000 ✓
-    * Match system total: $125,000 ✓
+
+- Manually verify revenue calculations:
+  - Count invoices in period: 47
+  - Sum invoice totals: $125,000 ✓
+  - Match system total: $125,000 ✓
   
-  - Verify categorization:
-    * Services (labor): $95,000 ✓
-    * Parts (materials): $30,000 ✓
-    * Total: $125,000 ✓
+- Verify categorization:
+  - Services (labor): $95,000 ✓
+  - Parts (materials): $30,000 ✓
+  - Total: $125,000 ✓
   
-  - Tax calculations:
-    * Taxable revenue: $125,000
-    * Tax rate: 8%
-    * Expected tax: $10,000
-    * System shows: $10,000 ✓
+- Tax calculations:
+  - Taxable revenue: $125,000
+  - Tax rate: 8%
+  - Expected tax: $10,000
+  - System shows: $10,000 ✓
 
 Acceptance Criteria:
   ✓ Revenue total accurate to $1
@@ -1147,12 +1215,15 @@ Pass/Fail: PASS (all numbers verified correct)
 
 User Sign-off:
   "This is the accurate financial data we need for decisions."
-  - CFO: _______ Date: _______
+
+- CFO: _______ Date: _______
+
 ```
 
 ### UAT Test Execution Template
 
-```
+```text
+
 UAT Test Case: UAT-XXX
 
 Business User: [Name & Role]
@@ -1166,6 +1237,7 @@ Test Scenario:
   [Describe real-world workflow]
 
 Steps Performed:
+
   1. ___
   2. ___
   3. ___
@@ -1190,6 +1262,7 @@ Business User Sign-Off:
 Signature: _________________________ Date: _____________
 Name (Print): _____________________
 Title: ____________________________
+
 ```
 
 ---
@@ -1200,20 +1273,23 @@ Title: ____________________________
 
 Test every combination of:
 
-| Browser | Versions | Devices |
-|---------|----------|---------|
+| Browser | Versions         | Devices                 |
+|---------|------------------|-------------------------|
 | Chrome  | Latest, Latest-1 | Desktop, Tablet, Mobile |
-| Firefox | Latest, Latest-1 | Desktop |
-| Safari  | Latest, Latest-1 | Mac, iPad, iPhone |
-| Edge    | Latest, Latest-1 | Desktop |
+| Firefox | Latest, Latest-1 | Desktop                 |
+| Safari  | Latest, Latest-1 | Mac, iPad, iPhone       |
+| Edge    | Latest, Latest-1 | Desktop                 |
 
 ### Desktop Browser Testing
 
-**Chrome (Latest)**
-```
+#### Chrome (Latest)
+
+```text
+
 Steps:
+
   1. Open Chrome
-  2. Navigate to https://hvacbiz.insforge.site
+  2. Navigate to <https://hvacbiz.insforge.site>
   3. Check each page:
      ✓ Dashboard loads properly
      ✓ Sidebar visible and functional
@@ -1241,15 +1317,19 @@ Performance:
 
 Result: PASS / FAIL
 Evidence: [Screenshot path]
+
 ```
 
 ### Mobile Testing
 
-**iPhone 15 (Safari, Latest iOS)**
-```
+#### iPhone 15 (Safari, Latest iOS)
+
+```text
+
 Screen Resolution: 390×844
 
 Steps:
+
   1. Open Safari on iPhone
   2. Navigate to application
   3. Wait for page load
@@ -1281,15 +1361,19 @@ Performance:
 
 Result: PASS / FAIL
 Evidence: [Video/screenshots]
+
 ```
 
 ### Tablet Testing
 
-**iPad Air (Safari, 9.7-inch)**
-```
+#### iPad Air (Safari, 9.7-inch)
+
+```text
+
 Screen Resolution: 1024×1366
 
 Steps:
+
   1. Open Safari on iPad
   2. Navigate to application
   3. Test in both orientations (portrait & landscape)
@@ -1319,6 +1403,7 @@ Orientation:
   ✓ Responsive adjustment smooth
 
 Result: PASS / FAIL
+
 ```
 
 ---
@@ -1327,7 +1412,8 @@ Result: PASS / FAIL
 
 ### Pre-Testing Checklist
 
-```
+```text
+
 ☑ Test environment deployed and accessible
 ☑ Test data prepared and loaded
 ☑ Browser cache cleared
@@ -1341,13 +1427,15 @@ Result: PASS / FAIL
 ☑ Tester credentials prepared
 ☑ Communication channels open (Slack, email)
 ☑ Defect tracking system accessible
+
 ```
 
 ### Testing Guidelines
 
-**1. Test Execution Standards**
+#### 1. Test Execution Standards
 
-```
+```text
+
 For Each Test Case:
 
 ☑ Read test case completely before starting
@@ -1359,11 +1447,13 @@ For Each Test Case:
 ☑ Test both happy path and error scenarios
 ☑ Try to break the application (think like user)
 ☑ Report what you find, not what you think should happen
-```
-
-**2. Defect Reporting Standards**
 
 ```
+
+#### 2. Defect Reporting Standards
+
+```text
+
 Each defect must include:
 
 ✓ Title: Concise, descriptive
@@ -1371,7 +1461,8 @@ Each defect must include:
   Good: "Dark mode toggle doesn't persist after refresh"
 
 ✓ Steps to Reproduce: Exact, repeatable
-  1. Login as user@test.com
+
+  1. Login as <user@test.com>
   2. Navigate to /dashboard
   3. Click dark mode toggle
   4. Refresh page (F5)
@@ -1400,11 +1491,13 @@ Each defect must include:
   Video: [file paths]
   Browser console: [errors]
   Network logs: [relevant info]
+
 ```
 
 ### Daily Testing Report
 
-```
+```text
+
 Testing Daily Report
 Date: 2024-01-15
 Reporting Period: 9:00 AM - 5:00 PM
@@ -1429,16 +1522,19 @@ Defect: DEF-003 - Dark mode toggle not persisting
 Time Spent: 6 hours
 
 Next Day Plan:
-  - Follow up on DEF-003 fix
-  - Complete Leads module testing (TC-F-008 through TC-F-011)
-  - Begin Quotes module testing
+
+- Follow up on DEF-003 fix
+- Complete Leads module testing (TC-F-008 through TC-F-011)
+- Begin Quotes module testing
 
 Blockers: None
 
 Notes:
-  - Application stable overall
-  - API responses consistently < 200ms
-  - No crashes encountered
+
+- Application stable overall
+- API responses consistently < 200ms
+- No crashes encountered
+
 ```
 
 ---
@@ -1447,7 +1543,8 @@ Notes:
 
 ### Defect Lifecycle
 
-```
+```text
+
 1. OPEN
    └─> Developer reviews, estimates fix effort
 
@@ -1475,12 +1572,13 @@ Notes:
 7. REOPENED
    └─> If issue resurfaces
    └─> Return to Open status
+
 ```
 
 ### Severity vs Priority Matrix
 
 | Severity | Definition | Priority |
-|----------|------------|----------|
+| ---------- | ------------ | ---------- |
 | CRITICAL | App crash, data loss, security breach | P1 - Fix immediately |
 | HIGH | Major feature broken, no workaround | P2 - Fix within 24hrs |
 | MEDIUM | Feature issue with workaround | P3 - Fix within 3 days |
@@ -1488,7 +1586,8 @@ Notes:
 
 ### Defect Metrics
 
-```
+```text
+
 Track over time:
 
 1. Defect Density
@@ -1511,6 +1610,7 @@ Track over time:
 5. Defect Resolution Rate
    = Defects closed / Defects found
    Target: > 95% closed before release
+
 ```
 
 ---
@@ -1521,7 +1621,8 @@ Track over time:
 
 Before release, verify:
 
-```
+```text
+
 ☑ 100% of critical test cases executed
 ☑ 95%+ of high-priority test cases passed
 ☑ All critical defects fixed and verified
@@ -1535,11 +1636,13 @@ Before release, verify:
 ☑ Deployment checklist completed
 ☑ Disaster recovery tested
 ☑ Backup/restore procedures tested
+
 ```
 
 ### Release Approval Sign-Off
 
-```
+```text
+
 TESTING COMPLETION SIGN-OFF
 
 Project: AlphaERP - HVAC Dashboard
@@ -1597,6 +1700,7 @@ Approved By:
 Deployment Authorized: YES ✓
 Deploy Date: 2026-09-13 01:45 PM IST
 Rollback Plan Verified: YES ✓
+
 ```
 
 ---
@@ -1606,30 +1710,35 @@ Rollback Plan Verified: YES ✓
 ### Recommended Testing Tools
 
 **Functional Testing:**
+
 - Selenium (Web automation)
 - Playwright (Modern web testing)
 - TestCafe (End-to-end)
 - Cypress (Component testing)
 
 **API Testing:**
+
 - Postman (Manual & automated)
 - REST Assured (Java)
 - Insomnia (API client)
 - Jest (Unit testing)
 
 **Security Testing:**
+
 - Burp Suite Community (Web vulnerability scanner)
 - OWASP ZAP (Security scanning)
 - SQLMap (SQL injection testing)
 - JWT.io (Token analysis)
 
 **Performance Testing:**
+
 - Apache JMeter (Load testing)
 - Artillery.io (API load testing)
 - Lighthouse (Performance audit)
 - Chrome DevTools (Profiling)
 
 **Monitoring & Logging:**
+
 - ELK Stack (Elasticsearch, Logstash, Kibana)
 - Datadog (Application monitoring)
 - New Relic (Performance monitoring)
@@ -1637,7 +1746,8 @@ Rollback Plan Verified: YES ✓
 
 ### Test Data Management
 
-```
+```text
+
 Test Data Requirements:
 
 1. Leads Data (15 records)
@@ -1674,32 +1784,38 @@ Test Data Requirements:
    - Different roles (Admin, Manager, Technician, Customer)
    - Different permission levels
    - Active and inactive users
+
 ```
 
 ### Test Environment Configuration
 
-```
+```text
+
 Environment Requirements:
 
 Development:
-  - Latest code from main branch
-  - Local database (fresh dump daily)
-  - Mock APIs available
-  - Debug mode enabled
+
+- Latest code from main branch
+- Local database (fresh dump daily)
+- Mock APIs available
+- Debug mode enabled
 
 Staging:
-  - Mirror production environment
-  - Production-like database volume
-  - All integrations enabled
-  - Monitoring enabled
-  - Performance tools active
+
+- Mirror production environment
+- Production-like database volume
+- All integrations enabled
+- Monitoring enabled
+- Performance tools active
 
 Production:
-  - Live environment
-  - Production data (anonymized for testing)
-  - Full security measures
-  - Only approved tests
-  - Coordinated with support team
+
+- Live environment
+- Production data (anonymized for testing)
+- Full security measures
+- Only approved tests
+- Coordinated with support team
+
 ```
 
 ---
@@ -1718,14 +1834,15 @@ This comprehensive testing plan ensures thorough validation of the HVAC Dashboar
 
 **Questions or Clarifications:**
 Contact: QA Lead
-Email: qa@hvacbiz.com
+Email: <qa@hvacbiz.com>
 Phone: [contact number]
 
 ---
 
 **Document Version Control:**
+
 | Version | Date | Author | Changes |
-|---------|------|--------|---------|
+| --------- | ------ | -------- | --------- |
 | 0.9 | 2024-01-10 | QA Lead | Initial draft |
 | 1.0 | 2024-01-15 | QA Lead | Final version approved |
 | 2.0 | 2026-09-13 | Antigravity QA Lead | Execution results recorded, 100% passed & signed off |

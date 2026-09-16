@@ -506,4 +506,3 @@ When using the admin RBAC panel to assign or query module permissions, use these
 - **WebSocket Protection**: Maximum 5 concurrent WebSocket connections per IP address with automated heartbeat ping/pong cleanup.
 - **Payload Size**: Maximum 25MB JSON payload limit for database migrations and backup ingestion.
 - **UAT Verification**: 100% Passing automated test suite with 24 cases and 92 verification steps (`npm run test:uat`).
-
