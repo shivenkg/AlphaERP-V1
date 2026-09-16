@@ -7,6 +7,7 @@
 **Document Author:** Google AI Studio Systems Engineering & Enterprise Solutions Architecture  
 **Date:** September 2026  
 **Live Production URL:** [https://hvacbiz.insforge.site](https://hvacbiz.insforge.site) | [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
+**GitHub Repository:** [https://github.com/gautam303in/AlphaERP-HVAC](https://github.com/gautam303in/AlphaERP-HVAC)  
 **Target Repository:** `AlphaERP-V1`
 
 ---
@@ -67,6 +68,7 @@ flowchart TB
 
     subgraph PersistenceTier["☁️ Cloud Persistence & Integration Tier"]
         MongoCluster[("MongoDB Atlas Cloud Database (alphaerp)")]
+        LocalVault[("Local MongoDB Vault (data/mongodb_local_vault.json)")]
         GoogleSpreadsheets["Google Sheets 9-Tab Real-time Synchronizer"]
         SMTPRelay["Production SMTP Server / Mailtrap Dummy Sandbox"]
         GeminiAI["Google Gemini Live Real-Time Voice Model"]
@@ -76,6 +78,7 @@ flowchart TB
     ClientTier <-->|WSS Live Audio Stream| RealtimeHub
     IngressTier --> ServiceTier
     REST_APIs <--> MongoCluster
+    REST_APIs <--> LocalVault
     REST_APIs --> SMTPRelay
     GISAuth <--> GoogleSpreadsheets
     RealtimeHub <--> GeminiAI
@@ -440,6 +443,10 @@ flowchart TD
    - Gemini Live Duplex WebSockets feature heartbeat ping/pong monitoring and 5-minute idle disconnection sweeps.
 5. **Database Cloud Sync & Resiliency**:
    - Automatic fallback to browser IndexedDB/LocalStorage when network or cloud MongoDB Atlas is unreachable.
+6. **Dynamic Server Port Allocation**:
+   - `server.ts` audits port availability dynamically starting at `PORT || 3001` with `net.createServer()`. If the initial port is occupied, it automatically increments and binds to the next available free port without collision.
+7. **Local MongoDB Vault Resiliency**:
+   - `data/mongodb_local_vault.json` provides an immediate offline fallback data vault for HVAC projects, inventory, leads, and quotations, enabling full functionality even without network access.
 
 ---
 

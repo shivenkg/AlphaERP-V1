@@ -5,6 +5,7 @@
 **Document Version:** 3.6.0-Production  
 **Custom Production Domain:** [https://hvacbiz.insforge.site](https://hvacbiz.insforge.site)  
 **Vercel Production Mirror:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
+**GitHub Repository:** [https://github.com/gautam303in/AlphaERP-HVAC](https://github.com/gautam303in/AlphaERP-HVAC)  
 **Target Environments:** InsForge BaaS Edge / Vercel Serverless / Ubuntu 24.04-22.04 LTS / Docker & Google Cloud Run
 
 ---
@@ -27,7 +28,7 @@ flowchart TD
     subgraph ComputeLayer["⚙️ Compute & Application Runtime"]
         InsForgeBaaS["InsForge PostgreSQL & Edge Functions"]
         Serverless["Vercel Serverless Function (api/index.js)"]
-        Container["Containerized Dedicated Server (dist/server.cjs - Port 3000)"]
+        Container["Containerized Dedicated Server (dist/server.cjs - Port 3001/3000)"]
     end
 
     subgraph PersistenceCloud["☁️ Persistence & Integrations"]
@@ -68,7 +69,7 @@ AlphaERP supports four standard deployment pathways:
 3. **Ubuntu Linux 24.04 / 22.04 LTS (Bare-Metal or Cloud VM)**
    - Full-stack Node.js 20 deployment managed via PM2 or Systemd behind an Nginx reverse proxy with automated Let's Encrypt SSL.
 4. **Docker & Google Cloud Run (Containerized Microservices)**
-   - Multi-stage Alpine container image listening on port 3000 with support for duplex WebSockets (`/live`).
+   - Multi-stage Alpine container image listening on port 3000/3001 with support for duplex WebSockets (`/live`).
 
 ---
 
@@ -94,7 +95,7 @@ npm -v    # Expected: v10.x.x
 
 ```bash
 cd /opt
-sudo git clone https://github.com/YOUR_REPO/alpha-erp.git
+sudo git clone https://github.com/gautam303in/AlphaERP-HVAC.git alpha-erp
 sudo chown -R $USER:$USER /opt/alpha-erp
 cd /opt/alpha-erp
 npm install

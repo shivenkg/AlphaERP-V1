@@ -4,6 +4,7 @@
 
 **Live Production Mirror:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
 **Primary Custom InsForge Domain:** [https://hvacbiz.insforge.site](https://hvacbiz.insforge.site)  
+**GitHub Repository:** [https://github.com/gautam303in/AlphaERP-HVAC](https://github.com/gautam303in/AlphaERP-HVAC)  
 **Target Architecture:** React 19 Client SPA + Node.js 20 Express Serverless Functions  
 **Configuration File:** `vercel.json` | **Serverless Entrypoint:** `api/index.js`
 
@@ -87,7 +88,7 @@ git init
 git add .
 git commit -m "feat: complete enterprise AlphaERP release"
 git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/alpha-erp.git
+git remote add origin https://github.com/gautam303in/AlphaERP-HVAC.git
 git push -u origin main
 ```
 

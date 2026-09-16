@@ -4,7 +4,9 @@
 
 **Document Version:** 3.6.0-Production  
 **Base Production URL:** [https://hvacbiz.insforge.site](https://hvacbiz.insforge.site) | [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
-**WebSocket Protocol:** `ws://<host>/live` (or `wss://<host>/live` on HTTPS)
+**GitHub Repository:** [https://github.com/gautam303in/AlphaERP-HVAC](https://github.com/gautam303in/AlphaERP-HVAC)  
+**WebSocket Protocol:** `ws://<host>/live` (or `wss://<host>/live` on HTTPS)  
+**Default Server Port:** `3001` (supports `PORT` env var with dynamic collision detection & auto-increment)
 
 ---
 
@@ -70,7 +72,7 @@ Standard API requests accept JSON payloads and custom tenancy headers:
 Authorization: Bearer <API_ACCESS_TOKEN>
 Content-Type: application/json
 X-Alpha-Tenant-ID: default-corp
-X-Alpha-Client-Version: 3.5.0
+X-Alpha-Client-Version: 3.6.0
 ```
 
 ---
@@ -489,7 +491,19 @@ When using the admin RBAC panel to assign or query module permissions, use these
 | Service Scheduling & PPM | `services_schedule` | `services` | superadmin, admin, executive, sales_manager, estimator, technician, warehouse, service_manager |
 | Work Orders & Field Dispatch | `workorders` | `services` | superadmin, admin, executive, technician, warehouse, service_manager |
 
+### 3.10 Local MongoDB Vault & Dynamic Port Allocation
+
+- **Local MongoDB Vault (`data/mongodb_local_vault.json`)**:
+  Contains high-fidelity production HVAC project records, bill of quantities (BOQ), warehouse inventory SKUs, customer leads, and quotations. This vault acts as the local zero-dependency database seed and offline persistence cache when MongoDB Atlas or InsForge BaaS is unreachable or during initial development onboarding.
+- **Dynamic Server Port Allocation**:
+  The full-stack Express & WebSocket server (`server.ts`) dynamically audits port availability using `net.createServer()` starting at `PORT || 3001`. If the requested port is bound by another service, it automatically increments and binds to the next available free port without process failure or `EADDRINUSE` crashes.
+
+---
+
+### 3.11 Operational Guardrails & Verification
+
 - **Rate Limits**: 120 req/min for general REST routes; 20 req/min for email alerts and AI endpoints.
 - **WebSocket Protection**: Maximum 5 concurrent WebSocket connections per IP address with automated heartbeat ping/pong cleanup.
 - **Payload Size**: Maximum 25MB JSON payload limit for database migrations and backup ingestion.
 - **UAT Verification**: 100% Passing automated test suite with 24 cases and 92 verification steps (`npm run test:uat`).
+

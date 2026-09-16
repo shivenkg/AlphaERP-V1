@@ -1,8 +1,9 @@
 # HVAC Dashboard - Comprehensive Testing Execution Guide
 
-**Document Version:** 3.0 (Post-Execution Verified - Enterprise Release)  
-**Date:** September 13, 2026  
-**Project:** AlphaERP - HVAC Dashboard  
+**Document Version:** 3.6.0-Production (Enterprise Release Verified)  
+**Date:** September 17, 2026  
+**Project:** AlphaERP - HVAC Enterprise Suite  
+**Repository:** [https://github.com/gautam303in/AlphaERP-HVAC](https://github.com/gautam303in/AlphaERP-HVAC)  
 **Objective:** Complete Application, Security, Performance, and UAT Testing Execution Verification  
 **Execution Status:** ✅ 100% EXECUTED & PASSED (92/92 Test Steps Verified across 24 Business Use Cases)
 
@@ -1728,3 +1729,4 @@ Phone: [contact number]
 | 0.9 | 2024-01-10 | QA Lead | Initial draft |
 | 1.0 | 2024-01-15 | QA Lead | Final version approved |
 | 2.0 | 2026-09-13 | Antigravity QA Lead | Execution results recorded, 100% passed & signed off |
+| 3.0 | 2026-09-17 | Antigravity QA Lead | Enterprise Release verification across all 24 use cases (92 steps), dynamic port allocation, local vault data sync, and multi-cloud persistence |

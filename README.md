@@ -2,6 +2,7 @@
 
 ## Full-Lifecycle Techno-Commercial CRM, BOQ Engineering, Multi-Tier Procurement, Automated Email Indents, GAAP Financials & HRMS Platform
 
+[![GitHub Repository](https://img.shields.io/badge/GitHub-AlphaERP--HVAC-181717?style=for-the-badge&logo=github)](https://github.com/gautam303in/AlphaERP-HVAC)
 [![Custom Domain](https://img.shields.io/badge/InsForge_Domain-hvacbiz.insforge.site-00C49F?style=for-the-badge&logo=fastapi)](https://hvacbiz.insforge.site/#dashboard)
 [![InsForge BaaS](https://img.shields.io/badge/PostgreSQL_14+-InsForge_BaaS-336791?style=for-the-badge&logo=postgresql)](https://as2hwz72.us-east.insforge.app)
 [![UAT Test Suite](https://img.shields.io/badge/UAT_Tests-100%25_Passing_(24_Cases%2F92_Steps)-10B981?style=for-the-badge)](#11-enterprise-uat-test-verification-suite)
@@ -19,6 +20,7 @@
 
 - **Custom InsForge Production URL**: [https://hvacbiz.insforge.site/#dashboard](https://hvacbiz.insforge.site/#dashboard) (Primary Custom Domain)
 - **Vercel Mirror Production URL**: [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)
+- **GitHub Repository**: [https://github.com/gautam303in/AlphaERP-HVAC](https://github.com/gautam303in/AlphaERP-HVAC)
 - **InsForge BaaS API Endpoint**: [https://as2hwz72.us-east.insforge.app](https://as2hwz72.us-east.insforge.app)
 - **API Health Diagnostics**: [https://hvacbiz.vercel.app/api/health](https://hvacbiz.vercel.app/api/health)
 - **Quality Verification**: [100% Passing Enterprise UAT Suite (24 Use Cases, 92 Verification Steps)](#11-enterprise-uat-test-verification-suite)
@@ -246,12 +248,14 @@ The system supports instant authentication via **OTP** with master passcodes `12
 AlphaERP-V1/
 ├── api/
 │   └── index.ts                         # Vercel Serverless Function entry adapter
+├── data/
+│   └── mongodb_local_vault.json         # Local MongoDB vault with mock project records & offline fallback
 ├── server/
 │   ├── app.ts                           # Express application & REST API routes
 │   ├── api-entry.ts                     # Bundling entry for Vercel Serverless Function
 │   ├── envManager.ts                    # Dynamic .env secrets manager & validation
 │   └── mongodb.ts                       # MongoDB Atlas connection manager & sync engine
-├── server.ts                            # Standalone Node.js server with WebSocket (/live)
+├── server.ts                            # Standalone Node.js server with WebSockets & dynamic port allocation
 ├── vercel.json                          # Vercel routing, rewrite rules, security headers
 ├── database/
 │   ├── schema.sql                       # PostgreSQL 14+ DDL relational schema
@@ -317,7 +321,7 @@ npm install
 npm run dev
 
 # 3. Access locally in browser
-# http://localhost:3000
+# http://localhost:3001 (auto-allocates next free port if 3001 is occupied)
 ```
 
 ### 9.2 Production Build

@@ -5,7 +5,8 @@
 **Document Version:** 3.6.0-Production  
 **Primary Custom Domain:** [https://hvacbiz.insforge.site](https://hvacbiz.insforge.site)  
 **Vercel Production Mirror:** [https://hvacbiz.vercel.app](https://hvacbiz.vercel.app)  
-**Ingress Host & Port:** `0.0.0.0:3000` (Dedicated Server) | Vercel Serverless Edge | InsForge Edge
+**GitHub Repository:** [https://github.com/gautam303in/AlphaERP-HVAC](https://github.com/gautam303in/AlphaERP-HVAC)  
+**Ingress Host & Port:** `0.0.0.0:3001` (Standalone Server default with auto-increment on collision) | `0.0.0.0:3000` (Docker Container) | Vercel Serverless Edge | InsForge Edge
 
 ---
 
@@ -15,8 +16,8 @@ AlphaERP is engineered as an enterprise-grade, full-stack HVAC operations platfo
 
 - **Frontend / Client**: React 19 + TypeScript + Vite 6 + Tailwind CSS v4 + Lucide Icons + Motion
 - **Backend / API**: Node.js 20+ / Express with TypeScript bundling via esbuild
-- **Persistence Options**: InsForge BaaS (PostgreSQL 14+), MongoDB Atlas (Cloud NoSQL), or browser IndexedDB cache
-- **Ingress Port**: Hardcoded to **Port 3000** (Host: `0.0.0.0`) for container compatibility and reverse proxies.
+- **Persistence Options**: InsForge BaaS (PostgreSQL 14+), MongoDB Atlas (Cloud NoSQL), Local MongoDB Vault (`data/mongodb_local_vault.json`), or browser IndexedDB cache
+- **Ingress Port**: Defaults to **Port 3001** (Host: `0.0.0.0`) in development and standalone mode with automatic collision fallback to the next available free port via `net.createServer()`, or **Port 3000** for Docker/Cloud Run container compatibility.
 
 ```mermaid
 flowchart TD
@@ -170,7 +171,7 @@ npx @insforge/cli deployments deploy .
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY package.json package-lock.json* bun.lock* ./
+COPY package.json package-lock.json* ./
 RUN npm ci
 
 COPY . .
@@ -187,6 +188,7 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/data ./data
 COPY --from=builder /app/dist/server.cjs ./dist/server.cjs
 
 EXPOSE 3000

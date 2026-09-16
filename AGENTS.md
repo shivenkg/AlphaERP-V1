@@ -66,11 +66,13 @@ flowchart TD
 
 1. **Frontend**: React 19, TypeScript 5.8+, Vite 6, Tailwind CSS v4, Lucide React icons, Motion animations.
 2. **Backend**: Express 4.21+ running on Node.js 20+ with esbuild bundling:
+   - `server.ts`: Standalone Node.js server with WebSockets & dynamic port allocation (`PORT || 3001`, auto-discovers next free port on collision).
    - `dist/server.cjs`: Standalone Node.js bundle for Docker, Cloud Run, and Ubuntu Systemd/PM2.
    - `api/index.js`: Serverless bundle for Vercel Serverless Functions.
 3. **Database Options**:
    - **InsForge BaaS / PostgreSQL 14+**: Relational schemas in `database/schema.sql` and `database/insforge_schema.sql`.
    - **MongoDB Atlas**: Document store with endpoints in `server/mongodb.ts` and `/api/mongodb/*`.
+   - **Local MongoDB Vault**: `data/mongodb_local_vault.json` for resilient mock records & offline fallback.
    - **Browser Storage**: IndexedDB and reactive LocalStorage in `src/services/storageService.ts`.
 4. **AI & Voice Engine**: Google GenAI SDK (`@google/genai`) and WebSocket duplex streaming (`/live`).
 5. **Email System**: Nodemailer with dynamic fallback to Mock Sandbox wrapper when SMTP credentials are absent.
@@ -183,12 +185,14 @@ flowchart TD
 ```text
 AlphaERP-V1/
 ├── api/index.ts                         # Vercel Serverless Function adapter
+├── data/
+│   └── mongodb_local_vault.json         # Local MongoDB vault with mock project records & offline fallback
 ├── server/
 │   ├── app.ts                           # Express application & REST routes
 │   ├── api-entry.ts                     # Bundling entrypoint for Vercel
 │   ├── envManager.ts                    # Dynamic .env secrets manager & validation
 │   └── mongodb.ts                       # MongoDB Atlas driver & sync operations
-├── server.ts                            # Standalone Node.js server with WebSockets
+├── server.ts                            # Standalone Node.js server with WebSockets & dynamic port allocation
 ├── vercel.json                          # Vercel routing rules & security headers
 ├── database/
 │   ├── schema.sql                       # PostgreSQL 14+ DDL Schema
